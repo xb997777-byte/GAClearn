@@ -1,0 +1,121 @@
+@import "../../styles/theme.wxss";
+
+.wrong-ai-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 248, 255, 0.98) 100%);
+}
+
+.wrong-ai-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.ai-refresh-btn {
+  flex-shrink: 0;
+}
+
+.wrong-ai-loading,
+.wrong-ai-error {
+  margin-top: 18rpx;
+  padding: 20rpx 22rpx;
+  border-radius: 24rpx;
+  font-size: 26rpx;
+  line-height: 1.7;
+}
+
+.wrong-ai-loading {
+  background: rgba(44, 93, 255, 0.08);
+  color: var(--theme-text-primary);
+}
+
+.wrong-ai-error {
+  background: rgba(183, 28, 28, 0.08);
+  color: #b91c1c;
+}
+
+.wrong-ai-body {
+  margin-top: 18rpx;
+}
+
+.wrong-ai-highlight {
+  padding: 24rpx;
+  border-radius: 28rpx;
+  background: linear-gradient(135deg, rgba(44, 93, 255, 0.08) 0%, rgba(120, 156, 255, 0.12) 100%);
+}
+
+.wrong-ai-headline,
+.wrong-ai-section-title,
+.priority-word,
+.wrong-ai-coach-line {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: var(--theme-text-primary);
+}
+
+.wrong-ai-summary,
+.wrong-ai-bullet-text,
+.priority-reason,
+.wrong-ai-coach-line {
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  line-height: 1.8;
+  color: var(--theme-text-primary);
+  word-break: break-word;
+}
+
+.wrong-ai-section {
+  margin-top: 18rpx;
+}
+
+.wrong-ai-bullet-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  margin-top: 14rpx;
+}
+
+.wrong-ai-bullet-dot {
+  width: 14rpx;
+  height: 14rpx;
+  margin-top: 12rpx;
+  border-radius: 999rpx;
+  background: var(--theme-accent);
+  flex-shrink: 0;
+}
+
+.priority-word-card {
+  margin-top: 14rpx;
+  padding: 22rpx;
+  border-radius: 24rpx;
+  background: #ffffff;
+  border: 2rpx solid var(--theme-card-border);
+}
+
+.priority-word-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.priority-meaning {
+  font-size: 24rpx;
+  color: var(--theme-text-secondary);
+  text-align: right;
+}
+
+.action-plan-chip {
+  margin-top: 12rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 20rpx;
+  background: rgba(44, 93, 255, 0.06);
+  color: var(--theme-text-primary);
+  font-size: 26rpx;
+  line-height: 1.7;
+}
+
+ai-evidence {
+  display: block;
+  margin-top: 18rpx;
+}

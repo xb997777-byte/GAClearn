@@ -1,0 +1,63 @@
+@import "../../styles/theme.wxss";
+
+.feedback-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.feedback-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64rpx;
+  padding: 0 22rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid var(--theme-card-border);
+  background: #ffffff;
+  color: var(--theme-text-secondary);
+  font-size: var(--theme-font-size-list-desc);
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+.feedback-chip.active {
+  border-color: var(--theme-accent);
+  background: var(--theme-secondary-bg);
+  color: var(--theme-secondary-text);
+}
+
+.feedback-textarea {
+  width: 100%;
+  min-height: 320rpx;
+  margin-top: 20rpx;
+  padding: 22rpx;
+  box-sizing: border-box;
+  border-radius: 22rpx;
+  border: 2rpx solid var(--theme-card-border);
+  background: #ffffff;
+  color: var(--theme-text-primary);
+  font-size: var(--theme-font-size-base);
+  line-height: 1.7;
+}
+
+.feedback-counter {
+  margin-top: 12rpx;
+  text-align: right;
+  color: var(--theme-text-secondary);
+  font-size: var(--theme-font-size-list-desc);
+}
+
+.feedback-input {
+  width: 100%;
+  min-height: 88rpx;
+  margin-top: 20rpx;
+  padding: 0 24rpx;
+  box-sizing: border-box;
+  border-radius: 20rpx;
+  border: 2rpx solid var(--theme-card-border);
+  background: #ffffff;
+  color: var(--theme-text-primary);
+  font-size: var(--theme-font-size-base);
+}

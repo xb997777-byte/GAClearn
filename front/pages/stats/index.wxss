@@ -1,0 +1,71 @@
+@import "../../styles/theme.wxss";
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18rpx;
+}
+
+.stat-card {
+  min-height: 176rpx;
+  padding: 26rpx 20rpx;
+  border-radius: 24rpx;
+  background: var(--theme-card-bg);
+  border: 2rpx solid var(--theme-card-border);
+  box-shadow: 0 12rpx 28rpx var(--theme-card-shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-number {
+  margin-top: 12rpx;
+  font-size: 40rpx;
+  font-weight: 800;
+}
+
+.grammar-number {
+  font-size: 30rpx;
+  line-height: 1.4;
+}
+
+.stat-label {
+  margin-top: 0;
+}
+
+.stats-hero-head {
+  text-align: center;
+}
+
+.hero-metric-grid {
+  align-items: stretch;
+}
+
+.hero-metric-card {
+  min-height: 148rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.hero-metric-label {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.hero-metric-value {
+  margin-top: 14rpx;
+}
+
+.stats-trend-item {
+  padding: 22rpx 0;
+  border-bottom: 2rpx solid #eef2f6;
+}
+
+.stats-trend-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}

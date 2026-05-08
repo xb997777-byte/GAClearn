@@ -1,0 +1,558 @@
+.grammar-page {
+  --grammar-outline: var(--theme-card-border);
+  --grammar-accent: var(--theme-accent);
+  --grammar-soft-bg: var(--theme-secondary-bg);
+  --grammar-soft-text: var(--theme-secondary-text);
+  --grammar-chip-bg: var(--theme-chip-light-bg);
+  --grammar-chip-text: var(--theme-chip-light-text);
+}
+
+.grammar-page .hub-title,
+.grammar-page .guide-hero-title,
+.grammar-page .volume-hero-title,
+.grammar-page .module-title,
+.grammar-page .volume-title,
+.grammar-page .chapter-title,
+.grammar-page .detail-summary,
+.grammar-page .block-title,
+.grammar-page .guide-example-en,
+.grammar-page .focus-en,
+.grammar-page .summary-text.strong,
+.grammar-page .theme-featured-name {
+  font-family: var(--theme-font-display);
+}
+
+.grammar-page .hub-title,
+.grammar-page .guide-hero-title,
+.grammar-page .volume-hero-title {
+  font-size: var(--theme-font-size-hero);
+}
+
+.grammar-page .module-title,
+.grammar-page .volume-title,
+.grammar-page .guide-path-title,
+.grammar-page .book-title,
+.grammar-page .chapter-title,
+.grammar-page .detail-summary,
+.grammar-page .block-title,
+.grammar-page .guide-example-en,
+.grammar-page .focus-en,
+.grammar-page .summary-text.strong {
+  font-size: var(--theme-font-size-grammar-title);
+}
+
+.grammar-page .module-subtitle,
+.grammar-page .guide-path-desc,
+.grammar-page .volume-subtitle,
+.grammar-page .book-desc,
+.grammar-page .chapter-desc,
+.grammar-page .chapter-block-text,
+.grammar-page .chapter-line,
+.grammar-page .volume-preview-text,
+.grammar-page .path-text,
+.grammar-page .guide-cn,
+.grammar-page .core-cn,
+.grammar-page .focus-cn,
+.grammar-page .support-cn,
+.grammar-page .reading-translation,
+.grammar-page .summary-text,
+.grammar-page .practice-question,
+.grammar-page .practice-option,
+.grammar-page .volume-line,
+.grammar-page .volume-goal,
+.grammar-page .search-input,
+.grammar-page .analyze-textarea {
+  font-size: var(--theme-font-size-base);
+}
+
+.grammar-page .hero-kicker,
+.grammar-page .hero-ghost-btn,
+.grammar-page .hero-soft-btn,
+.grammar-page .section-tip,
+.grammar-page .filter-chip,
+.grammar-page .difficulty-chip,
+.grammar-page .sample-chip,
+.grammar-page .mode-chip,
+.grammar-page .mode-chip-text,
+.grammar-page .guide-note,
+.grammar-page .core-note,
+.grammar-page .focus-note,
+.grammar-page .sentence-list-meta,
+.grammar-page .volume-nav-text {
+  font-size: var(--theme-font-size-subtitle);
+}
+
+.grammar-page .search-btn,
+.grammar-page .hero-entry-btn-text,
+.grammar-page .module-entry-btn-text,
+.grammar-page .volume-entry-btn-text {
+  font-size: var(--theme-font-size-button);
+}
+
+.grammar-page .hub-hero,
+.grammar-page .guide-hero,
+.grammar-page .volume-hero,
+.grammar-page .learning-hero {
+  background:
+    radial-gradient(circle at 12% 14%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 34%),
+    linear-gradient(135deg, var(--theme-primary-start) 0%, var(--theme-hero-end) 52%, var(--theme-accent) 100%);
+}
+
+.grammar-page .module-card,
+.grammar-page .guide-path-card,
+.grammar-page .volume-card,
+.grammar-page .book-card,
+.grammar-page .chapter-card,
+.grammar-page .volume-preview-panel,
+.grammar-page .chapter-block,
+.grammar-page .example-card,
+.grammar-page .volume-line,
+.grammar-page .volume-goal,
+.grammar-page .practice-card,
+.grammar-page .summary-card,
+.grammar-page .board-card,
+.grammar-page .focus-card,
+.grammar-page .guide-card,
+.grammar-page .core-card,
+.grammar-page .support-card {
+  border-color: var(--theme-card-border);
+  box-shadow: 0 14rpx 30rpx var(--theme-card-shadow);
+}
+
+.grammar-page .module-mark,
+.grammar-page .path-index,
+.grammar-page .volume-badge,
+.grammar-page .book-source,
+.grammar-page .chapter-no,
+.grammar-page .chapter-toggle,
+.grammar-page .detail-kicker,
+.grammar-page .focus-role,
+.grammar-page .support-role {
+  background: var(--grammar-soft-bg);
+  color: var(--grammar-soft-text);
+}
+
+.grammar-page .module-tag,
+.grammar-page .volume-meta-chip,
+.grammar-page .filter-chip,
+.grammar-page .difficulty-chip,
+.grammar-page .sample-chip {
+  border-color: var(--theme-card-border);
+}
+
+.grammar-page .module-entry-btn,
+.grammar-page .volume-entry-btn,
+.grammar-page .hero-entry-btn {
+  background: linear-gradient(135deg, var(--theme-primary-start) 0%, var(--theme-primary-end) 100%);
+  box-shadow: 0 16rpx 30rpx var(--theme-card-shadow);
+}
+
+.grammar-page .hero-soft-btn {
+  background: var(--theme-card-bg);
+  color: var(--theme-accent);
+}
+
+.grammar-page .hero-ghost-btn {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border: 2rpx solid rgba(255, 255, 255, 0.24);
+}
+
+.grammar-page .module-entry-btn-text,
+.grammar-page .volume-entry-btn-text,
+.grammar-page .hero-entry-btn-text {
+  color: #ffffff;
+}
+
+.grammar-page .module-subtitle,
+.grammar-page .guide-path-desc,
+.grammar-page .volume-subtitle,
+.grammar-page .book-desc,
+.grammar-page .chapter-desc,
+.grammar-page .block-tag,
+.grammar-page .mode-chip-text,
+.grammar-page .summary-label,
+.grammar-page .guide-note,
+.grammar-page .core-note,
+.grammar-page .focus-note,
+.grammar-page .sentence-list-meta,
+.grammar-page .volume-nav-text,
+.grammar-page .section-tip {
+  color: var(--theme-text-secondary);
+}
+
+.grammar-page .module-fit,
+.grammar-page .volume-preview-text,
+.grammar-page .chapter-block-text,
+.grammar-page .chapter-line,
+.grammar-page .path-text,
+.grammar-page .reading-translation,
+.grammar-page .summary-text,
+.grammar-page .guide-cn,
+.grammar-page .core-cn,
+.grammar-page .focus-cn,
+.grammar-page .support-cn,
+.grammar-page .guide-en,
+.grammar-page .core-en,
+.grammar-page .support-en,
+.grammar-page .focus-en,
+.grammar-page .practice-question,
+.grammar-page .practice-option {
+  color: var(--theme-text-primary);
+}
+
+.grammar-page .module-fit,
+.grammar-page .search-input,
+.grammar-page .analyze-textarea,
+.grammar-page .sample-chip,
+.grammar-page .reading-translation,
+.grammar-page .practice-option {
+  background: var(--theme-card-bg);
+  border-color: var(--theme-card-border);
+}
+
+.grammar-page .view-segmented {
+  background: var(--theme-segmented-bg);
+}
+
+.grammar-page .view-segmented .segmented-item.active,
+.grammar-page .filter-chip.active,
+.grammar-page .difficulty-chip.active,
+.grammar-page .practice-option.selected {
+  background: var(--theme-primary-start);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 12rpx 24rpx var(--theme-card-shadow);
+}
+
+.grammar-page .mode-chip.complete {
+  background: var(--theme-secondary-bg);
+  color: var(--theme-secondary-text);
+}
+
+.grammar-page .mode-chip.core {
+  background: var(--theme-chip-light-bg);
+  color: var(--theme-chip-light-text);
+}
+
+.grammar-page .board-complete {
+  background:
+    radial-gradient(circle at 10% 12%, rgba(255, 255, 255, 0.64) 0%, rgba(255, 255, 255, 0) 34%),
+    linear-gradient(180deg, var(--theme-page-start) 0%, #ffffff 100%);
+  border-color: var(--theme-card-border);
+}
+
+.grammar-page .board-core {
+  background:
+    radial-gradient(circle at 10% 12%, rgba(255, 255, 255, 0.64) 0%, rgba(255, 255, 255, 0) 34%),
+    linear-gradient(180deg, var(--theme-page-mid) 0%, #ffffff 100%);
+  border-color: var(--theme-card-border);
+}
+
+.grammar-page .reading-translation {
+  border-left-color: var(--theme-accent);
+}
+
+.grammar-page .progress-fill {
+  background: linear-gradient(135deg, var(--theme-primary-start) 0%, var(--theme-primary-end) 100%);
+}
+
+.grammar-page .volume-line.warn,
+.grammar-page .practice-result.error {
+  border-color: #f4b183;
+}
+
+.grammar-page .volume-goal,
+.grammar-page .practice-result.ok {
+  border-color: #9ad7b0;
+}
+
+.motion-pop .hero-entry-btn,
+.motion-pop .module-entry-btn,
+.motion-pop .volume-entry-btn,
+.motion-pop .chapter-head,
+.motion-pop .guide-card,
+.motion-pop .core-card,
+.motion-pop .support-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.motion-glide .hero-entry-btn,
+.motion-glide .module-entry-btn,
+.motion-glide .volume-entry-btn,
+.motion-glide .chapter-head,
+.motion-glide .guide-card,
+.motion-glide .core-card,
+.motion-glide .support-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.motion-sheet .hero-entry-btn,
+.motion-sheet .module-entry-btn,
+.motion-sheet .volume-entry-btn,
+.motion-sheet .chapter-head,
+.motion-sheet .guide-card,
+.motion-sheet .core-card,
+.motion-sheet .support-card {
+  transition: transform 0.16s ease, opacity 0.16s ease, border-color 0.16s ease;
+}
+
+.motion-focus .hero-entry-btn,
+.motion-focus .module-entry-btn,
+.motion-focus .volume-entry-btn,
+.motion-focus .chapter-head,
+.motion-focus .guide-card,
+.motion-focus .core-card,
+.motion-focus .support-card {
+  transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease;
+}
+
+.motion-float .hero-entry-btn,
+.motion-float .module-entry-btn,
+.motion-float .volume-entry-btn,
+.motion-float .chapter-head,
+.motion-float .guide-card,
+.motion-float .core-card,
+.motion-float .support-card {
+  transition: transform 0.24s ease, box-shadow 0.24s ease, background-color 0.24s ease, border-color 0.24s ease;
+}
+
+.hover-card-pop {
+  transform: translateY(-6rpx) scale(1.015);
+  box-shadow: 0 20rpx 40rpx var(--theme-card-shadow);
+}
+
+.hover-action-bloom {
+  transform: scale(0.98);
+  opacity: 0.96;
+}
+
+.hover-card-slide {
+  transform: translateX(8rpx);
+  border-color: var(--theme-accent);
+}
+
+.hover-action-sweep {
+  transform: translateY(-2rpx);
+  box-shadow: 0 18rpx 34rpx var(--theme-card-shadow);
+}
+
+.hover-card-sheet {
+  transform: rotate(-0.5deg) translateY(-4rpx);
+  border-color: var(--theme-accent);
+}
+
+.hover-action-underline {
+  transform: scaleX(0.985);
+  opacity: 0.94;
+}
+
+.hover-card-focus {
+  transform: translateY(-4rpx);
+  box-shadow: 0 18rpx 38rpx var(--theme-card-shadow);
+}
+
+.hover-action-nudge {
+  transform: translateX(8rpx);
+}
+
+.hover-card-float {
+  transform: translateY(-8rpx) scale(1.012);
+  box-shadow: 0 24rpx 46rpx var(--theme-card-shadow);
+}
+
+.hover-action-press {
+  transform: translateY(-3rpx) scale(0.992);
+  box-shadow: 0 20rpx 36rpx var(--theme-card-shadow);
+}
+
+.font-notebook .hub-title,
+.font-notebook .guide-hero-title,
+.font-notebook .volume-hero-title,
+.font-notebook .module-title,
+.font-notebook .volume-title,
+.font-notebook .chapter-title,
+.font-notebook .detail-summary,
+.font-notebook .block-title {
+  letter-spacing: 1rpx;
+  font-weight: 700;
+}
+
+.font-editorial .hub-title,
+.font-editorial .guide-hero-title,
+.font-editorial .volume-hero-title,
+.font-editorial .module-title,
+.font-editorial .volume-title,
+.font-editorial .chapter-title,
+.font-editorial .detail-summary {
+  letter-spacing: 0.6rpx;
+}
+
+.grammar-theme-playful .hub-metric,
+.grammar-theme-playful .hero-metric-card {
+  border-radius: 26rpx;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.grammar-theme-playful .module-card,
+.grammar-theme-playful .volume-card,
+.grammar-theme-playful .book-card {
+  border-radius: 34rpx;
+  background: linear-gradient(145deg, var(--theme-card-bg) 0%, var(--theme-page-start) 100%);
+}
+
+.grammar-theme-playful .hero-entry-btn,
+.grammar-theme-playful .module-entry-btn,
+.grammar-theme-playful .volume-entry-btn {
+  border-radius: 999rpx;
+}
+
+.grammar-theme-playful .module-mark,
+.grammar-theme-playful .path-index,
+.grammar-theme-playful .chapter-no {
+  box-shadow: 0 10rpx 18rpx var(--theme-card-shadow);
+}
+
+.grammar-theme-coach .module-card,
+.grammar-theme-coach .volume-card,
+.grammar-theme-coach .chapter-card {
+  background: linear-gradient(180deg, var(--theme-card-bg) 0%, var(--theme-page-mid) 100%);
+}
+
+.grammar-theme-coach .hero-entry-btn,
+.grammar-theme-coach .module-entry-btn,
+.grammar-theme-coach .volume-entry-btn {
+  border-radius: 24rpx;
+}
+
+.grammar-theme-notebook .hub-hero,
+.grammar-theme-notebook .guide-hero,
+.grammar-theme-notebook .volume-hero,
+.grammar-theme-notebook .learning-hero {
+  background:
+    linear-gradient(180deg, rgba(255, 251, 241, 0.95) 0%, rgba(252, 245, 226, 0.98) 100%);
+  border: 2rpx solid var(--theme-card-border);
+}
+
+.grammar-theme-notebook .hero-badge,
+.grammar-theme-notebook .guide-hero-badge,
+.grammar-theme-notebook .volume-hero-badge,
+.grammar-theme-notebook .hero-kicker {
+  background: var(--theme-secondary-bg);
+  color: var(--theme-secondary-text);
+}
+
+.grammar-theme-notebook .hub-title,
+.grammar-theme-notebook .guide-hero-title,
+.grammar-theme-notebook .volume-hero-title,
+.grammar-theme-notebook .hero-metric-value,
+.grammar-theme-notebook .hero-metric-label,
+.grammar-theme-notebook .hero-metric-note,
+.grammar-theme-notebook .light-text {
+  color: var(--theme-text-primary);
+}
+
+.grammar-theme-notebook .hero-entry-btn,
+.grammar-theme-notebook .module-entry-btn,
+.grammar-theme-notebook .volume-entry-btn {
+  width: 100%;
+  border-radius: 14rpx;
+  background: var(--theme-card-bg);
+  border: 3rpx solid var(--theme-accent);
+  box-shadow: none;
+}
+
+.grammar-theme-notebook .hero-soft-btn,
+.grammar-theme-notebook .hero-ghost-btn {
+  background: var(--theme-card-bg);
+  color: var(--theme-accent);
+  border: 2rpx solid var(--theme-card-border);
+}
+
+.grammar-theme-notebook .hero-entry-btn-text,
+.grammar-theme-notebook .module-entry-btn-text,
+.grammar-theme-notebook .volume-entry-btn-text {
+  color: var(--theme-accent);
+  letter-spacing: 1rpx;
+}
+
+.grammar-theme-notebook .module-card,
+.grammar-theme-notebook .volume-card,
+.grammar-theme-notebook .book-card,
+.grammar-theme-notebook .chapter-card,
+.grammar-theme-notebook .guide-path-card {
+  border-radius: 18rpx;
+  border-left-width: 12rpx;
+  box-shadow: none;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 248, 0.96) 0%, rgba(251, 245, 230, 0.96) 100%);
+}
+
+.grammar-theme-notebook .grammar-hub-page .hub-metrics {
+  grid-template-columns: 1fr;
+}
+
+.grammar-theme-notebook .hub-metric {
+  background: rgba(255, 255, 255, 0.84);
+  border: 2rpx dashed var(--theme-card-border);
+}
+
+.grammar-theme-editorial .hero-entry-btn,
+.grammar-theme-editorial .module-entry-btn,
+.grammar-theme-editorial .volume-entry-btn {
+  width: 100%;
+  border-radius: 18rpx;
+  background: transparent;
+  border: 2rpx solid var(--theme-card-border);
+  box-shadow: none;
+}
+
+.grammar-theme-editorial .hero-soft-btn,
+.grammar-theme-editorial .hero-ghost-btn {
+  border-radius: 18rpx;
+}
+
+.grammar-theme-editorial .hero-entry-btn-text,
+.grammar-theme-editorial .module-entry-btn-text,
+.grammar-theme-editorial .volume-entry-btn-text {
+  color: var(--theme-accent);
+}
+
+.grammar-theme-editorial .hub-hero .hero-entry-btn,
+.grammar-theme-editorial .guide-hero .hero-entry-btn,
+.grammar-theme-editorial .volume-hero .hero-entry-btn,
+.grammar-theme-editorial .learning-hero .hero-entry-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.42);
+  box-shadow: none;
+}
+
+.grammar-theme-editorial .hub-hero .hero-entry-btn-text,
+.grammar-theme-editorial .guide-hero .hero-entry-btn-text,
+.grammar-theme-editorial .volume-hero .hero-entry-btn-text,
+.grammar-theme-editorial .learning-hero .hero-entry-btn-text {
+  color: #ffffff;
+  text-shadow: 0 2rpx 10rpx rgba(15, 23, 42, 0.16);
+}
+
+.grammar-theme-editorial .module-card,
+.grammar-theme-editorial .volume-card,
+.grammar-theme-editorial .book-card,
+.grammar-theme-editorial .chapter-card,
+.grammar-theme-editorial .guide-path-card {
+  border-radius: 20rpx;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.9) 100%);
+}
+
+.grammar-theme-editorial .module-mark,
+.grammar-theme-editorial .path-index,
+.grammar-theme-editorial .chapter-no {
+  border-radius: 999rpx;
+  background: transparent;
+  border: 2rpx solid var(--theme-card-border);
+}
+
+.grammar-theme-editorial .grammar-hub-page .hub-metrics,
+.grammar-theme-editorial .guide-page .path-grid {
+  gap: 12rpx;
+}

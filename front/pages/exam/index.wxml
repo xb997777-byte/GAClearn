@@ -1,0 +1,92 @@
+<view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="{{navTitle}}" showBack="{{true}}" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view wx:if="{{loading}}" class="section panel-card">
+      <view class="card-title">正在加载题目...</view>
+    </view>
+
+    <block wx:elif="{{completed}}">
+      <view class="section hero-card">
+        <view class="card-title" style="color:#fff;">{{ mode === 'placement' ? '分级结果' : '测试完成' }}</view>
+        <view class="metric-grid" style="margin-top:24rpx;">
+          <view class="metric-item">
+            <view class="metric-label">得分</view>
+            <view class="metric-value">{{ result.score }}</view>
+          </view>
+          <view class="metric-item">
+            <view class="metric-label">答对</view>
+            <view class="metric-value">{{ result.correct_count }}/{{ result.question_count }}</view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{mode === 'placement' && result.recommendation}}" class="section panel-card">
+        <view class="card-title">推荐路径</view>
+        <view class="list-item">
+          <view class="list-main">
+            <view class="list-title">CEFR 等级</view>
+            <view class="list-desc">{{ result.cefr_level }}</view>
+          </view>
+        </view>
+        <view class="list-item">
+          <view class="list-main">
+            <view class="list-title">建议每日目标</view>
+            <view class="list-desc">{{ result.recommendation.daily_target }} 个单词</view>
+          </view>
+        </view>
+        <view class="list-item">
+          <view class="list-main">
+            <view class="list-title">学习重点</view>
+            <view class="list-desc">{{ result.recommendation.focus }}</view>
+          </view>
+        </view>
+        <view class="list-item" wx:if="{{result.recommendation.book}}">
+          <view class="list-main">
+            <view class="list-title">推荐词书</view>
+            <view class="list-desc">{{ result.recommendation.book.name }}</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="section panel-card">
+        <button class="primary-btn full-btn" bindtap="handleRestart">再来一轮</button>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view class="section panel-card" wx:if="{{currentQuestion}}">
+        <view class="chip-light chip">第 {{ currentIndex + 1 }} 题 / 共 {{ questions.length }} 题</view>
+        <view class="card-title" style="margin-top:18rpx;">{{ currentQuestion.stem }}</view>
+        <view class="tag-row" style="margin-top:16rpx;" wx:if="{{mode === 'placement'}}">
+          <view class="chip-light chip">{{ currentQuestion.cefr_tag }}</view>
+        </view>
+      </view>
+
+      <view wx:if="{{currentQuestion && currentQuestion.answer_mode === 'choice'}}" class="section">
+        <view
+          wx:for="{{options}}"
+          wx:key="key"
+          class="{{ item.className }}"
+          data-value="{{item.value}}"
+          bindtap="chooseOption"
+        >
+          <view class="choice-item">
+            <view class="choice-key">{{ item.key }}</view>
+            <view class="list-main">
+              <view class="list-title">{{ item.value }}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{currentQuestion && currentQuestion.answer_mode === 'input'}}" class="section panel-card">
+        <view class="card-title">输入答案</view>
+        <input class="answer-input" placeholder="请输入答案" value="{{inputValue}}" bindinput="handleInput" />
+      </view>
+
+      <view wx:if="{{currentQuestion}}" class="section panel-card">
+        <button class="primary-btn full-btn" bindtap="handleNext">{{ currentIndex + 1 === questions.length ? '提交测试' : '下一题' }}</button>
+      </view>
+    </block>
+  </scroll-view>
+</view>

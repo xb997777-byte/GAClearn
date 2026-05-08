@@ -1,0 +1,121 @@
+<view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="单词详情" showBack="{{true}}" />
+  <scroll-view class="page-scroll" scroll-y wx:if="{{word}}">
+    <view class="section hero-card">
+      <view class="word-title">{{ word.word }}</view>
+      <view class="word-phonetic">{{ word.phonetic }} · {{ word.part_of_speech }}</view>
+      <view class="word-meaning">{{ word.meaning_cn }}</view>
+    </view>
+
+    <view class="section panel-card ai-card">
+      <view class="ai-head">
+        <view>
+          <view class="card-title">讲词助手</view>
+          <view class="card-subtitle">{{ aiTutorEnabled ? '现在显示的是 AI 讲词，会向后端请求更细的记忆法、易混提醒和用法解释。' : '现在显示的是本地讲词。默认只展示基础词义、词性和例句讲解，打开右侧开关后才会切换为 AI 讲词。' }}</view>
+        </view>
+        <view class="ai-switch-wrap">
+          <view class="ai-switch-label">AI讲词</view>
+          <switch checked="{{aiTutorEnabled}}" color="#2c5dff" bindchange="handleAiTutorSwitch" />
+        </view>
+      </view>
+
+      <view class="button-row" wx:if="{{aiTutorEnabled}}" style="margin-top:18rpx;">
+        <button class="ghost-btn ai-refresh-btn" loading="{{aiTutorLoading}}" bindtap="handleReloadAiTutor">AI重讲</button>
+      </view>
+
+      <view wx:if="{{aiTutorEnabled && aiTutorLoading}}" class="ai-loading">AI 正在整理这个词的记忆点和用法重点…</view>
+      <view wx:elif="{{aiTutorEnabled && aiTutorError}}" class="ai-error">{{ aiTutorError }}</view>
+
+      <view class="ai-card-tip" wx:if="{{aiTutorEnabled}}">当前是 AI 讲词视图，上一轮本地讲词内容不会继续混在这里展示。</view>
+
+      <view wx:if="{{activeTutor}}" class="ai-body">
+        <view class="ai-highlight">
+          <view class="ai-highlight-label">{{ aiTutorEnabled ? 'AI一句话讲清' : '本地一句话讲清' }}</view>
+          <view class="ai-highlight-text">{{ activeTutor.simple_explanation_cn }}</view>
+        </view>
+
+        <view class="ai-tip-grid">
+          <view class="ai-tip-card">
+            <view class="ai-tip-title">记忆提示</view>
+            <view class="ai-tip-text">{{ activeTutor.memory_tip }}</view>
+          </view>
+          <view class="ai-tip-card">
+            <view class="ai-tip-title">使用提醒</view>
+            <view class="ai-tip-text">{{ activeTutor.usage_tip }}</view>
+          </view>
+        </view>
+
+        <view wx:if="{{activeTutor.why_recommended}}" class="ai-why-box">
+          <view class="ai-tip-title">为什么现在讲它</view>
+          <view class="ai-tip-text">{{ activeTutor.why_recommended }}</view>
+        </view>
+
+        <view wx:if="{{activeTutor.confusing_points && activeTutor.confusing_points.length}}" class="ai-list-block">
+          <view class="ai-section-title">易混提醒</view>
+          <view wx:for="{{activeTutor.confusing_points}}" wx:key="index" class="ai-bullet-row">
+            <view class="ai-bullet-dot"></view>
+            <view class="ai-bullet-text">{{ item }}</view>
+          </view>
+        </view>
+
+        <view wx:if="{{activeTutor.synonym_compare && activeTutor.synonym_compare.length}}" class="ai-list-block">
+          <view class="ai-section-title">近义词对比</view>
+          <view wx:for="{{activeTutor.synonym_compare}}" wx:key="word" class="compare-card">
+            <view class="compare-head">
+              <view class="compare-word">{{ item.word }}</view>
+              <view class="compare-meaning">{{ item.meaning_cn }}</view>
+            </view>
+            <view class="compare-diff">{{ item.difference }}</view>
+          </view>
+        </view>
+
+        <view wx:if="{{activeTutor.mini_quiz}}" class="ai-quiz-card">
+          <view class="ai-section-title">{{ aiTutorEnabled ? 'AI微练习' : '本地微练习' }}</view>
+          <view class="quiz-prompt">{{ activeTutor.mini_quiz.prompt }}</view>
+          <view wx:for="{{activeTutor.mini_quiz.options}}" wx:key="index" class="quiz-option">{{ index + 1 }}. {{ item }}</view>
+          <button class="secondary-btn full-btn" bindtap="handleToggleAiQuizAnswer">
+            {{ aiQuizAnswerVisible ? '收起参考答案' : '查看参考答案' }}
+          </button>
+          <view wx:if="{{aiQuizAnswerVisible}}" class="quiz-answer-box">
+            <view class="quiz-answer-label">参考答案</view>
+            <view class="quiz-answer-text">{{ activeTutor.mini_quiz.answer }}</view>
+            <view class="quiz-answer-explain">{{ activeTutor.mini_quiz.explanation }}</view>
+          </view>
+        </view>
+        <ai-evidence wx:if="{{aiTutorEnabled && aiTutorEvidence}}" evidence="{{aiTutorEvidence}}" title="AI 讲词证据区" />
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">例句</view>
+      <view class="card-subtitle example-sentence">{{ word.example_sentence }}</view>
+      <view class="card-subtitle example-translation">{{ word.example_translation }}</view>
+      <view class="button-row" style="margin-top:20rpx;">
+        <button class="secondary-btn" bindtap="handlePlayWord">听单词</button>
+        <button wx:if="{{playbackReady}}" class="ghost-btn" bindtap="handlePlayExample">听例句</button>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">学习状态</view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">掌握度</view>
+          <view class="list-desc">{{ word.progress.mastery_level }}</view>
+        </view>
+      </view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">收藏状态</view>
+          <view class="list-desc">{{ favoriteText }}</view>
+        </view>
+      </view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">错误次数</view>
+          <view class="list-desc">{{ word.progress.wrong_count }}</view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>

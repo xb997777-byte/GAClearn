@@ -1,0 +1,66 @@
+Building RAG index with backend=online model=text-embedding-v4
+Knowledge sources: words, word_examples, grammar_points, grammar_sentences
+  - words (words): 13487 records
+  - word_examples (word_examples): 11114 records
+  - grammar_points (grammar_points): 14 records
+  - grammar_sentences (grammar_sentences): 1008 records
+Inserted batch 1-64 / 25623
+Inserted batch 65-128 / 25623
+Inserted batch 129-192 / 25623
+Inserted batch 193-256 / 25623
+Inserted batch 257-320 / 25623
+Inserted batch 321-384 / 25623
+Inserted batch 385-448 / 25623
+Inserted batch 449-512 / 25623
+Inserted batch 513-576 / 25623
+Inserted batch 577-640 / 25623
+Inserted batch 641-704 / 25623
+Inserted batch 705-768 / 25623
+Inserted batch 769-832 / 25623
+Inserted batch 833-896 / 25623
+Inserted batch 897-960 / 25623
+Inserted batch 961-1024 / 25623
+Inserted batch 1025-1088 / 25623
+Inserted batch 1089-1152 / 25623
+Inserted batch 1153-1216 / 25623
+Inserted batch 1217-1280 / 25623
+Inserted batch 1281-1344 / 25623
+Inserted batch 1345-1408 / 25623
+Inserted batch 1409-1472 / 25623
+Inserted batch 1473-1536 / 25623
+Inserted batch 1537-1600 / 25623
+Inserted batch 1601-1664 / 25623
+Inserted batch 1665-1728 / 25623
+Inserted batch 1729-1792 / 25623
+Inserted batch 1793-1856 / 25623
+Inserted batch 1857-1920 / 25623
+Inserted batch 1921-1984 / 25623
+Inserted batch 1985-2048 / 25623
+Inserted batch 2049-2112 / 25623
+Inserted batch 2113-2176 / 25623
+Inserted batch 2177-2240 / 25623
+Inserted batch 2241-2304 / 25623
+Inserted batch 2305-2368 / 25623
+Inserted batch 2369-2432 / 25623
+Inserted batch 2433-2496 / 25623
+Inserted batch 2497-2560 / 25623
+Inserted batch 2561-2624 / 25623
+Inserted batch 2625-2688 / 25623
+Inserted batch 2689-2752 / 25623
+Inserted batch 2753-2816 / 25623
+Inserted batch 2817-2880 / 25623
+Inserted batch 2881-2944 / 25623
+Inserted batch 2945-3008 / 25623
+Inserted batch 3009-3072 / 25623
+Inserted batch 3073-3136 / 25623
+Inserted batch 3137-3200 / 25623
+Inserted batch 3201-3264 / 25623
+Inserted batch 3265-3328 / 25623
+Inserted batch 3329-3392 / 25623
+Inserted batch 3393-3456 / 25623
+Inserted batch 3457-3520 / 25623
+Inserted batch 3521-3584 / 25623
+Inserted batch 3585-3648 / 25623
+Inserted batch 3649-3712 / 25623
+Inserted batch 3713-3776 / 25623
+Inserted batch 3777-3840 / 25623

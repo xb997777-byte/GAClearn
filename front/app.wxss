@@ -1,0 +1,8 @@
+@import "./styles/theme.wxss";
+
+page {
+  min-height: 100%;
+  background: #f4f7fb;
+  color: #101828;
+  font-size: 28rpx;
+}

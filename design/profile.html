@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>英语单词微信小程序 - 个人中心</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="./assets/prototype.css">
+</head>
+<body class="prototype-page">
+  <div class="phone-shell">
+    <div class="phone-screen">
+      <div class="page-backdrop page-backdrop--forest"></div>
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <div>9:41</div>
+        <div class="status-meta">
+          <i class="ri-signal-wifi-3-line"></i>
+          <i class="ri-wifi-line"></i>
+          <i class="ri-battery-charge-line"></i>
+        </div>
+      </div>
+
+      <main class="screen-scroll">
+        <section class="section">
+          <div class="card card--dark">
+            <div class="row row--between row--center">
+              <div class="row row--center">
+                <div class="avatar avatar--large">L</div>
+                <div>
+                  <p class="eyebrow eyebrow--light">个人中心</p>
+                  <h1 class="title-lg">Luna Chen</h1>
+                  <p class="subtitle subtitle--light">当前词书：2026 考研高频核心词</p>
+                </div>
+              </div>
+              <span class="chip chip--dark"><i class="ri-vip-crown-line"></i> MVP</span>
+            </div>
+
+            <div class="metric-grid" style="margin-top: 18px;">
+              <div class="metric-card metric-card--dark">
+                <p class="metric-label metric-label--light">学习天数</p>
+                <p class="metric-value">27</p>
+                <p class="metric-helper metric-helper--light">连续 9 天保持中</p>
+              </div>
+              <div class="metric-card metric-card--dark">
+                <p class="metric-label metric-label--light">累计收藏</p>
+                <p class="metric-value">46</p>
+                <p class="metric-helper metric-helper--light">个人重点词库</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="menu-list">
+            <a class="menu-item" href="./plan.html">
+              <span class="badge badge--soft"><i class="ri-calendar-check-line"></i></span>
+              <div class="menu-item__body">
+                <p class="menu-item__title">学习计划</p>
+                <p class="menu-item__hint">修改每日目标、提醒时间、当前词书</p>
+              </div>
+              <i class="ri-arrow-right-s-line"></i>
+            </a>
+
+            <a class="menu-item" href="./favorites.html">
+              <span class="badge badge--warm"><i class="ri-heart-3-line"></i></span>
+              <div class="menu-item__body">
+                <p class="menu-item__title">收藏夹</p>
+                <p class="menu-item__hint">管理你的高价值词清单</p>
+              </div>
+              <i class="ri-arrow-right-s-line"></i>
+            </a>
+
+            <a class="menu-item" href="./wrong-words.html">
+              <span class="badge badge--green"><i class="ri-error-warning-line"></i></span>
+              <div class="menu-item__body">
+                <p class="menu-item__title">错词本</p>
+                <p class="menu-item__hint">查看高风险词和近期错误记录</p>
+              </div>
+              <i class="ri-arrow-right-s-line"></i>
+            </a>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="card">
+            <p class="eyebrow">学习设置</p>
+            <h2 class="title-md">这些开关都可以直接点击</h2>
+            <div class="menu-list" style="margin-top: 14px;">
+              <div class="menu-item">
+                <span class="badge badge--soft"><i class="ri-notification-4-line"></i></span>
+                <div class="menu-item__body">
+                  <p class="menu-item__title">学习提醒</p>
+                  <p class="menu-item__hint">每日 20:30 推送今日学习任务</p>
+                </div>
+                <button class="switch is-active" type="button" data-switch></button>
+              </div>
+              <div class="menu-item">
+                <span class="badge badge--warm"><i class="ri-volume-up-line"></i></span>
+                <div class="menu-item__body">
+                  <p class="menu-item__title">自动播放发音</p>
+                  <p class="menu-item__hint">进入单词卡时自动播放标准发音</p>
+                </div>
+                <button class="switch" type="button" data-switch></button>
+              </div>
+              <div class="menu-item">
+                <span class="badge badge--green"><i class="ri-cloud-line"></i></span>
+                <div class="menu-item__body">
+                  <p class="menu-item__title">云端同步</p>
+                  <p class="menu-item__hint">自动同步学习进度与收藏数据</p>
+                </div>
+                <button class="switch is-active" type="button" data-switch></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section stack">
+          <a class="btn btn-secondary" href="#" data-toast="隐私政策页面为原型示意"><i class="ri-shield-check-line"></i> 隐私政策与用户协议</a>
+          <a class="btn btn-ghost" href="#" data-toast="反馈入口为原型示意"><i class="ri-message-2-line"></i> 意见反馈</a>
+          <a class="btn btn-primary" href="./login.html"><i class="ri-logout-box-r-line"></i> 退出登录</a>
+        </section>
+      </main>
+
+      <nav class="bottom-nav">
+        <a class="nav-item" href="./home.html">
+          <i class="ri-home-5-line"></i>
+          <span>首页</span>
+        </a>
+        <a class="nav-item" href="./books.html">
+          <i class="ri-book-2-line"></i>
+          <span>词书</span>
+        </a>
+        <a class="nav-item" href="./stats.html">
+          <i class="ri-bar-chart-box-line"></i>
+          <span>统计</span>
+        </a>
+        <a class="nav-item is-active" href="./profile.html">
+          <i class="ri-user-3-line"></i>
+          <span>我的</span>
+        </a>
+      </nav>
+
+      <div class="toast">模拟交互已响应</div>
+    </div>
+  </div>
+  <script src="./assets/prototype.js"></script>
+</body>
+</html>

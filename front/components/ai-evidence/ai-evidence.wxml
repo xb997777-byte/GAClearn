@@ -1,0 +1,86 @@
+<view wx:if="{{displayEvidence}}" class="evidence-block">
+  <view class="evidence-title">{{title}}</view>
+  <view wx:if="{{displayEvidence.summary}}" class="evidence-summary">{{displayEvidence.summary}}</view>
+
+  <view wx:if="{{displayEvidence.workflow && displayEvidence.workflow.steps && displayEvidence.workflow.steps.length}}" class="evidence-section">
+    <view class="evidence-section-title">{{displayEvidence.workflow.label || '工作流'}}</view>
+    <view wx:for="{{displayEvidence.workflow.steps}}" wx:key="index" class="evidence-step">
+      <view class="evidence-step-index">{{index + 1}}</view>
+      <view class="evidence-step-main">
+        <view class="evidence-step-name">{{item.name}}</view>
+        <view wx:if="{{item.detail}}" class="evidence-step-detail">{{item.detail}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{displayEvidence.tools_used && displayEvidence.tools_used.length}}" class="evidence-section">
+    <view class="evidence-section-title">工具调用</view>
+    <view wx:for="{{displayEvidence.tools_used}}" wx:key="name" class="evidence-card">
+      <view class="evidence-card-head">
+        <view class="evidence-card-title">{{item.name}}</view>
+      </view>
+      <view wx:if="{{item.detail}}" class="evidence-card-text">{{item.detail}}</view>
+      <view wx:if="{{item.args_text}}" class="evidence-code">
+        {{item.args_text}}
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{displayEvidence.trace_timeline && displayEvidence.trace_timeline.length}}" class="evidence-section">
+    <view class="evidence-section-title">链路时间线</view>
+    <view wx:for="{{displayEvidence.trace_timeline}}" wx:key="index" class="evidence-card">
+      <view class="evidence-card-head">
+        <view class="evidence-card-title">{{item.step}}</view>
+        <view class="evidence-chip">{{item.phase}}</view>
+      </view>
+      <view wx:if="{{item.detail}}" class="evidence-card-text">{{item.detail}}</view>
+      <view class="evidence-inline-row">
+        <view class="evidence-chip">{{item.status_text || '成功'}}</view>
+        <view wx:if="{{item.tool_name}}" class="evidence-chip">{{item.tool_name}}</view>
+      </view>
+      <view wx:if="{{item.meta_text}}" class="evidence-code">
+        {{item.meta_text}}
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{displayEvidence.retrieval_hits && displayEvidence.retrieval_hits.length}}" class="evidence-section">
+    <view class="evidence-section-title">RAG / 检索命中</view>
+    <view wx:for="{{displayEvidence.retrieval_hits}}" wx:key="index" class="evidence-card">
+      <view class="evidence-card-head">
+        <view class="evidence-card-title">{{item.title || item.source_type}}</view>
+        <view class="evidence-chip">{{item.source_type}}</view>
+      </view>
+      <view wx:if="{{item.reason}}" class="evidence-card-text">{{item.reason}}</view>
+      <view wx:if="{{item.preview}}" class="evidence-card-tip">{{item.preview}}</view>
+      <view wx:if="{{item.score !== undefined}}" class="evidence-card-tip">相关度：{{item.score}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{displayEvidence.observability}}" class="evidence-section">
+    <view class="evidence-section-title">可观测性</view>
+    <view class="evidence-metric-grid">
+      <view class="evidence-metric">
+        <view class="evidence-metric-label">引擎</view>
+        <view class="evidence-metric-value">{{displayEvidence.observability.engine || '--'}}</view>
+      </view>
+      <view class="evidence-metric">
+        <view class="evidence-metric-label">模型</view>
+        <view class="evidence-metric-value">{{displayEvidence.observability.model_name || '--'}}</view>
+      </view>
+      <view class="evidence-metric">
+        <view class="evidence-metric-label">提示词版本</view>
+        <view class="evidence-metric-value">{{displayEvidence.observability.prompt_version || '--'}}</view>
+      </view>
+      <view class="evidence-metric">
+        <view class="evidence-metric-label">耗时</view>
+        <view class="evidence-metric-value">{{displayEvidence.observability.latency_ms || 0}} ms</view>
+      </view>
+    </view>
+    <view class="evidence-inline-row">
+      <view class="evidence-chip">{{displayEvidence.observability.status_text || '成功'}}</view>
+      <view class="evidence-chip">{{displayEvidence.observability.cache_hit ? '缓存命中' : '未命中缓存'}}</view>
+      <view wx:if="{{displayEvidence.observability.endpoint}}" class="evidence-chip evidence-chip-wide">{{displayEvidence.observability.endpoint}}</view>
+    </view>
+  </view>
+</view>

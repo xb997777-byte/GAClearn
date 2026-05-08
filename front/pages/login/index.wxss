@@ -1,0 +1,35 @@
+@import "../../styles/theme.wxss";
+
+.login-debug-block {
+  margin-top: 24rpx;
+  padding: 20rpx;
+  border-radius: 20rpx;
+  background: #f7faff;
+  border: 2rpx solid #dbe7ff;
+}
+
+.login-debug-label {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #344054;
+}
+
+.login-debug-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 16rpx;
+  min-height: 84rpx;
+  padding: 0 24rpx;
+  border-radius: 18rpx;
+  background: #ffffff;
+  border: 2rpx solid #cddcff;
+  font-size: 28rpx;
+  color: #101828;
+}
+
+.login-debug-tip {
+  margin-top: 14rpx;
+  font-size: 22rpx;
+  line-height: 1.7;
+  color: #667085;
+}

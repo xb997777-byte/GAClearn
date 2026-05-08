@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>英语单词微信小程序 - 词书选择</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="./assets/prototype.css">
+</head>
+<body class="prototype-page">
+  <div class="phone-shell">
+    <div class="phone-screen">
+      <div class="page-backdrop page-backdrop--sunset"></div>
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <div>9:41</div>
+        <div class="status-meta">
+          <i class="ri-signal-wifi-3-line"></i>
+          <i class="ri-wifi-line"></i>
+          <i class="ri-battery-charge-line"></i>
+        </div>
+      </div>
+
+      <main class="screen-scroll">
+        <section class="section">
+          <div class="row row--between row--center">
+            <div>
+              <p class="eyebrow">词书中心</p>
+              <h1 class="title-lg">为这段学习周期选一本主词书</h1>
+            </div>
+            <a class="badge badge--soft" href="#" data-toast="筛选抽屉原型入口"><i class="ri-equalizer-2-line"></i></a>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="search-field">
+            <i class="ri-search-line"></i>
+            <input type="text" value="考研 / CET-6 / IELTS" readonly>
+            <a href="#" data-toast="搜索功能为原型示意"><i class="ri-sparkling-line"></i></a>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="chip-row" data-toggle-group>
+            <button class="chip is-active" type="button" data-toast="已切换到全部词书">全部</button>
+            <button class="chip" type="button" data-toast="已切换到考研词汇">考研</button>
+            <button class="chip" type="button" data-toast="已切换到四六级">四六级</button>
+            <button class="chip" type="button" data-toast="已切换到雅思托福">雅思托福</button>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="card card--warm">
+            <div class="row row--between row--center">
+              <div style="max-width: 230px;">
+                <p class="eyebrow eyebrow--light">Featured Book</p>
+                <h2 class="title-lg">2026 考研高频核心词</h2>
+                <p class="subtitle subtitle--light">3500 词 · 高频优先级排序 · 适合 90 天系统推进。</p>
+              </div>
+              <span class="badge"><i class="ri-medal-2-line"></i></span>
+            </div>
+            <div class="metric-grid" style="margin-top: 18px;">
+              <div class="metric-card metric-card--dark">
+                <p class="metric-label metric-label--light">适用人群</p>
+                <p class="metric-value">考研党</p>
+                <p class="metric-helper metric-helper--light">词频优先，便于冲刺</p>
+              </div>
+              <div class="metric-card metric-card--dark">
+                <p class="metric-label metric-label--light">推荐目标</p>
+                <p class="metric-value">20/天</p>
+                <p class="metric-helper metric-helper--light">约 175 天完整学完</p>
+              </div>
+            </div>
+            <div class="row" style="margin-top: 18px;">
+              <a class="btn btn-dark" href="./plan.html"><i class="ri-check-double-line"></i> 选这本</a>
+              <a class="btn btn-secondary" href="./learn.html"><i class="ri-eye-line"></i> 预览内容</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="row row--between row--center" style="margin-bottom: 10px;">
+            <div>
+              <p class="eyebrow">更多词书</p>
+              <h2 class="title-md">按目标快速选择</h2>
+            </div>
+            <a class="pill" href="#" data-toast="排序功能为原型示意">按热度</a>
+          </div>
+
+          <div class="list">
+            <div class="list-item">
+              <span class="badge badge--soft"><i class="ri-graduation-cap-line"></i></span>
+              <div class="list-item__body">
+                <h3 class="list-item__title">大学英语六级词汇</h3>
+                <p class="list-item__text">2200 词 · 含真题词组、常见混淆词和高频短语。</p>
+                <div class="list-item__actions">
+                  <a class="btn btn-inline btn-secondary" href="./plan.html">设为当前</a>
+                  <a class="btn btn-inline btn-ghost" href="./word-detail.html">查看样词</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="list-item">
+              <span class="badge badge--green"><i class="ri-flight-takeoff-line"></i></span>
+              <div class="list-item__body">
+                <h3 class="list-item__title">雅思 6.5 核心词汇</h3>
+                <p class="list-item__text">1800 词 · 强化学术场景和口语常用表达。</p>
+                <div class="list-item__actions">
+                  <a class="btn btn-inline btn-secondary" href="./plan.html">设为当前</a>
+                  <a class="btn btn-inline btn-ghost" href="./learn.html">预览学习</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="list-item">
+              <span class="badge badge--warm"><i class="ri-school-line"></i></span>
+              <div class="list-item__body">
+                <h3 class="list-item__title">高中核心 3500 词</h3>
+                <p class="list-item__text">按课标分层，适合打基础和查漏补缺。</p>
+                <div class="list-item__actions">
+                  <a class="btn btn-inline btn-secondary" href="./plan.html">设为当前</a>
+                  <a class="btn btn-inline btn-ghost" href="./favorites.html">看收藏词</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav">
+        <a class="nav-item" href="./home.html">
+          <i class="ri-home-5-line"></i>
+          <span>首页</span>
+        </a>
+        <a class="nav-item is-active" href="./books.html">
+          <i class="ri-book-2-line"></i>
+          <span>词书</span>
+        </a>
+        <a class="nav-item" href="./stats.html">
+          <i class="ri-bar-chart-box-line"></i>
+          <span>统计</span>
+        </a>
+        <a class="nav-item" href="./profile.html">
+          <i class="ri-user-3-line"></i>
+          <span>我的</span>
+        </a>
+      </nav>
+
+      <div class="toast">模拟交互已响应</div>
+    </div>
+  </div>
+  <script src="./assets/prototype.js"></script>
+</body>
+</html>

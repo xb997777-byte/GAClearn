@@ -1,0 +1,83 @@
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+[28/Apr/2026 14:54:52] "GET /api/v1/system/ping HTTP/1.1" 200 48
+[28/Apr/2026 14:54:52,140] - Broken pipe from ('127.0.0.1', 64447)
+[28/Apr/2026 14:55:04] "POST /api/v1/auth/wx-login HTTP/1.1" 200 747
+[28/Apr/2026 14:55:04] "GET /api/v1/users/me HTTP/1.1" 200 514
+[28/Apr/2026 14:55:04] "GET /api/v1/tasks/today HTTP/1.1" 200 137
+[28/Apr/2026 14:55:04] "GET /api/v1/books HTTP/1.1" 200 696
+[28/Apr/2026 14:59:52] "GET /api/v1/system/bootstrap HTTP/1.1" 200 185
+[28/Apr/2026 14:59:56] "POST /api/v1/auth/wx-login HTTP/1.1" 200 901
+[28/Apr/2026 14:59:56] "GET /api/v1/plans/current HTTP/1.1" 200 35
+[28/Apr/2026 14:59:56] "GET /api/v1/users/me HTTP/1.1" 200 668
+[28/Apr/2026 14:59:56] "GET /api/v1/tasks/today HTTP/1.1" 200 137
+[28/Apr/2026 14:59:57] "GET /api/v1/stats/overview HTTP/1.1" 200 255
+[28/Apr/2026 15:00:05] "GET /api/v1/books HTTP/1.1" 200 696
+[28/Apr/2026 15:00:07] "GET /api/v1/books/2 HTTP/1.1" 200 230
+[28/Apr/2026 15:00:07] "GET /api/v1/books/2/words?page=1&page_size=200&keyword= HTTP/1.1" 200 93212
+[28/Apr/2026 15:00:10] "GET /api/v1/learn/words/9 HTTP/1.1" 200 816
+[28/Apr/2026 15:00:12] "POST /api/v1/system/speech HTTP/1.1" 200 236
+[28/Apr/2026 15:00:12] "GET /media/tts/691bc00ecaa96cac436ff4a23fde92508520ded2.wav HTTP/1.1" 200 141780
+[28/Apr/2026 15:00:17] "POST /api/v1/system/speech HTTP/1.1" 200 202
+[28/Apr/2026 15:00:17] "GET /media/tts/c13c28a7f3a12abf1edee0b94e908ea36a7340d9.wav HTTP/1.1" 200 64180
+[28/Apr/2026 15:01:31] "GET /api/v1/system/bootstrap HTTP/1.1" 200 185
+[28/Apr/2026 15:04:14] "GET /api/v1/system/bootstrap HTTP/1.1" 200 185
+[28/Apr/2026 15:04:17] "POST /api/v1/auth/wx-login HTTP/1.1" 200 901
+[28/Apr/2026 15:04:17] "GET /api/v1/plans/current HTTP/1.1" 200 35
+[28/Apr/2026 15:04:18] "GET /api/v1/tasks/today HTTP/1.1" 200 137
+[28/Apr/2026 15:04:18] "GET /api/v1/users/me HTTP/1.1" 200 668
+[28/Apr/2026 15:04:18] "GET /api/v1/stats/overview HTTP/1.1" 200 255
+[28/Apr/2026 15:04:20] "GET /api/v1/books HTTP/1.1" 200 696
+[28/Apr/2026 15:04:23] "GET /api/v1/books/2 HTTP/1.1" 200 230
+[28/Apr/2026 15:04:23] "GET /api/v1/books/2/words?page=1&page_size=200&keyword= HTTP/1.1" 200 93212
+[28/Apr/2026 15:04:27] "GET /api/v1/learn/words/16 HTTP/1.1" 200 750
+[28/Apr/2026 15:04:29] "POST /api/v1/system/speech HTTP/1.1" 200 199
+[28/Apr/2026 15:04:29] "GET /media/tts/8257335d546d74ca59e59812aa250d9a7f3bdbe3.wav HTTP/1.1" 200 58890
+[28/Apr/2026 15:04:33] "GET /api/v1/books HTTP/1.1" 200 696
+[28/Apr/2026 15:04:35] "GET /api/v1/grammar/topics HTTP/1.1" 200 6377
+[28/Apr/2026 15:04:35] "GET /api/v1/grammar/progress HTTP/1.1" 200 2532
+[28/Apr/2026 15:04:49] "POST /api/v1/grammar/analyze HTTP/1.1" 200 3236
+D:\XB\agent学习\英语单词微信小程序\backend\apps\grammar\analyzer.py changed, reloading.
+D:\XB\agent学习\英语单词微信小程序\backend\apps\grammar\analyzer.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+D:\XB\agent学习\英语单词微信小程序\backend\apps\grammar\analyzer.py changed, reloading.
+D:\XB\agent学习\英语单词微信小程序\backend\apps\grammar\analyzer.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+D:\XB\agent学习\英语单词微信小程序\backend\apps\grammar\analyzer.py changed, reloading.
+D:\XB\agent学习\英语单词微信小程序\backend\apps\grammar\analyzer.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+D:\XB\agent学习\英语单词微信小程序\backend\apps\grammar\analyzer.py changed, reloading.
+D:\XB\agent学习\英语单词微信小程序\backend\apps\grammar\analyzer.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+D:\XB\agent学习\英语单词微信小程序\backend\apps\grammar\analyzer.py changed, reloading.
+D:\XB\agent学习\英语单词微信小程序\backend\apps\grammar\analyzer.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+D:\XB\agent学习\英语单词微信小程序\backend\config\settings\base.py changed, reloading.
+D:\XB\agent学习\英语单词微信小程序\backend\config\settings\base.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+D:\XB\agent学习\英语单词微信小程序\backend\manage.py changed, reloading.
+D:\XB\agent学习\英语单词微信小程序\backend\manage.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+D:\XB\agent学习\英语单词微信小程序\backend\config\wsgi.py changed, reloading.
+D:\XB\agent学习\英语单词微信小程序\backend\config\wsgi.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+[28/Apr/2026 15:47:20] "GET /api/v1/system/bootstrap HTTP/1.1" 200 185
+[28/Apr/2026 15:47:27] "POST /api/v1/auth/wx-login HTTP/1.1" 200 901
+[28/Apr/2026 15:47:27] "GET /api/v1/plans/current HTTP/1.1" 200 35
+[28/Apr/2026 15:47:27] "GET /api/v1/users/me HTTP/1.1" 200 668
+[28/Apr/2026 15:47:27] "GET /api/v1/tasks/today HTTP/1.1" 200 137
+[28/Apr/2026 15:47:27] "GET /api/v1/stats/overview HTTP/1.1" 200 255
+[28/Apr/2026 15:47:33] "GET /api/v1/grammar/topics HTTP/1.1" 200 6377
+[28/Apr/2026 15:47:33] "GET /api/v1/grammar/progress HTTP/1.1" 200 2532
+[28/Apr/2026 15:47:35] "GET /api/v1/users/me HTTP/1.1" 200 668
+[28/Apr/2026 15:47:55] "GET /api/v1/system/bootstrap HTTP/1.1" 200 185
+[28/Apr/2026 15:48:48] "GET /api/v1/system/bootstrap HTTP/1.1" 200 185
+[28/Apr/2026 15:48:48,659] - Broken pipe from ('127.0.0.1', 64743)

@@ -1,0 +1,61 @@
+<view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="统计" showBack="{{true}}" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view class="section hero-card" wx:if="{{overview}}">
+      <view class="stats-hero-head">
+        <view class="card-title" style="color:#fff;">学习统计总览</view>
+        <view class="card-subtitle light-text">最近学习状态与复习进度一目了然</view>
+      </view>
+      <view class="metric-grid hero-metric-grid" style="margin-top:24rpx;">
+        <view class="metric-item hero-metric-card">
+          <view class="metric-label hero-metric-label">累计学习</view>
+          <view class="metric-value hero-metric-value">{{ overview.learned_word_count }}</view>
+        </view>
+        <view class="metric-item hero-metric-card">
+          <view class="metric-label hero-metric-label">连续打卡</view>
+          <view class="metric-value hero-metric-value">{{ overview.streak_days }}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section stat-grid" wx:if="{{overview}}">
+      <view class="stat-card">
+        <view class="card-subtitle stat-label">复习次数</view>
+        <view class="stat-number">{{ overview.review_count }}</view>
+      </view>
+      <view class="stat-card">
+        <view class="card-subtitle stat-label">收藏数量</view>
+        <view class="stat-number">{{ overview.favorite_count }}</view>
+      </view>
+      <view class="stat-card">
+        <view class="card-subtitle stat-label">错词数量</view>
+        <view class="stat-number">{{ overview.wrong_word_count }}</view>
+      </view>
+      <view class="stat-card">
+        <view class="card-subtitle stat-label">语法句子</view>
+        <view class="stat-number grammar-number">{{ overview.grammar_studied_count }}/{{ overview.grammar_sentence_count }}</view>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">近 7 天趋势</view>
+      <view class="stats-trend-item" wx:for="{{trend}}" wx:key="date">
+        <view class="list-main">
+          <view class="list-title">{{ item.date }}</view>
+          <view class="list-desc">学习 {{ item.learned_count }} · 复习 {{ item.review_count }} · 语法 {{ item.grammar_count }}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">每日打卡</view>
+      <button class="primary-btn full-btn" style="margin-top:20rpx;" bindtap="handleCheckin">立即打卡</button>
+      <view class="stats-trend-item" wx:for="{{checkins}}" wx:key="checkin_date">
+        <view class="list-main">
+          <view class="list-title">{{ item.checkin_date }}</view>
+          <view class="list-desc">新词 {{ item.finished_new_count }} · 复习 {{ item.finished_review_count }}</view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>

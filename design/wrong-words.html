@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>英语单词微信小程序 - 错词本</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="./assets/prototype.css">
+</head>
+<body class="prototype-page">
+  <div class="phone-shell">
+    <div class="phone-screen">
+      <div class="page-backdrop page-backdrop--sunset"></div>
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <div>9:41</div>
+        <div class="status-meta">
+          <i class="ri-signal-wifi-3-line"></i>
+          <i class="ri-wifi-line"></i>
+          <i class="ri-battery-charge-line"></i>
+        </div>
+      </div>
+
+      <main class="screen-scroll">
+        <section class="section">
+          <div class="card card--warm">
+            <div class="row row--between row--center">
+              <div style="max-width: 220px;">
+                <p class="eyebrow eyebrow--light">Wrong Words</p>
+                <h1 class="title-lg">今晚有 12 个词值得优先重刷</h1>
+                <p class="subtitle subtitle--light">错词本会按最近错误时间、错误次数和掌握波动优先级排序。</p>
+              </div>
+              <div class="metric-card metric-card--dark" style="width: 114px;">
+                <p class="metric-label metric-label--light">累计错词</p>
+                <p class="metric-value">38</p>
+                <p class="metric-helper metric-helper--light">高风险 12 个</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="chip-row" data-toggle-group>
+            <button class="chip is-active" type="button" data-toast="已按最近错误时间排序">最近错误</button>
+            <button class="chip" type="button" data-toast="已按错误次数排序">错误次数</button>
+            <button class="chip" type="button" data-toast="已按难度排序">高难优先</button>
+          </div>
+        </section>
+
+        <section class="section stack">
+          <div class="card">
+            <div class="row row--between row--center">
+              <div>
+                <p class="eyebrow">1 · plausible</p>
+                <h2 class="title-md">看似合理的；貌似可信的</h2>
+              </div>
+              <a class="badge badge--warm" href="./word-detail.html"><i class="ri-arrow-right-up-line"></i></a>
+            </div>
+            <div class="stack" style="margin-top: 14px;">
+              <div>
+                <div class="row row--between row--center">
+                  <span class="subtitle">错误频次</span>
+                  <span class="subtitle">4 次</span>
+                </div>
+                <div class="bar bar--warm"><span style="width: 84%;"></span></div>
+              </div>
+              <div>
+                <div class="row row--between row--center">
+                  <span class="subtitle">当前掌握度</span>
+                  <span class="subtitle">2 / 5</span>
+                </div>
+                <div class="bar"><span style="width: 38%;"></span></div>
+              </div>
+            </div>
+            <div class="row" style="margin-top: 16px;">
+              <a class="btn btn-primary" href="./review.html"><i class="ri-refresh-line"></i> 立即强化</a>
+              <button class="btn btn-secondary" type="button" data-toast="已从错词本移除"><i class="ri-check-line"></i> 标记掌握</button>
+            </div>
+          </div>
+
+          <div class="list">
+            <div class="list-item">
+              <span class="badge badge--soft"><i class="ri-error-warning-line"></i></span>
+              <div class="list-item__body">
+                <h3 class="list-item__title">coherent</h3>
+                <p class="list-item__text">错误 3 次 · 常与 consistent 混淆 · 下次复习 20:30</p>
+                <div class="list-item__actions">
+                  <a class="btn btn-inline btn-secondary" href="./word-detail.html">看详情</a>
+                  <a class="btn btn-inline btn-ghost" href="./review.html">去复习</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="list-item">
+              <span class="badge badge--green"><i class="ri-history-line"></i></span>
+              <div class="list-item__body">
+                <h3 class="list-item__title">subtle</h3>
+                <p class="list-item__text">错误 2 次 · 发音不规则 · 易与 “微妙的” 中文语感混淆</p>
+                <div class="list-item__actions">
+                  <a class="btn btn-inline btn-secondary" href="./word-detail.html">看详情</a>
+                  <button class="btn btn-inline btn-ghost" type="button" data-toast="已加入今晚加练列表">加练</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav">
+        <a class="nav-item is-active" href="./home.html">
+          <i class="ri-home-5-line"></i>
+          <span>首页</span>
+        </a>
+        <a class="nav-item" href="./books.html">
+          <i class="ri-book-2-line"></i>
+          <span>词书</span>
+        </a>
+        <a class="nav-item" href="./stats.html">
+          <i class="ri-bar-chart-box-line"></i>
+          <span>统计</span>
+        </a>
+        <a class="nav-item" href="./profile.html">
+          <i class="ri-user-3-line"></i>
+          <span>我的</span>
+        </a>
+      </nav>
+
+      <div class="toast">模拟交互已响应</div>
+    </div>
+  </div>
+  <script src="./assets/prototype.js"></script>
+</body>
+</html>

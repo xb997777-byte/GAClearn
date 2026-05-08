@@ -1,0 +1,18 @@
+@import "../../styles/theme.wxss";
+
+.choice-active {
+  border: 2rpx solid var(--theme-accent);
+  background: var(--theme-secondary-bg);
+}
+
+.answer-input {
+  width: 100%;
+  min-height: 88rpx;
+  box-sizing: border-box;
+  padding: 0 24rpx;
+  border-radius: 20rpx;
+  border: 2rpx solid var(--theme-card-border);
+  background: #fff;
+  color: var(--theme-text-primary);
+  font-size: var(--theme-font-size-base);
+}

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>英语单词微信小程序 - 单词学习</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="./assets/prototype.css">
+</head>
+<body class="prototype-page">
+  <div class="phone-shell">
+    <div class="phone-screen">
+      <div class="page-backdrop page-backdrop--night"></div>
+      <div class="dynamic-island"></div>
+      <div class="status-bar status-bar--light">
+        <div>9:41</div>
+        <div class="status-meta">
+          <i class="ri-signal-wifi-3-line"></i>
+          <i class="ri-wifi-line"></i>
+          <i class="ri-battery-charge-line"></i>
+        </div>
+      </div>
+
+      <main class="screen-scroll">
+        <section class="section">
+          <div class="row row--between row--center">
+            <a class="pill" href="./home.html"><i class="ri-arrow-left-line"></i> 返回首页</a>
+            <span class="chip chip--dark"><i class="ri-timer-line"></i> 12 / 20</span>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="word-card">
+            <div class="row row--between row--center">
+              <p class="eyebrow eyebrow--light">Word Card</p>
+              <div class="row">
+                <button class="btn btn-dark btn-inline" type="button" data-toast="正在播放单词发音">
+                  <i class="ri-volume-up-line"></i> 发音
+                </button>
+                <button class="btn btn-dark btn-inline" type="button" data-favorite>
+                  <i class="ri-heart-3-line"></i>
+                </button>
+              </div>
+            </div>
+
+            <h1 class="word-card__word">resilient</h1>
+            <p class="word-card__phonetic">/rɪˈzɪliənt/ · adj.</p>
+            <p class="word-card__meaning">有恢复力的；适应力强的；在压力下依旧能够迅速调整状态的。</p>
+
+            <div class="chip-row" style="margin-top: 16px;">
+              <span class="chip chip--dark"><i class="ri-fire-line"></i> 高频考研词</span>
+              <span class="chip chip--dark"><i class="ri-flashlight-line"></i> 易与 resistant 混淆</span>
+            </div>
+
+            <div class="row" style="margin-top: 18px;">
+              <button class="btn btn-dark" type="button" data-panel-toggle="learn-meaning" data-toast="已切换释义卡片">
+                <i class="ri-eye-line"></i> 显示例句
+              </button>
+              <button class="btn btn-dark" type="button" data-panel-toggle="learn-root" data-toast="已切换词根卡片">
+                <i class="ri-seedling-line"></i> 查看词根
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section hidden-panel" id="learn-meaning">
+          <div class="card card--soft">
+            <p class="eyebrow">例句</p>
+            <h2 class="title-md">She remained resilient after repeated setbacks.</h2>
+            <p class="subtitle">即使在反复受挫之后，她依然保持了很强的恢复力。</p>
+          </div>
+        </section>
+
+        <section class="section hidden-panel" id="learn-root">
+          <div class="card card--soft">
+            <p class="eyebrow">词根联想</p>
+            <h2 class="title-md">re + salire</h2>
+            <p class="subtitle">源义接近“弹回、反跳”，可以联想为“遭遇冲击后还能迅速回弹”。</p>
+          </div>
+        </section>
+
+        <section class="section stack">
+          <div class="card">
+            <p class="eyebrow">你的判断</p>
+            <h2 class="title-md">这个词对你来说难度如何</h2>
+            <div class="row" style="margin-top: 14px;">
+              <a class="btn btn-primary" href="./word-detail.html"><i class="ri-thumb-up-line"></i> 我认识</a>
+              <button class="btn btn-secondary" type="button" data-toast="已标记为重点复习词"><i class="ri-focus-2-line"></i> 不太熟</button>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+              <button class="btn btn-ghost" type="button" data-toast="已加入掌握列表"><i class="ri-check-double-line"></i> 标记掌握</button>
+              <a class="btn btn-ghost" href="./review.html"><i class="ri-arrow-right-line"></i> 下一个词</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="row row--between row--center">
+              <div>
+                <p class="eyebrow">本轮队列</p>
+                <h2 class="title-md">后面还会出现这些词</h2>
+              </div>
+              <a class="pill" href="./word-detail.html">看详情</a>
+            </div>
+            <div class="list" style="margin-top: 14px;">
+              <div class="list-item">
+                <span class="badge badge--soft"><i class="ri-flashlight-line"></i></span>
+                <div class="list-item__body">
+                  <h3 class="list-item__title">concise</h3>
+                  <p class="list-item__text">adj. 简洁的，简明扼要的</p>
+                </div>
+              </div>
+              <div class="list-item">
+                <span class="badge badge--green"><i class="ri-links-line"></i></span>
+                <div class="list-item__body">
+                  <h3 class="list-item__title">infer</h3>
+                  <p class="list-item__text">v. 推断，推论；根据线索得出结论</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav">
+        <a class="nav-item is-active" href="./home.html">
+          <i class="ri-home-5-line"></i>
+          <span>首页</span>
+        </a>
+        <a class="nav-item" href="./books.html">
+          <i class="ri-book-2-line"></i>
+          <span>词书</span>
+        </a>
+        <a class="nav-item" href="./stats.html">
+          <i class="ri-bar-chart-box-line"></i>
+          <span>统计</span>
+        </a>
+        <a class="nav-item" href="./profile.html">
+          <i class="ri-user-3-line"></i>
+          <span>我的</span>
+        </a>
+      </nav>
+
+      <div class="toast">模拟交互已响应</div>
+    </div>
+  </div>
+  <script src="./assets/prototype.js"></script>
+</body>
+</html>

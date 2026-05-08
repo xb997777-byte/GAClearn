@@ -1,0 +1,18 @@
+<view class="nav-wrap {{ light ? 'light' : '' }} {{showBack ? 'detail-wrap' : 'root-wrap'}}" style="padding-top: {{statusBarHeight}}px;">
+  <view class="nav-bar {{showBack ? 'detail-bar' : 'root-bar'}}" style="height: {{navHeight}}px;">
+    <block wx:if="{{showBack}}">
+      <view class="nav-left nav-back" bindtap="handleBack" hover-class="nav-back-hover" hover-start-time="20" hover-stay-time="70">
+        <view class="nav-back-icon" aria-hidden="true">
+          <view class="nav-back-arrow"></view>
+        </view>
+        <text class="nav-back-label">返回</text>
+      </view>
+      <view class="nav-title detail-title">{{title}}</view>
+      <view class="nav-right detail-right"><slot name="right"></slot></view>
+    </block>
+    <block wx:else>
+      <view class="nav-title root-title">{{title}}</view>
+      <view class="nav-right root-right"><slot name="right"></slot></view>
+    </block>
+  </view>
+</view>

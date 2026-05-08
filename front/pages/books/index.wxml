@@ -1,0 +1,86 @@
+<view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="词书" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view class="section panel-card">
+      <view class="card-title">选择适合你的词书</view>
+      <view class="card-subtitle">按照当前目标和考试阶段选择主词书，后续可以随时切换。</view>
+
+      <view class="search-bar">
+        <view class="search-field">
+          <icon class="search-field-icon" type="search" size="16" color="#8E8E93" />
+          <input
+            class="search-input"
+            placeholder="搜索词书，例如 四级、雅思、高中"
+            value="{{searchKeyword}}"
+            bindinput="handleKeywordInput"
+            confirm-type="search"
+            bindconfirm="handleSearchConfirm"
+          />
+        </view>
+        <view class="search-btn" bindtap="handleSearchConfirm">搜索</view>
+      </view>
+
+      <view class="filter-block" wx:if="{{categoryOptions.length}}">
+        <view class="filter-title">考试/阶段</view>
+        <view class="filter-row">
+          <view
+            wx:for="{{categoryOptions}}"
+            wx:key="value"
+            class="{{item.className}}"
+            data-value="{{item.value}}"
+            bindtap="handleCategoryTap"
+          >
+            {{ item.label }}
+          </view>
+        </view>
+      </view>
+
+      <view class="filter-block" wx:if="{{levelOptions.length}}">
+        <view class="filter-title">难度层级</view>
+        <view class="filter-row">
+          <view
+            wx:for="{{levelOptions}}"
+            wx:key="value"
+            class="{{item.className}}"
+            data-value="{{item.value}}"
+            bindtap="handleLevelTap"
+          >
+            {{ item.label }}
+          </view>
+        </view>
+      </view>
+
+      <view class="filter-summary-row">
+        <view class="card-subtitle">{{ resultSummaryText }}</view>
+        <view
+          wx:if="{{selectedCategory || selectedLevel || activeKeyword}}"
+          class="filter-clear"
+          bindtap="handleClearFilters"
+        >
+          清除筛选
+        </view>
+      </view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{loading}}">
+      <view class="card-subtitle">正在加载词书...</view>
+    </view>
+
+    <block wx:elif="{{books.length}}">
+      <view class="section list-card" wx:for="{{books}}" wx:key="id">
+        <view class="list-title">{{ item.name }}</view>
+        <view class="list-desc">{{ item.description }}</view>
+        <view class="tag-row" style="margin-top:16rpx;">
+          <view class="chip-light chip">{{ item.category }}</view>
+          <view class="chip-light chip">{{ item.level }}</view>
+          <view class="chip-light chip">{{ item.word_count }} 词</view>
+        </view>
+        <button class="primary-btn full-btn" style="margin-top:20rpx;" data-book-id="{{item.id}}" bindtap="handleChoose">使用这本词书</button>
+      </view>
+    </block>
+
+    <view class="section panel-card" wx:else>
+      <empty-state text="暂无词书数据" hint="请检查后端接口返回或数据库内容" />
+    </view>
+  </scroll-view>
+</view>

@@ -1,0 +1,15 @@
+Django==5.2.5
+djangorestframework==3.17.1
+django-simpleui==2026.1.13
+PyMySQL==1.1.1
+requests==2.32.4
+
+# Optional AI orchestration stack for phase 1 and future upgrades.
+langchain
+langgraph
+langchain-openai
+langchain-community
+langchain-mcp-adapters
+mcp
+chromadb
+sentence-transformers

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>英语单词微信小程序 - 登录引导</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="./assets/prototype.css">
+</head>
+<body class="prototype-page">
+  <div class="phone-shell">
+    <div class="phone-screen">
+      <div class="page-backdrop page-backdrop--night"></div>
+      <div class="dynamic-island"></div>
+      <div class="status-bar status-bar--light">
+        <div>9:41</div>
+        <div class="status-meta">
+          <i class="ri-signal-wifi-3-line"></i>
+          <i class="ri-wifi-line"></i>
+          <i class="ri-battery-charge-line"></i>
+        </div>
+      </div>
+
+      <main class="screen-scroll">
+        <section class="section">
+          <div class="card card--dark">
+            <p class="eyebrow eyebrow--light"><i class="ri-book-open-line"></i> Word Flow</p>
+            <h1 class="hero-title">记单词，也可以像精品应用一样顺手。</h1>
+            <p class="subtitle subtitle--light">从词书选择、每日计划到复习闭环，用更轻盈的移动端体验把学习真正做成可持续习惯。</p>
+
+            <div class="chip-row" style="margin-top: 16px;">
+              <span class="chip chip--dark"><i class="ri-wechat-fill"></i> 微信原生体验</span>
+              <span class="chip chip--dark"><i class="ri-flashlight-line"></i> 15 分钟轻学习</span>
+              <span class="chip chip--dark"><i class="ri-bar-chart-grouped-line"></i> 数据反馈闭环</span>
+            </div>
+
+            <div class="metric-grid" style="margin-top: 18px;">
+              <div class="metric-card metric-card--dark">
+                <p class="metric-label metric-label--light">词书</p>
+                <p class="metric-value">12</p>
+                <p class="metric-helper metric-helper--light">覆盖四六级 / 考研 / 雅思</p>
+              </div>
+              <div class="metric-card metric-card--dark">
+                <p class="metric-label metric-label--light">预计耗时</p>
+                <p class="metric-value">15m</p>
+                <p class="metric-helper metric-helper--light">每日平均学习时长</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section stack">
+          <div class="card">
+            <div class="row row--between row--center">
+              <div>
+                <p class="eyebrow">快速开始</p>
+                <h2 class="title-md">3 步建立你的背词节奏</h2>
+              </div>
+              <span class="badge badge--soft"><i class="ri-sparkling-2-line"></i></span>
+            </div>
+
+            <div class="list" style="margin-top: 16px;">
+              <div class="list-item">
+                <span class="badge badge--soft"><i class="ri-book-2-line"></i></span>
+                <div class="list-item__body">
+                  <h3 class="list-item__title">选一本适合自己的词书</h3>
+                  <p class="list-item__text">从四级、六级、考研到雅思托福，先选对目标，再把计划做轻。</p>
+                </div>
+              </div>
+              <div class="list-item">
+                <span class="badge badge--warm"><i class="ri-calendar-schedule-line"></i></span>
+                <div class="list-item__body">
+                  <h3 class="list-item__title">设定每日学习量</h3>
+                  <p class="list-item__text">10 到 50 个单词自由设定，系统会自动预估完成周期。</p>
+                </div>
+              </div>
+              <div class="list-item">
+                <span class="badge badge--green"><i class="ri-loop-right-line"></i></span>
+                <div class="list-item__body">
+                  <h3 class="list-item__title">用复习闭环把词记住</h3>
+                  <p class="list-item__text">新学、复习、测试、错词回看全部打通，不靠死记硬背。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card--soft">
+            <div class="stack">
+              <a class="btn btn-primary" href="./home.html"><i class="ri-wechat-fill"></i> 微信一键登录</a>
+              <a class="btn btn-secondary" href="./books.html"><i class="ri-book-shelf-line"></i> 先看看词书内容</a>
+              <a class="btn btn-ghost" href="#" data-toast="这里是游客预览入口，当前仅展示高保真原型"><i class="ri-eye-line"></i> 游客模式预览</a>
+            </div>
+            <div class="note" style="margin-top: 14px;">
+              登录后会自动创建学习档案，原型中的数据均为假数据，所有按钮和卡片都可以点击体验交互反馈。
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <div class="toast">模拟交互已响应</div>
+    </div>
+  </div>
+  <script src="./assets/prototype.js"></script>
+</body>
+</html>

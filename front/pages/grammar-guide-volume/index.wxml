@@ -1,0 +1,124 @@
+<view class="page-shell {{themePageClass}} grammar-page guide-volume-page {{grammarThemeClass}} {{themeFontClass}} {{themeMotionClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="分册详情" showBack="{{true}}" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view class="section hero-card volume-hero" wx:if="{{volumeDetail}}">
+      <view class="volume-hero-top">
+        <view class="volume-hero-badge">{{ volumeDetail.volume }}</view>
+        <view class="volume-hero-level">{{ volumeDetail.level }}</view>
+      </view>
+      <view class="volume-hero-title">{{ volumeDetail.title }}</view>
+      <view class="card-subtitle light-text">{{ volumeDetail.subtitle }}</view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{volumeDetail}}">
+      <view class="card-title">适合谁学</view>
+      <view class="volume-block-text">{{ volumeDetail.audience }}</view>
+
+      <view class="volume-preview-panel">
+        <view class="volume-preview-label">这一册重点</view>
+        <view class="volume-preview-text">{{ volumeDetail.preview }}</view>
+      </view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{volumeDetail}}">
+      <view class="card-title">章节目录</view>
+      <view class="card-subtitle">建议按顺序学。点开每一章后，可以直接看到核心规则、句型和对应例句、易错点。</view>
+
+      <view wx:for="{{volumeDetail.chapters}}" wx:key="no" wx:for-item="chapter" class="chapter-card">
+        <view class="chapter-head" data-chapter-no="{{chapter.no}}" bindtap="handleToggleChapter" hover-class="{{grammarCardHoverClass}}" hover-start-time="20" hover-stay-time="90">
+          <view class="chapter-no">{{ chapter.no }}</view>
+          <view class="chapter-main">
+            <view class="chapter-title">{{ chapter.title }}</view>
+            <view class="chapter-desc">{{ chapter.desc }}</view>
+          </view>
+          <view class="chapter-toggle">{{ chapter.expanded ? '收起' : '展开' }}</view>
+        </view>
+
+        <view class="chapter-body" wx:if="{{chapter.expanded}}">
+          <view class="chapter-block">
+            <view class="chapter-block-label">核心规则</view>
+            <view class="chapter-block-text">{{ chapter.coreRule }}</view>
+          </view>
+
+          <view class="chapter-block">
+            <view class="chapter-block-label">常见句型与对应例句</view>
+            <view wx:for="{{chapter.patternExamples}}" wx:key="index" wx:for-item="item" class="pattern-example-card">
+              <view class="pattern-example-head">
+                <view class="pattern-example-index">0{{index + 1}}</view>
+                <view class="pattern-example-title">{{ item.pattern }}</view>
+              </view>
+              <view class="pattern-example-label">对应例句</view>
+              <view class="example-card inline">
+                <view class="example-en">{{ item.example.en }}</view>
+                <view class="example-cn">{{ item.example.cn }}</view>
+              </view>
+            </view>
+          </view>
+
+          <view class="chapter-block">
+            <view class="chapter-block-label">易错提醒</view>
+            <view wx:for="{{chapter.mistakes}}" wx:key="index" wx:for-item="mistake" class="chapter-line warn">
+              {{ mistake }}
+            </view>
+          </view>
+
+          <view class="chapter-block tip">
+            <view class="chapter-block-label">学习提示</view>
+            <view class="chapter-block-text">{{ chapter.studyTip }}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{volumeDetail}}">
+      <view class="card-title">示例句</view>
+      <view class="volume-example-card">
+        <view class="guide-example-en">{{ volumeDetail.example }}</view>
+        <view class="guide-example-cn">{{ volumeDetail.translation }}</view>
+      </view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{volumeDetail}}">
+      <view class="card-title">学完这一册你会得到什么</view>
+      <view wx:for="{{volumeDetail.learnings}}" wx:key="index" wx:for-item="learning" class="volume-line">
+        {{ learning }}
+      </view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{volumeDetail}}">
+      <view class="card-title">最容易卡住的地方</view>
+      <view wx:for="{{volumeDetail.pitfalls}}" wx:key="index" wx:for-item="pitfall" class="volume-line warn">
+        {{ pitfall }}
+      </view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{volumeDetail}}">
+      <view class="card-title">学习目标</view>
+      <view class="volume-goal">{{ volumeDetail.checkpoint }}</view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{volumeDetail}}">
+      <view class="card-title">继续学习</view>
+      <view class="volume-nav-row">
+        <button
+          class="secondary-btn volume-nav-btn"
+          wx:if="{{previousVolume}}"
+          data-module-id="{{previousVolume.id}}"
+          bindtap="handleJumpVolume"
+        >
+          上一册
+        </button>
+        <button
+          class="primary-btn volume-nav-btn"
+          wx:if="{{nextVolume}}"
+          data-module-id="{{nextVolume.id}}"
+          bindtap="handleJumpVolume"
+        >
+          下一册
+        </button>
+      </view>
+      <view class="volume-nav-text" wx:if="{{previousVolume}}">{{ previousVolume.volume }} · {{ previousVolume.title }}</view>
+      <view class="volume-nav-text" wx:if="{{nextVolume}}">{{ nextVolume.volume }} · {{ nextVolume.title }}</view>
+    </view>
+  </scroll-view>
+</view>

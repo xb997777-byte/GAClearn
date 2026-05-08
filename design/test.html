@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>英语单词微信小程序 - 测试</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="./assets/prototype.css">
+</head>
+<body class="prototype-page">
+  <div class="phone-shell">
+    <div class="phone-screen">
+      <div class="page-backdrop page-backdrop--violet"></div>
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <div>9:41</div>
+        <div class="status-meta">
+          <i class="ri-signal-wifi-3-line"></i>
+          <i class="ri-wifi-line"></i>
+          <i class="ri-battery-charge-line"></i>
+        </div>
+      </div>
+
+      <main class="screen-scroll">
+        <section class="section">
+          <div class="card card--warm">
+            <div class="row row--between row--center">
+              <div style="max-width: 220px;">
+                <p class="eyebrow eyebrow--light">Quick Test</p>
+                <h1 class="title-lg">10 题快测进行中</h1>
+                <p class="subtitle subtitle--light">用更短的测试节奏验证最近 3 天学习效果，适合睡前回顾。</p>
+              </div>
+              <div class="metric-card metric-card--dark" style="width: 110px;">
+                <p class="metric-label metric-label--light">剩余时间</p>
+                <p class="metric-value">08:24</p>
+                <p class="metric-helper metric-helper--light">第 7 / 10 题</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="card">
+            <div class="row row--between row--center">
+              <div>
+                <p class="eyebrow">题干</p>
+                <h2 class="title-md">infer 最接近下面哪一项中文释义？</h2>
+              </div>
+              <a class="pill" href="#" data-toast="切换到听音题为原型示意">换题型</a>
+            </div>
+
+            <div class="choice-list" data-choice-group style="margin-top: 16px;">
+              <button class="choice" type="button" data-result="wrong" data-toast="这项更接近“培养”">
+                <span class="choice__index">A</span>
+                <span class="choice__body">
+                  <span class="choice__title">培养，逐步建立</span>
+                  <span class="choice__meta">更接近 cultivate</span>
+                </span>
+              </button>
+              <button class="choice" type="button" data-result="correct" data-toast="回答正确，infer 表示推断">
+                <span class="choice__index">B</span>
+                <span class="choice__body">
+                  <span class="choice__title">推断，推论</span>
+                  <span class="choice__meta">根据线索得出结论</span>
+                </span>
+              </button>
+              <button class="choice" type="button" data-result="wrong" data-toast="这项更接近“简洁的”">
+                <span class="choice__index">C</span>
+                <span class="choice__body">
+                  <span class="choice__title">简洁的，简明的</span>
+                  <span class="choice__meta">更接近 concise</span>
+                </span>
+              </button>
+              <button class="choice" type="button" data-result="wrong" data-toast="这项更接近“有恢复力的”">
+                <span class="choice__index">D</span>
+                <span class="choice__body">
+                  <span class="choice__title">有恢复力的</span>
+                  <span class="choice__meta">更接近 resilient</span>
+                </span>
+              </button>
+            </div>
+
+            <div class="row" style="margin-top: 16px;">
+              <button class="btn btn-primary" type="button" data-panel-toggle="test-result" data-toast="已提交并生成成绩预览">
+                <i class="ri-flag-line"></i> 交卷并查看结果
+              </button>
+              <button class="btn btn-secondary" type="button" data-toast="已跳转到下一题">
+                <i class="ri-arrow-right-line"></i> 下一题
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section hidden-panel" id="test-result">
+          <div class="card card--accent">
+            <p class="eyebrow eyebrow--light">Result Preview</p>
+            <h2 class="title-lg">本轮成绩 86 分</h2>
+            <p class="subtitle subtitle--light">共答对 8 题，错误题 2 个，建议把错题直接加入今晚复习波次。</p>
+            <div class="row" style="margin-top: 16px;">
+              <a class="btn btn-dark" href="./stats.html"><i class="ri-bar-chart-line"></i> 看统计</a>
+              <a class="btn btn-secondary" href="./wrong-words.html"><i class="ri-error-warning-line"></i> 看错题</a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav">
+        <a class="nav-item is-active" href="./home.html">
+          <i class="ri-home-5-line"></i>
+          <span>首页</span>
+        </a>
+        <a class="nav-item" href="./books.html">
+          <i class="ri-book-2-line"></i>
+          <span>词书</span>
+        </a>
+        <a class="nav-item" href="./stats.html">
+          <i class="ri-bar-chart-box-line"></i>
+          <span>统计</span>
+        </a>
+        <a class="nav-item" href="./profile.html">
+          <i class="ri-user-3-line"></i>
+          <span>我的</span>
+        </a>
+      </nav>
+
+      <div class="toast">模拟交互已响应</div>
+    </div>
+  </div>
+  <script src="./assets/prototype.js"></script>
+</body>
+</html>

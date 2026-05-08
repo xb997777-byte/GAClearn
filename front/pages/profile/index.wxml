@@ -1,0 +1,353 @@
+<view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="我的" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view class="section hero-card" wx:if="{{user}}">
+      <view class="card-title" style="color:#fff;">{{displayName}}</view>
+      <view class="card-subtitle light-text">欢迎继续你的英语单词与语法学习计划。</view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{settings}}">
+      <view class="card-title">学习与资料</view>
+      <view class="card-subtitle">把高频学习入口、反馈和学习设置放在一起，不再和外观设置混在一块。</view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">每日目标</view>
+          <view class="list-desc">{{settings.daily_target}} 个单词</view>
+        </view>
+      </view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">学习计划</view>
+          <view class="list-desc">查看当前计划、切换词书和每日目标</view>
+        </view>
+        <button class="ghost-btn mini-action-btn" bindtap="goPlan">进入</button>
+      </view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">错词本</view>
+          <view class="list-desc">集中查看近期错词和 AI 深度复盘入口</view>
+        </view>
+        <button class="ghost-btn mini-action-btn" bindtap="goWrongWords">进入</button>
+      </view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">收藏夹</view>
+          <view class="list-desc">查看你已收藏的单词与学习资料</view>
+        </view>
+        <button class="ghost-btn mini-action-btn" bindtap="goFavorites">进入</button>
+      </view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">意见反馈</view>
+          <view class="list-desc">把体验问题和改进建议直接提交给后台</view>
+        </view>
+        <button class="ghost-btn mini-action-btn" bindtap="goFeedback">进入</button>
+      </view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">学习设置摘要</view>
+          <view class="list-desc">自动播放：{{settings.auto_play_audio ? '已开启' : '已关闭'}} · 发音速度：{{settings.speech_speed || 1}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">系统与外观</view>
+      <view class="card-subtitle">主题、字体、视觉风格和账号同步说明统一放在这里。</view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">当前主题</view>
+          <view class="list-desc">{{activeTheme.name}} · {{activeTheme.source}}</view>
+        </view>
+      </view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">同步状态</view>
+          <view class="list-desc">主题会保存到后端设置，重新登录后仍可继续使用。</view>
+        </view>
+      </view>
+      <view class="card-title" style="margin-top:24rpx;">主题中心</view>
+      <view class="card-subtitle">预设主题负责一键切换完整风格，自定义主题可以继续细调颜色、渐变和字体表现。</view>
+      <view class="theme-sync-tip" wx:if="{{themeSaving}}">正在同步当前主题到你的个人设置...</view>
+
+      <view class="theme-featured" wx:if="{{activeTheme}}">
+        <view class="theme-featured-banner" style="{{activeTheme.previewStyle}}">
+          <view class="theme-featured-meta">
+            <view class="theme-pill">{{activeTheme.source}}</view>
+            <view class="theme-pill subtle">{{activeTheme.tone}}</view>
+          </view>
+          <view class="theme-featured-name">{{activeTheme.name}}</view>
+          <view class="theme-featured-desc">{{activeTheme.description}}</view>
+          <view class="theme-meta-line">{{activeTheme.fontLabel}} · {{activeTheme.interactionLabel}}</view>
+        </view>
+        <view class="theme-palette-row">
+          <view
+            wx:for="{{activeTheme.swatches}}"
+            wx:key="index"
+            class="theme-swatch"
+            style="background: {{item}};"
+          ></view>
+        </view>
+      </view>
+
+      <view class="theme-grid">
+        <view
+          wx:for="{{themeOptions}}"
+          wx:key="id"
+          wx:for-item="theme"
+          class="theme-card {{currentThemeId === theme.id ? 'active' : ''}}"
+          data-theme-id="{{theme.id}}"
+          bindtap="handleThemeSelect"
+        >
+          <view class="theme-card-banner" style="{{theme.previewStyle}}">
+            <view class="theme-card-banner-top">
+              <view class="theme-pill">{{theme.source}}</view>
+              <view class="theme-pill subtle">{{theme.tone}}</view>
+            </view>
+            <view class="theme-card-name">{{theme.name}}</view>
+          </view>
+
+          <view class="theme-card-body">
+            <view class="theme-card-desc">{{theme.description}}</view>
+            <view class="theme-card-meta">{{theme.fontLabel}} · {{theme.interactionLabel}}</view>
+            <view class="theme-palette-row compact">
+              <view
+                wx:for="{{theme.swatches}}"
+                wx:key="index"
+                class="theme-swatch small"
+                style="background: {{item}};"
+              ></view>
+            </view>
+            <view class="theme-card-action {{currentThemeId === theme.id ? 'active' : ''}}">
+              {{currentThemeId === theme.id ? '当前主题' : '一键切换'}}
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="custom-theme-panel">
+        <view class="custom-theme-head">
+          <view>
+            <view class="card-title small">自定义主题</view>
+            <view class="card-subtitle">自由调节主色、颜色深浅、渐变、字体颜色和字体大小。</view>
+          </view>
+          <view class="custom-theme-badge {{currentThemeId === customThemeId ? 'active' : ''}}">
+            {{currentThemeId === customThemeId ? '当前使用中' : '可单独应用'}}
+          </view>
+        </view>
+
+        <view class="custom-preview-shell">
+          <view class="custom-preview-banner" style="{{customThemePreview.previewStyle}}">
+            <view class="theme-featured-meta">
+              <view class="theme-pill">自定义</view>
+              <view class="theme-pill subtle">{{customThemeDraft.gradient_enabled ? '渐变已开启' : '纯色模式'}}</view>
+            </view>
+            <view class="custom-preview-title">你的主题预览</view>
+            <view class="custom-preview-desc">改动下面的滑杆后，这里会实时展示新的色彩和排版效果。</view>
+          </view>
+
+          <view class="custom-preview-surface" style="{{customThemePreview.surfaceStyle}}">
+            <view
+              class="custom-preview-surface-title"
+              style="font-size: {{customThemePreview.fontSizes.fontSizeTitle}}; color: {{customThemePreview.textPrimary}};"
+            >
+              Grammar Studio
+            </view>
+            <view
+              class="custom-preview-surface-meta"
+              style="font-size: {{customThemePreview.fontSizes.fontSizeBase}}; color: {{customThemePreview.textSecondary}};"
+            >
+              用一句示例看看卡片、文字颜色和字号在当前主题下的整体效果。
+            </view>
+            <view class="custom-preview-actions">
+              <view
+                class="custom-preview-btn primary"
+                style="font-size: {{customThemePreview.fontSizes.fontSizeButton}}; {{customThemePreview.buttonStyle}}"
+              >
+                开始学习
+              </view>
+              <view
+                class="custom-preview-btn ghost"
+                style="font-size: {{customThemePreview.fontSizes.fontSizeButton}}; color: {{customThemePreview.accent}}; border-color: {{customThemePreview.cardBorder}};"
+              >
+                查看结构
+              </view>
+            </view>
+          </view>
+
+          <view class="theme-palette-row compact spacious">
+            <view
+              wx:for="{{customThemePreview.swatches}}"
+              wx:key="index"
+              class="theme-swatch"
+              style="background: {{item}};"
+            ></view>
+          </view>
+        </view>
+
+        <view class="control-group">
+          <view class="control-title">主色预设</view>
+          <view class="preset-chip-row">
+            <view
+              wx:for="{{huePresets}}"
+              wx:key="id"
+              wx:for-item="preset"
+              class="preset-chip {{customThemeDraft.base_hue === preset.hue ? 'active' : ''}}"
+              data-hue="{{preset.hue}}"
+              bindtap="handleHuePresetSelect"
+            >
+              <view class="preset-chip-dot" style="background: {{preset.color}};"></view>
+              <view class="preset-chip-text">{{preset.label}}</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="control-group">
+          <view class="control-head">
+            <view class="control-label">主色相</view>
+            <view class="control-value">{{customThemeDraft.base_hue}}°</view>
+          </view>
+          <slider
+            min="0"
+            max="359"
+            value="{{customThemeDraft.base_hue}}"
+            data-field="base_hue"
+            activeColor="{{customThemePreview.accent}}"
+            backgroundColor="rgba(148, 163, 184, 0.18)"
+            bindchange="handleCustomThemeSlider"
+            bindchanging="handleCustomThemeSlider"
+          />
+        </view>
+
+        <view class="control-group">
+          <view class="control-head">
+            <view class="control-label">颜色深浅</view>
+            <view class="control-value">{{customThemeDraft.base_lightness}}</view>
+          </view>
+          <slider
+            min="22"
+            max="72"
+            value="{{customThemeDraft.base_lightness}}"
+            data-field="base_lightness"
+            activeColor="{{customThemePreview.accent}}"
+            backgroundColor="rgba(148, 163, 184, 0.18)"
+            bindchange="handleCustomThemeSlider"
+            bindchanging="handleCustomThemeSlider"
+          />
+        </view>
+
+        <view class="control-group">
+          <view class="switch-row">
+            <view>
+              <view class="control-label">启用渐变</view>
+              <view class="control-hint">关闭后会切换成更克制的纯色卡片和交互风格。</view>
+            </view>
+            <switch
+              checked="{{customThemeDraft.gradient_enabled}}"
+              color="{{customThemePreview.accent}}"
+              bindchange="handleCustomGradientSwitch"
+            />
+          </view>
+        </view>
+
+        <view class="control-group" wx:if="{{customThemeDraft.gradient_enabled}}">
+          <view class="control-head">
+            <view class="control-label">渐变偏移</view>
+            <view class="control-value">{{customThemeDraft.gradient_shift}}°</view>
+          </view>
+          <slider
+            min="0"
+            max="90"
+            value="{{customThemeDraft.gradient_shift}}"
+            data-field="gradient_shift"
+            activeColor="{{customThemePreview.accent}}"
+            backgroundColor="rgba(148, 163, 184, 0.18)"
+            bindchange="handleCustomThemeSlider"
+            bindchanging="handleCustomThemeSlider"
+          />
+        </view>
+
+        <view class="control-group" wx:if="{{customThemeDraft.gradient_enabled}}">
+          <view class="control-head">
+            <view class="control-label">渐变深度</view>
+            <view class="control-value">{{customThemeDraft.gradient_depth}}</view>
+          </view>
+          <slider
+            min="0"
+            max="24"
+            value="{{customThemeDraft.gradient_depth}}"
+            data-field="gradient_depth"
+            activeColor="{{customThemePreview.accent}}"
+            backgroundColor="rgba(148, 163, 184, 0.18)"
+            bindchange="handleCustomThemeSlider"
+            bindchanging="handleCustomThemeSlider"
+          />
+        </view>
+
+        <view class="control-group">
+          <view class="control-head">
+            <view class="control-label">字体色相</view>
+            <view class="control-value">{{customThemeDraft.font_hue}}°</view>
+          </view>
+          <slider
+            min="0"
+            max="359"
+            value="{{customThemeDraft.font_hue}}"
+            data-field="font_hue"
+            activeColor="{{customThemePreview.accent}}"
+            backgroundColor="rgba(148, 163, 184, 0.18)"
+            bindchange="handleCustomThemeSlider"
+            bindchanging="handleCustomThemeSlider"
+          />
+        </view>
+
+        <view class="control-group">
+          <view class="control-head">
+            <view class="control-label">字体深浅</view>
+            <view class="control-value">{{customThemeDraft.font_lightness}}</view>
+          </view>
+          <slider
+            min="6"
+            max="92"
+            value="{{customThemeDraft.font_lightness}}"
+            data-field="font_lightness"
+            activeColor="{{customThemePreview.accent}}"
+            backgroundColor="rgba(148, 163, 184, 0.18)"
+            bindchange="handleCustomThemeSlider"
+            bindchanging="handleCustomThemeSlider"
+          />
+        </view>
+
+        <view class="control-group">
+          <view class="control-head">
+            <view class="control-label">字体大小</view>
+            <view class="control-value">{{customThemeDraft.font_size_scale}}%</view>
+          </view>
+          <slider
+            min="85"
+            max="130"
+            value="{{customThemeDraft.font_size_scale}}"
+            data-field="font_size_scale"
+            activeColor="{{customThemePreview.accent}}"
+            backgroundColor="rgba(148, 163, 184, 0.18)"
+            bindchange="handleCustomThemeSlider"
+            bindchanging="handleCustomThemeSlider"
+          />
+        </view>
+
+        <view class="button-row custom-theme-actions">
+          <button class="ghost-btn" bindtap="handleCustomThemeReset">恢复默认</button>
+          <button class="secondary-btn" bindtap="handleCustomThemeApply">应用自定义主题</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">账号与同步</view>
+      <view class="card-subtitle">测试时只要后端数据库不删、并保持同一个微信账号，学习记录就会继续保留。</view>
+      <view class="button-row profile-action-row">
+        <button class="ghost-btn" bindtap="logout">退出登录</button>
+      </view>
+    </view>
+  </scroll-view>
+</view>

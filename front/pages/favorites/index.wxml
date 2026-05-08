@@ -1,0 +1,18 @@
+<view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="收藏夹" showBack="{{true}}" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view wx:if="{{list.length}}" class="section list-card">
+      <view class="list-item" wx:for="{{list}}" wx:key="id">
+        <view class="list-main" data-word-id="{{item.word.id}}" bindtap="goDetail">
+          <view class="list-title">{{ item.word.word }}</view>
+          <view class="list-desc">{{ item.word.meaning_cn }}</view>
+          <view class="list-desc">掌握度 {{ item.word.progress.mastery_level }}</view>
+        </view>
+        <button class="ghost-btn" size="mini" data-word-id="{{item.word.id}}" bindtap="handleDelete">移除</button>
+      </view>
+    </view>
+    <view wx:else class="section panel-card">
+      <empty-state text="还没有收藏的单词" hint="在学习页点击收藏即可加入这里。" />
+    </view>
+  </scroll-view>
+</view>

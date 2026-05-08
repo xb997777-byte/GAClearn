@@ -1,0 +1,136 @@
+<view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="学习计划" showBack="{{true}}" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view class="section panel-card" wx:if="{{pageLoading}}">
+      <view class="card-subtitle">正在加载学习计划...</view>
+    </view>
+
+    <block wx:else>
+      <view class="section hero-card" wx:if="{{book}}">
+        <view class="card-title" style="color:#fff;">{{ book.name }}</view>
+        <view class="card-subtitle light-text">当前主学习计划围绕这本词书展开，词书浏览统一回到“词书”页处理。</view>
+        <view class="tag-row" style="margin-top:18rpx;">
+          <view class="chip">{{ book.category }}</view>
+          <view class="chip">{{ book.word_count }} 词</view>
+        </view>
+      </view>
+
+      <view class="section panel-card" wx:if="{{hasCurrentPlan}}">
+        <view class="plan-status-head">
+          <view>
+            <view class="card-title">当前计划</view>
+            <view class="card-subtitle">{{ currentPlan.book.name }} · 每日 {{ currentPlan.daily_target }} 个 · 已学 {{ currentPlan.finished_word_count }} 个</view>
+          </view>
+          <view class="plan-status-pill {{currentPlan.status}}">{{ planStatusText }}</view>
+        </view>
+
+        <view class="button-row" style="margin-top:20rpx;">
+          <button
+            wx:if="{{currentPlan.status === 'active'}}"
+            class="ghost-btn"
+            loading="{{planActionLoading}}"
+            disabled="{{planActionLoading}}"
+            bindtap="handlePausePlan"
+          >
+            暂停计划
+          </button>
+          <button
+            wx:if="{{currentPlan.status === 'paused'}}"
+            class="secondary-btn"
+            loading="{{planActionLoading}}"
+            disabled="{{planActionLoading}}"
+            bindtap="handleResumePlan"
+          >
+            恢复计划
+          </button>
+          <button class="ghost-btn" bindtap="goBooks">去词书页</button>
+        </view>
+      </view>
+
+      <view class="section panel-card">
+        <view class="card-title">每日目标</view>
+        <view class="card-subtitle">这里专门负责计划，不再混入词汇浏览内容。</view>
+        <view class="segmented" style="margin-top:24rpx;">
+          <view
+            wx:for="{{targetOptions}}"
+            wx:key="value"
+            class="{{item.className}}"
+            data-value="{{item.value}}"
+            bindtap="chooseTarget"
+          >
+            {{ item.value }} 个/天
+          </view>
+        </view>
+        <button
+          class="primary-btn full-btn"
+          style="margin-top:24rpx;"
+          loading="{{planActionLoading}}"
+          disabled="{{planActionLoading}}"
+          bindtap="handleSavePlan"
+        >
+          {{ saveButtonText }}
+        </button>
+      </view>
+
+      <view class="section panel-card" wx:if="{{hasCurrentPlan}}">
+        <view class="card-title">AI 重规划学习计划</view>
+        <view class="card-subtitle">直接生成用户可读的新计划、原因、收益和风险。</view>
+        <view class="button-row" style="margin-top:20rpx;">
+          <button class="secondary-btn" loading="{{aiPlanLoading}}" disabled="{{aiPlanLoading}}" bindtap="runAiReplan">生成 AI 计划</button>
+          <button class="ghost-btn" bindtap="goAiCenterPlan">去看 Agent 演示</button>
+        </view>
+
+        <view wx:if="{{aiPlanResult}}" class="plan-ai-card">
+          <view class="plan-ai-kicker">AI 给你的新计划</view>
+          <view class="plan-ai-title">{{ aiPlanResult.headline }}</view>
+          <view class="plan-ai-summary">{{ aiPlanResult.summary }}</view>
+
+          <view wx:if="{{aiPlanResult.new_plan}}" class="ai-grid-two" style="margin-top:18rpx;">
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">建议日目标</view>
+              <view class="ai-metric-value">{{ aiPlanResult.new_plan.suggested_daily_target || aiPlanResult.new_plan.current_daily_target || '--' }}</view>
+            </view>
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">建议复习量</view>
+              <view class="ai-metric-value">{{ aiPlanResult.new_plan.review_target || '--' }}</view>
+            </view>
+          </view>
+
+          <view wx:if="{{aiPlanResult.new_plan.focus_mode_label}}" class="plan-ai-item">{{ aiPlanResult.new_plan.focus_mode_label }}</view>
+
+          <view wx:if="{{aiPlanResult.new_plan.study_order && aiPlanResult.new_plan.study_order.length}}" class="plan-ai-list">
+            <view class="plan-ai-section-title">执行顺序</view>
+            <view wx:for="{{aiPlanResult.new_plan.study_order}}" wx:key="index" class="plan-ai-item">{{ index + 1 }}. {{ item }}</view>
+          </view>
+
+          <view wx:if="{{aiPlanResult.decision && aiPlanResult.decision.reasons && aiPlanResult.decision.reasons.length}}" class="plan-ai-list">
+            <view class="plan-ai-section-title">原因</view>
+            <view wx:for="{{aiPlanResult.decision.reasons}}" wx:key="index" class="plan-ai-item">{{ item }}</view>
+          </view>
+
+          <view wx:if="{{aiPlanResult.decision && aiPlanResult.decision.expected_benefit}}" class="plan-ai-list">
+            <view class="plan-ai-section-title">收益</view>
+            <view class="plan-ai-item plan-ai-emphasis">{{ aiPlanResult.decision.expected_benefit }}</view>
+          </view>
+
+          <view wx:if="{{aiPlanResult.decision && aiPlanResult.decision.risks && aiPlanResult.decision.risks.length}}" class="plan-ai-list">
+            <view class="plan-ai-section-title">风险</view>
+            <view wx:for="{{aiPlanResult.decision.risks}}" wx:key="index" class="plan-ai-item">{{ item }}</view>
+          </view>
+
+          <view class="button-row" style="margin-top:20rpx;" wx:if="{{aiPlanResult.plan_patch && aiPlanResult.plan_patch.daily_target}}">
+            <button class="primary-btn full-btn" loading="{{aiPlanApplying}}" disabled="{{aiPlanApplying}}" bindtap="applyAiPlanResult">应用这份 AI 调整</button>
+          </view>
+        </view>
+
+        <view wx:if="{{planHistory.length}}" class="plan-history-block">
+          <view class="card-subtitle">最近一次 revision 会显示在这里，方便确认 AI patch 是否真的落到了当前计划。</view>
+          <view wx:for="{{planHistory}}" wx:key="id" class="plan-history-item">
+            <view>{{ item.summary }}</view>
+            <view style="margin-top:8rpx;">{{ item.created_at }}</view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </scroll-view>
+</view>

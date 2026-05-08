@@ -1,0 +1,150 @@
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+[06/May/2026 20:14:57] "POST /api/v1/plans/current/switch-book HTTP/1.1" 200 241
+[06/May/2026 20:14:57,537] - Broken pipe from ('127.0.0.1', 53823)
+[06/May/2026 20:16:15] "GET /api/v1/system/bootstrap HTTP/1.1" 200 184
+[06/May/2026 20:16:18] "POST /api/v1/auth/wx-login HTTP/1.1" 200 921
+[06/May/2026 20:16:18] "GET /api/v1/plans/current HTTP/1.1" 200 35
+[06/May/2026 20:16:19] "GET /api/v1/tasks/today HTTP/1.1" 200 153
+[06/May/2026 20:16:19] "GET /api/v1/users/me HTTP/1.1" 200 688
+[06/May/2026 20:16:19] "GET /api/v1/stats/overview HTTP/1.1" 200 255
+[06/May/2026 20:16:21] "GET /api/v1/grammar/topics HTTP/1.1" 200 6377
+[06/May/2026 20:16:21] "GET /api/v1/grammar/progress HTTP/1.1" 200 2532
+[06/May/2026 20:16:23] "GET /api/v1/books?page=1&page_size=50 HTTP/1.1" 200 696
+[06/May/2026 20:16:23] "GET /api/v1/books?page=1&page_size=100 HTTP/1.1" 200 697
+[06/May/2026 20:16:25] "GET /api/v1/plans/current HTTP/1.1" 200 35
+[06/May/2026 20:16:25] "GET /api/v1/books/2 HTTP/1.1" 200 230
+[06/May/2026 20:16:25] "GET /api/v1/books/2/words?page=1&page_size=200&keyword= HTTP/1.1" 200 93212
+[06/May/2026 20:16:29] "POST /api/v1/plans/current/switch-book HTTP/1.1" 200 241
+[06/May/2026 20:16:29] "GET /api/v1/users/me HTTP/1.1" 200 688
+[06/May/2026 20:16:29] "GET /api/v1/stats/overview HTTP/1.1" 200 255
+[06/May/2026 20:16:29] "GET /api/v1/tasks/today HTTP/1.1" 200 1030
+[06/May/2026 20:16:33] "POST /api/v1/tasks/today/start HTTP/1.1" 200 63
+[06/May/2026 20:16:33] "GET /api/v1/learn/words?limit=20 HTTP/1.1" 200 17936
+[06/May/2026 20:16:33] "POST /api/v1/system/speech HTTP/1.1" 200 214
+[06/May/2026 20:16:33] "GET /media/tts/749146873fe283f73fff09a645a945799ebe89a8.wav HTTP/1.1" 200 68812
+[06/May/2026 20:16:38] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:38] "POST /api/v1/system/speech HTTP/1.1" 200 212
+[06/May/2026 20:16:38] "GET /media/tts/3ed3fee9eb00cb535827e4d87de94a39e3499934.wav HTTP/1.1" 200 67492
+[06/May/2026 20:16:44] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:44] "POST /api/v1/system/speech HTTP/1.1" 200 213
+[06/May/2026 20:16:44] "GET /media/tts/83eb0e95de82b989a9a00d26e0cea09c85294aa8.wav HTTP/1.1" 200 64180
+[06/May/2026 20:16:46] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:46] "POST /api/v1/system/speech HTTP/1.1" 200 211
+[06/May/2026 20:16:46] "GET /media/tts/02dedaaa9a5fe11c0442f3d55431b24ae00ae251.wav HTTP/1.1" 200 67052
+[06/May/2026 20:16:48] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:48] "POST /api/v1/system/speech HTTP/1.1" 200 214
+[06/May/2026 20:16:48] "GET /media/tts/bbdf5fc85b524995b61e5a546a08a1645ec2d830.wav HTTP/1.1" 200 68152
+[06/May/2026 20:16:49] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:50] "POST /api/v1/system/speech HTTP/1.1" 200 213
+[06/May/2026 20:16:50] "GET /media/tts/d216a91557bcc394d82702fc475389952e35ecb7.wav HTTP/1.1" 200 61094
+[06/May/2026 20:16:50] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:50] "POST /api/v1/system/speech HTTP/1.1" 200 211
+[06/May/2026 20:16:50] "GET /media/tts/b6213194f25ef700c66c2fcbafcb125f9aa89191.wav HTTP/1.1" 200 62198
+[06/May/2026 20:16:51] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:51] "POST /api/v1/system/speech HTTP/1.1" 200 210
+[06/May/2026 20:16:51] "GET /media/tts/4f2cae5fbef80733e84b3b8f96a2a1b62f783c7d.wav HTTP/1.1" 200 58890
+[06/May/2026 20:16:52] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:52] "POST /api/v1/system/speech HTTP/1.1" 200 212
+[06/May/2026 20:16:52] "GET /media/tts/6da1ff4ab54975685b8dbb901c20b13395242724.wav HTTP/1.1" 200 63520
+[06/May/2026 20:16:53] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:53] "POST /api/v1/system/speech HTTP/1.1" 200 209
+[06/May/2026 20:16:53] "GET /media/tts/8bb7d1a9d12fbda4054b62bcf24c4c4e3479ff6a.wav HTTP/1.1" 200 58894
+[06/May/2026 20:16:54] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:54] "POST /api/v1/system/speech HTTP/1.1" 200 211
+[06/May/2026 20:16:54] "GET /media/tts/bf7dfb958fa28631880fda7643628d61f0360411.wav HTTP/1.1" 200 60658
+[06/May/2026 20:16:54] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:54] "POST /api/v1/system/speech HTTP/1.1" 200 209
+[06/May/2026 20:16:54] "GET /media/tts/cf69126921d4a55c856b93ad5d0b637e361306f0.wav HTTP/1.1" 200 56248
+[06/May/2026 20:16:55] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:55] "POST /api/v1/system/speech HTTP/1.1" 200 211
+[06/May/2026 20:16:55] "GET /media/tts/398417b4d2f410b06e902d2562cda88649b21a39.wav HTTP/1.1" 200 58452
+[06/May/2026 20:16:56] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:56] "POST /api/v1/system/speech HTTP/1.1" 200 209
+[06/May/2026 20:16:56] "GET /media/tts/5a455dd0a6a3a31bd98cc2b074e1df6914f64d1b.wav HTTP/1.1" 200 63302
+[06/May/2026 20:16:57] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:57] "POST /api/v1/system/speech HTTP/1.1" 200 209
+[06/May/2026 20:16:57] "GET /media/tts/2b58729e628757744dce21c96c2462aa6ef7ebdf.wav HTTP/1.1" 200 57570
+[06/May/2026 20:16:58] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:58] "POST /api/v1/system/speech HTTP/1.1" 200 209
+[06/May/2026 20:16:58] "GET /media/tts/34ae48cefe9d3734f80535a516bd62f861d644ca.wav HTTP/1.1" 200 63082
+[06/May/2026 20:16:58] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:58] "POST /api/v1/system/speech HTTP/1.1" 200 209
+[06/May/2026 20:16:58] "GET /media/tts/369c5c68365ad5446995acd01d16380325f4889b.wav HTTP/1.1" 200 55144
+[06/May/2026 20:16:59] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:16:59] "POST /api/v1/system/speech HTTP/1.1" 200 210
+[06/May/2026 20:16:59] "GET /media/tts/beb34633d4b997ed389d3827d2238a6c03c042eb.wav HTTP/1.1" 200 64186
+[06/May/2026 20:17:01] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:17:01] "POST /api/v1/system/speech HTTP/1.1" 200 209
+[06/May/2026 20:17:01] "GET /media/tts/c9d320858a4f76d36ff939af05d591f20e181071.wav HTTP/1.1" 200 53160
+[06/May/2026 20:17:02] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:17:02] "POST /api/v1/system/speech HTTP/1.1" 200 209
+[06/May/2026 20:17:02] "GET /media/tts/bddef01a0b26849f2b7afaec77e8860adb624da4.wav HTTP/1.1" 200 54262
+[06/May/2026 20:17:06] "POST /api/v1/learn/records HTTP/1.1" 200 253
+[06/May/2026 20:17:06] "GET /api/v1/users/me HTTP/1.1" 200 688
+[06/May/2026 20:17:06] "GET /api/v1/tasks/today HTTP/1.1" 200 1363
+[06/May/2026 20:17:06] "GET /api/v1/stats/overview HTTP/1.1" 200 256
+[06/May/2026 20:17:10] "GET /api/v1/ai/capabilities HTTP/1.1" 200 5951
+[06/May/2026 20:17:10] "GET /api/v1/ai/reports?limit=5&include_compare=1 HTTP/1.1" 200 75
+[06/May/2026 20:17:10] "GET /api/v1/ai/mcp/manifest HTTP/1.1" 200 5590
+[06/May/2026 20:17:10] "GET /api/v1/plans/current/history?limit=8 HTTP/1.1" 200 1020
+[06/May/2026 20:17:10] "GET /api/v1/ai/evaluations?limit=6 HTTP/1.1" 200 7482
+[06/May/2026 20:17:11] "GET /api/v1/ai/profile-memory HTTP/1.1" 200 2091
+[06/May/2026 20:17:50] "POST /api/v1/ai/plans/replan HTTP/1.1" 200 22821
+[06/May/2026 20:18:00] "POST /api/v1/ai/plans/replan HTTP/1.1" 200 22821
+[06/May/2026 20:18:01] "POST /api/v1/ai/plans/replan HTTP/1.1" 200 22821
+[06/May/2026 20:18:03] "POST /api/v1/ai/profile-memory HTTP/1.1" 200 2147
+[06/May/2026 20:18:13] "POST /api/v1/plans/current/apply-ai-patch HTTP/1.1" 200 245
+[06/May/2026 20:18:13] "GET /api/v1/plans/current/history?limit=8 HTTP/1.1" 200 8384
+[06/May/2026 20:18:15] "GET /api/v1/users/me HTTP/1.1" 200 688
+[06/May/2026 20:18:15] "GET /api/v1/stats/overview HTTP/1.1" 200 256
+[06/May/2026 20:18:15] "GET /api/v1/tasks/today HTTP/1.1" 200 1363
+[06/May/2026 20:18:23] "GET /api/v1/checkin/history HTTP/1.1" 200 44
+[06/May/2026 20:18:23] "GET /api/v1/stats/overview HTTP/1.1" 200 256
+[06/May/2026 20:18:23] "GET /api/v1/stats/trend?days=7 HTTP/1.1" 200 814
+[06/May/2026 20:21:15] "GET /api/v1/system/bootstrap HTTP/1.1" 200 184
+[06/May/2026 20:21:48] "GET /api/v1/system/bootstrap HTTP/1.1" 200 184
+[06/May/2026 20:21:51] "POST /api/v1/auth/wx-login HTTP/1.1" 200 921
+[06/May/2026 20:21:51] "GET /api/v1/plans/current HTTP/1.1" 200 35
+[06/May/2026 20:21:51] "GET /api/v1/users/me HTTP/1.1" 200 688
+[06/May/2026 20:21:51] "GET /api/v1/stats/overview HTTP/1.1" 200 255
+[06/May/2026 20:21:51] "GET /api/v1/tasks/today HTTP/1.1" 200 153
+[06/May/2026 20:21:57] "GET /api/v1/checkin/history HTTP/1.1" 200 44
+[06/May/2026 20:21:57] "GET /api/v1/stats/overview HTTP/1.1" 200 255
+[06/May/2026 20:21:57] "GET /api/v1/stats/trend?days=7 HTTP/1.1" 200 813
+[06/May/2026 20:22:02] "GET /api/v1/users/me HTTP/1.1" 200 688
+[06/May/2026 20:22:02] "GET /api/v1/tasks/today HTTP/1.1" 200 153
+[06/May/2026 20:22:02] "GET /api/v1/stats/overview HTTP/1.1" 200 255
+[06/May/2026 20:22:05] "GET /api/v1/books?page=1&page_size=100 HTTP/1.1" 200 697
+[06/May/2026 20:22:05] "GET /api/v1/books?page=1&page_size=50 HTTP/1.1" 200 696
+[06/May/2026 20:22:07] "GET /api/v1/grammar/topics HTTP/1.1" 200 6377
+[06/May/2026 20:22:07] "GET /api/v1/grammar/progress HTTP/1.1" 200 2532
+[06/May/2026 20:22:10] "GET /api/v1/ai/mcp/manifest HTTP/1.1" 200 5590
+[06/May/2026 20:22:10] "GET /api/v1/ai/capabilities HTTP/1.1" 200 5951
+[06/May/2026 20:22:10] "GET /api/v1/ai/reports?limit=5&include_compare=1 HTTP/1.1" 200 75
+[06/May/2026 20:22:10] "GET /api/v1/plans/current/history?limit=8 HTTP/1.1" 200 44
+[06/May/2026 20:22:10] "GET /api/v1/ai/evaluations?limit=6 HTTP/1.1" 200 7482
+[06/May/2026 20:22:10] "GET /api/v1/ai/profile-memory HTTP/1.1" 200 1408
+[06/May/2026 20:22:38] "POST /api/v1/ai/plans/replan HTTP/1.1" 200 22264
+Bad Request: /api/v1/plans/current/apply-ai-patch
+Bad Request: /api/v1/plans/current/apply-ai-patch
+[06/May/2026 20:22:46] "POST /api/v1/plans/current/apply-ai-patch HTTP/1.1" 400 53
+Bad Request: /api/v1/plans/current/apply-ai-patch
+Bad Request: /api/v1/plans/current/apply-ai-patch
+[06/May/2026 20:22:49] "POST /api/v1/plans/current/apply-ai-patch HTTP/1.1" 400 53
+D:\XB\agent学习\英语单词微信小程序\backend\apps\ai\observability.py changed, reloading.
+D:\XB\agent学习\英语单词微信小程序\backend\apps\ai\observability.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+[06/May/2026 20:28:19] "GET /api/v1/system/bootstrap HTTP/1.1" 200 184
+[06/May/2026 20:28:29] "GET /api/v1/system/bootstrap HTTP/1.1" 200 184
+D:\XB\agent学习\英语单词微信小程序\backend\apps\ai\mcp\server_http.py changed, reloading.
+D:\XB\agent学习\英语单词微信小程序\backend\apps\ai\mcp\server_http.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+D:\XB\agent学习\英语单词微信小程序\backend\apps\ai\graphs\plan_replanner.py changed, reloading.
+D:\XB\agent学习\英语单词微信小程序\backend\apps\ai\graphs\plan_replanner.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+[06/May/2026 20:33:16] "GET /api/v1/system/bootstrap HTTP/1.1" 200 184
+[06/May/2026 20:33:34] "GET /api/v1/system/bootstrap HTTP/1.1" 200 184

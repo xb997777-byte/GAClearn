@@ -1,0 +1,69 @@
+<view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="错词本" showBack="{{true}}" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view wx:if="{{list.length}}" class="section panel-card wrong-ai-card">
+      <view class="wrong-ai-head">
+        <view>
+          <view class="card-title">AI错词复盘</view>
+          <view class="card-subtitle">把你当前的活跃错词整理成“先复习什么、为什么先复习、怎么复习”的一套建议。</view>
+        </view>
+        <button class="ghost-btn ai-refresh-btn" size="mini" loading="{{wrongWordsCoachLoading}}" bindtap="handleReloadWrongWordsCoach">刷新</button>
+      </view>
+
+      <view wx:if="{{wrongWordsCoachLoading}}" class="wrong-ai-loading">AI 正在分析你当前错词本的重复模式…</view>
+      <view wx:elif="{{wrongWordsCoachError}}" class="wrong-ai-error">{{ wrongWordsCoachError }}</view>
+
+      <view wx:if="{{wrongWordsCoach}}" class="wrong-ai-body">
+        <view class="wrong-ai-highlight">
+          <view class="wrong-ai-headline">{{ wrongWordsCoach.headline }}</view>
+          <view class="wrong-ai-summary">{{ wrongWordsCoach.summary }}</view>
+        </view>
+
+        <view wx:if="{{wrongWordsCoach.mistake_patterns && wrongWordsCoach.mistake_patterns.length}}" class="wrong-ai-section">
+          <view class="wrong-ai-section-title">错误模式</view>
+          <view wx:for="{{wrongWordsCoach.mistake_patterns}}" wx:key="index" class="wrong-ai-bullet-row">
+            <view class="wrong-ai-bullet-dot"></view>
+            <view class="wrong-ai-bullet-text">{{ item }}</view>
+          </view>
+        </view>
+
+        <view wx:if="{{wrongWordsCoach.priority_words && wrongWordsCoach.priority_words.length}}" class="wrong-ai-section">
+          <view class="wrong-ai-section-title">优先回收词</view>
+          <view wx:for="{{wrongWordsCoach.priority_words}}" wx:key="word" class="priority-word-card">
+            <view class="priority-word-head">
+              <view class="priority-word">{{ item.word }}</view>
+              <view class="priority-meaning">{{ item.meaning_cn }}</view>
+            </view>
+            <view class="priority-reason">{{ item.reason }}</view>
+          </view>
+        </view>
+
+        <view wx:if="{{wrongWordsCoach.action_plan && wrongWordsCoach.action_plan.length}}" class="wrong-ai-section">
+          <view class="wrong-ai-section-title">复盘动作</view>
+          <view wx:for="{{wrongWordsCoach.action_plan}}" wx:key="index" class="action-plan-chip">{{ index + 1 }}. {{ item }}</view>
+        </view>
+
+        <view class="wrong-ai-coach-line">{{ wrongWordsCoach.coach_line }}</view>
+        <view class="button-row" style="margin-top:16rpx;">
+          <button class="ghost-btn full-btn" bindtap="goAiCenterConversation">去 AI 中心继续追问</button>
+        </view>
+        <ai-evidence evidence="{{wrongWordsCoachEvidence}}" title="错词复盘证据区" />
+      </view>
+    </view>
+
+    <view wx:if="{{list.length}}" class="section list-card">
+      <view class="list-item" wx:for="{{list}}" wx:key="id">
+        <view class="list-main" data-word-id="{{item.word_id}}" bindtap="goDetail">
+          <view class="list-title">{{ item.word }}</view>
+          <view class="list-desc">{{ item.meaning_cn }}</view>
+          <view class="list-desc">错误 {{ item.wrong_count }} 次</view>
+        </view>
+        <button class="ghost-btn" size="mini" data-word-id="{{item.word_id}}" bindtap="handleDelete">移除</button>
+      </view>
+    </view>
+
+    <view wx:else class="section panel-card">
+      <empty-state text="暂无错词" hint="保持得不错，继续加油。" />
+    </view>
+  </scroll-view>
+</view>

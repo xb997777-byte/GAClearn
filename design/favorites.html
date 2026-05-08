@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>英语单词微信小程序 - 收藏夹</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="./assets/prototype.css">
+</head>
+<body class="prototype-page">
+  <div class="phone-shell">
+    <div class="phone-screen">
+      <div class="page-backdrop page-backdrop--violet"></div>
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <div>9:41</div>
+        <div class="status-meta">
+          <i class="ri-signal-wifi-3-line"></i>
+          <i class="ri-wifi-line"></i>
+          <i class="ri-battery-charge-line"></i>
+        </div>
+      </div>
+
+      <main class="screen-scroll">
+        <section class="section">
+          <div class="card card--accent">
+            <div class="row row--between row--center">
+              <div style="max-width: 220px;">
+                <p class="eyebrow eyebrow--light">Favorites</p>
+                <h1 class="title-lg">收藏夹里有 46 个高价值词</h1>
+                <p class="subtitle subtitle--light">适合碎片时间回看，也适合在考前做一轮个人高频词清单。</p>
+              </div>
+              <span class="badge"><i class="ri-heart-3-fill"></i></span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="search-field">
+            <i class="ri-search-line"></i>
+            <input type="text" value="resilient / infer / coherent" readonly>
+            <a href="#" data-toast="搜索功能为原型示意"><i class="ri-command-line"></i></a>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="chip-row" data-toggle-group>
+            <button class="chip is-active" type="button" data-toast="当前分组：全部收藏">全部收藏</button>
+            <button class="chip" type="button" data-toast="当前分组：重点词">重点词</button>
+            <button class="chip" type="button" data-toast="当前分组：写作词">写作词</button>
+          </div>
+        </section>
+
+        <section class="section stack">
+          <div class="list-item">
+            <span class="badge badge--soft"><i class="ri-pushpin-line"></i></span>
+            <div class="list-item__body">
+              <h3 class="list-item__title">resilient</h3>
+              <p class="list-item__text">adj. 有恢复力的；写作和阅读中都很常见，推荐作为优先复习词。</p>
+              <div class="list-item__actions">
+                <a class="btn btn-inline btn-secondary" href="./word-detail.html">看详情</a>
+                <a class="btn btn-inline btn-ghost" href="./review.html">立即复习</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="list-item">
+            <span class="badge badge--green"><i class="ri-quill-pen-line"></i></span>
+            <div class="list-item__body">
+              <h3 class="list-item__title">coherent</h3>
+              <p class="list-item__text">adj. 连贯的；适合写作表达“逻辑清晰、结构完整”。</p>
+              <div class="list-item__actions">
+                <a class="btn btn-inline btn-secondary" href="./word-detail.html">看详情</a>
+                <button class="btn btn-inline btn-ghost" type="button" data-toast="已加入写作词单">加入词单</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="list-item">
+            <span class="badge badge--warm"><i class="ri-lightbulb-line"></i></span>
+            <div class="list-item__body">
+              <h3 class="list-item__title">infer</h3>
+              <p class="list-item__text">v. 推断；在阅读理解题里很常见，建议结合例句记忆。</p>
+              <div class="list-item__actions">
+                <a class="btn btn-inline btn-secondary" href="./word-detail.html">看详情</a>
+                <button class="btn btn-inline btn-ghost" type="button" data-toast="已从收藏夹移除">取消收藏</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav">
+        <a class="nav-item is-active" href="./home.html">
+          <i class="ri-home-5-line"></i>
+          <span>首页</span>
+        </a>
+        <a class="nav-item" href="./books.html">
+          <i class="ri-book-2-line"></i>
+          <span>词书</span>
+        </a>
+        <a class="nav-item" href="./stats.html">
+          <i class="ri-bar-chart-box-line"></i>
+          <span>统计</span>
+        </a>
+        <a class="nav-item" href="./profile.html">
+          <i class="ri-user-3-line"></i>
+          <span>我的</span>
+        </a>
+      </nav>
+
+      <div class="toast">模拟交互已响应</div>
+    </div>
+  </div>
+  <script src="./assets/prototype.js"></script>
+</body>
+</html>

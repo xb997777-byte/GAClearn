@@ -1,0 +1,373 @@
+<view class="page-shell {{themePageClass}} grammar-page grammar-learning-page {{grammarThemeClass}} {{themeFontClass}} {{themeMotionClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="例句学语法" showBack="{{true}}" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view class="section hero-card learning-hero">
+      <view class="hero-kicker">Sentence Grammar</view>
+      <view class="card-title" style="color:#fff;">用真实例句学语法，不靠死背规则。</view>
+      <view class="card-subtitle light-text">
+        先横着读整句，再看主干和补充层。专题筛选、句库切换、主干视图都放在这里。
+      </view>
+
+      <view class="hero-actions">
+        <button class="hero-soft-btn" bindtap="handleGoAnalyze">去自动拆句</button>
+        <button class="hero-ghost-btn" bindtap="handleGoGuide">看语法总览</button>
+      </view>
+
+      <view class="metric-grid hero-metrics">
+        <view class="hero-metric-card">
+          <view class="hero-metric-label">已学句子</view>
+          <view class="hero-metric-value">{{ progress ? progress.studied_sentence_count : '--' }}</view>
+        </view>
+        <view class="hero-metric-card">
+          <view class="hero-metric-label">掌握句子</view>
+          <view class="hero-metric-value">{{ progress ? progress.mastered_sentence_count : '--' }}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">筛选句库</view>
+      <view class="card-subtitle">按专题、难度和关键词快速定位你现在想学的句子。</view>
+
+      <view class="search-row">
+        <view class="search-field">
+          <icon class="search-field-icon" type="search" size="16" color="#8E8E93" />
+          <input
+            class="search-input"
+            placeholder="搜索句子、翻译或语法点"
+            value="{{keyword}}"
+            bindinput="handleKeywordInput"
+            bindconfirm="handleSearchSubmit"
+            confirm-type="search"
+          />
+        </view>
+        <button class="search-btn" bindtap="handleSearchSubmit">搜索</button>
+      </view>
+
+      <scroll-view class="chip-scroll" scroll-x>
+        <view class="chip-strip">
+          <view class="filter-chip {{selectedTopicId === 0 ? 'active' : ''}}" data-topic-id="0" bindtap="handleTopicTap">全部专题</view>
+          <view
+            wx:for="{{topics}}"
+            wx:key="id"
+            wx:for-item="topic"
+            class="filter-chip {{selectedTopicId === topic.id ? 'active' : ''}}"
+            data-topic-id="{{topic.id}}"
+            bindtap="handleTopicTap"
+          >
+            {{ topic.title }}
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="difficulty-row">
+        <view
+          wx:for="{{difficulties}}"
+          wx:key="id"
+          wx:for-item="difficulty"
+          class="difficulty-chip {{selectedDifficulty === difficulty.id ? 'active' : ''}}"
+          data-difficulty="{{difficulty.id}}"
+          bindtap="handleDifficultyTap"
+        >
+          {{ difficulty.label }}
+        </view>
+      </view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{currentSentence}}">
+      <view class="detail-shell">
+        <view class="detail-kicker">{{ currentSentence.point.title }}</view>
+        <view class="detail-summary">{{ currentSentence.summary }}</view>
+        <view class="card-subtitle" wx:if="{{currentSentence.point_detail && currentSentence.point_detail.learning_tip}}">
+          {{ currentSentence.point_detail.learning_tip }}
+        </view>
+
+        <view class="tag-row sentence-tags">
+          <view class="chip-light chip">{{ currentSentence.difficulty_label }}</view>
+          <view class="chip-light chip">{{ currentSentence.scene_tag }}</view>
+          <view class="chip-light chip" wx:if="{{currentSentence.is_long_sentence}}">长难句</view>
+          <view class="chip-light chip" wx:for="{{currentSentence.grammar_tags}}" wx:key="index" wx:for-item="tag">{{ tag }}</view>
+        </view>
+
+        <view class="legend-wrap">
+          <view
+            wx:for="{{legend}}"
+            wx:key="token"
+            wx:for-item="legendItem"
+            class="legend-item"
+            style="background: {{legendItem.background}}; color: {{legendItem.color}};"
+          >
+            {{ legendItem.label }}
+          </view>
+        </view>
+
+        <view class="segmented view-segmented">
+          <view class="segmented-item {{viewMode === 'complete' ? 'active' : ''}}" data-mode="complete" bindtap="handleViewModeChange">完整视图</view>
+          <view class="segmented-item {{viewMode === 'core' ? 'active' : ''}}" data-mode="core" bindtap="handleViewModeChange">主干视图</view>
+        </view>
+
+        <view class="mode-chip-row">
+          <view class="mode-chip {{viewMode}}">{{ viewModeTitle }}</view>
+          <view class="mode-chip-text">{{ viewModeDescription }}</view>
+        </view>
+
+        <view class="analysis-board board-{{viewMode}}">
+          <view class="board-block board-card">
+            <view class="block-head">
+              <view class="block-title">原句阅读</view>
+              <view class="block-tag">点句子成分可联动高亮</view>
+            </view>
+
+            <view class="sentence-reading">
+              <view
+                wx:for="{{sentenceTokens}}"
+                wx:key="id"
+                wx:for-item="token"
+                class="reading-token {{token.annotationId ? 'annotated' : 'plain'}} {{token.isFocused ? 'focused' : ''}} {{token.isDimmed ? 'dimmed' : ''}} {{token.isMutedPlain ? 'plain-muted' : ''}}"
+                style="{{token.style}}"
+                data-annotation-id="{{token.annotationId}}"
+                bindtap="handleSegmentTap"
+              >
+                {{ token.text }}
+              </view>
+            </view>
+
+            <view class="reading-translation">{{ currentSentence.translation_cn }}</view>
+          </view>
+
+          <view class="board-block board-card">
+            <view class="block-head">
+              <view class="block-title">一眼先看懂这句话</view>
+              <view class="block-tag">先主干，再补充</view>
+            </view>
+
+            <view class="summary-grid">
+              <view class="summary-card">
+                <view class="summary-label">句子主干</view>
+                <view class="summary-text strong">{{ currentSentence.main_structure || '继续看下方结构卡片' }}</view>
+              </view>
+
+              <view class="summary-card">
+                <view class="summary-label">中文释义</view>
+                <view class="summary-text">{{ currentSentence.translation_cn }}</view>
+              </view>
+
+              <view class="summary-card wide" wx:if="{{currentSentence.analysis}}">
+                <view class="summary-label">拆解说明</view>
+                <view class="summary-text">{{ currentSentence.analysis }}</view>
+              </view>
+            </view>
+          </view>
+
+          <view class="board-block board-card">
+            <view class="block-head">
+              <view class="block-title">{{ viewMode === 'complete' ? '结构走读' : '主干骨架' }}</view>
+              <view class="block-tag">{{ viewMode === 'complete' ? '按原句顺序把信息串起来' : '先抓主线，再补补充层' }}</view>
+            </view>
+
+            <block wx:if="{{viewMode === 'complete'}}">
+              <view class="guide-strip-scroll">
+                <view class="guide-track">
+                  <block wx:for="{{guideCards}}" wx:key="id" wx:for-item="guide" wx:for-index="guideIndex">
+                    <view class="guide-segment">
+                      <view
+                        class="guide-card {{guide.isSelected ? 'active' : ''}} {{guide.isDimmed ? 'dimmed' : ''}}"
+                        style="{{guide.outlineStyle}}"
+                        data-annotation-id="{{guide.annotationId}}"
+                        bindtap="handleGuideCardTap"
+                        hover-class="{{grammarCardHoverClass}}"
+                        hover-start-time="20"
+                        hover-stay-time="90"
+                      >
+                        <view class="guide-card-head">
+                          <view class="guide-order" style="{{guide.accentStyle}}">{{ guide.orderLabel }}</view>
+                          <view class="guide-role" style="{{guide.accentStyle}}">{{ guide.roleLabel }}</view>
+                          <view class="guide-relation">{{ guide.relationText }}</view>
+                        </view>
+                        <view class="guide-en">{{ guide.english }}</view>
+                        <view class="guide-cn">{{ guide.chinese }}</view>
+                        <view class="guide-note">{{ guide.note }}</view>
+                      </view>
+                      <view class="guide-card-line" wx:if="{{guideIndex !== guideCards.length - 1}}"></view>
+                    </view>
+                  </block>
+                </view>
+              </view>
+            </block>
+
+            <block wx:else>
+              <view class="guide-strip-scroll">
+                <view class="core-track">
+                  <block wx:for="{{coreGuideCards}}" wx:key="id" wx:for-item="core" wx:for-index="coreIndex">
+                    <view class="guide-segment">
+                      <view
+                        class="core-card {{core.isSelected ? 'active' : ''}} {{core.isDimmed ? 'dimmed' : ''}}"
+                        style="{{core.outlineStyle}}"
+                        data-annotation-id="{{core.annotationId}}"
+                        bindtap="handleGuideCardTap"
+                        hover-class="{{grammarCardHoverClass}}"
+                        hover-start-time="20"
+                        hover-stay-time="90"
+                      >
+                        <view class="core-topline">
+                          <view class="core-order" style="{{core.accentStyle}}">{{ core.orderLabel }}</view>
+                          <view class="core-role" style="{{core.accentStyle}}">{{ core.roleLabel }}</view>
+                          <view class="core-relation">主干</view>
+                        </view>
+                        <view class="core-en">{{ core.english }}</view>
+                        <view class="core-cn">{{ core.chinese }}</view>
+                        <view class="core-note">{{ core.note }}</view>
+                      </view>
+                      <view class="guide-card-line core-card-line" wx:if="{{coreIndex !== coreGuideCards.length - 1}}"></view>
+                    </view>
+                  </block>
+                </view>
+              </view>
+
+              <view class="support-wrap" wx:if="{{supportGuideCards.length}}">
+                <view class="support-title">补充层</view>
+                <view class="support-grid">
+                  <view
+                    wx:for="{{supportGuideCards}}"
+                    wx:key="id"
+                    wx:for-item="support"
+                    class="support-card {{support.isSelected ? 'active' : ''}} {{support.isDimmed ? 'dimmed' : ''}}"
+                    style="{{support.outlineStyle}}"
+                    data-annotation-id="{{support.annotationId}}"
+                    bindtap="handleGuideCardTap"
+                    hover-class="{{grammarCardHoverClass}}"
+                    hover-start-time="20"
+                    hover-stay-time="90"
+                  >
+                    <view class="support-role" style="{{support.accentStyle}}">{{ support.roleLabel }}</view>
+                    <view class="support-en">{{ support.english }}</view>
+                    <view class="support-cn">{{ support.chinese }}</view>
+                  </view>
+                </view>
+              </view>
+            </block>
+          </view>
+
+          <view class="board-block board-card" wx:if="{{selectedGuideCard}}">
+            <view class="block-head">
+              <view class="block-title">当前聚焦</view>
+              <view class="block-tag">和上方句子联动</view>
+            </view>
+
+            <view class="focus-card" style="{{selectedGuideCard.outlineStyle}}">
+              <view class="focus-head">
+                <view class="focus-role" style="{{selectedGuideCard.accentStyle}}">{{ selectedGuideCard.roleLabel }}</view>
+                <view class="focus-tag">{{ selectedGuideCard.relationText }}</view>
+              </view>
+              <view class="focus-en">{{ selectedGuideCard.english }}</view>
+              <view class="focus-cn">{{ selectedGuideCard.chinese }}</view>
+              <view class="focus-note">{{ selectedGuideCard.note }}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="practice-card" wx:if="{{currentSentence.practice && currentSentence.practice.options.length}}">
+        <view class="info-title">专项练习</view>
+        <view class="practice-question">{{ currentSentence.practice.prompt }}</view>
+        <view
+          wx:for="{{currentSentence.practice.options}}"
+          wx:key="item"
+          wx:for-item="option"
+          class="practice-option {{practiceSelection === option ? 'selected' : ''}} {{practiceResult && option === currentSentence.practice.answer ? 'correct' : ''}} {{practiceResult && practiceSelection === option && option !== currentSentence.practice.answer ? 'wrong' : ''}}"
+          data-option="{{option}}"
+          bindtap="handlePracticeSelect"
+        >
+          {{ option }}
+        </view>
+        <view class="practice-result {{practiceResult.isCorrect ? 'ok' : 'error'}}" wx:if="{{practiceResult}}">
+          <view class="practice-result-title">{{ practiceResult.isCorrect ? '回答正确' : '继续强化' }}</view>
+          <view class="practice-result-text">正确答案：{{ practiceResult.answer }}</view>
+          <view class="practice-result-text">{{ practiceResult.explanation }}</view>
+        </view>
+      </view>
+
+      <view class="button-row" style="margin-top:24rpx;">
+        <button class="secondary-btn" data-direction="prev" bindtap="handleJumpNeighbor">上一句</button>
+        <button class="secondary-btn" data-action="unclear" bindtap="handleFeedback">还不清楚</button>
+        <button class="primary-btn" data-action="understood" bindtap="handleFeedback">我已理解</button>
+        <button class="secondary-btn" data-direction="next" bindtap="handleJumpNeighbor">下一句</button>
+      </view>
+    </view>
+
+    <view class="section panel-card" wx:else>
+      <empty-state text="当前没有可展示的句子" hint="试试切换筛选条件或重新搜索" />
+    </view>
+
+    <view class="section panel-card">
+      <view class="section-head">
+        <view>
+          <view class="card-title">推荐继续学习</view>
+          <view class="card-subtitle">优先推荐同专题或适合顺着往下看的句子。</view>
+        </view>
+        <button class="ghost-btn mini-btn" bindtap="handleRefreshRecommend">换一批</button>
+      </view>
+
+      <block wx:if="{{recommendations.length}}">
+        <view
+          wx:for="{{recommendations}}"
+          wx:key="id"
+          wx:for-item="recommend"
+          class="sentence-list-item"
+          data-sentence-id="{{recommend.id}}"
+          bindtap="handlePickSentence"
+        >
+          <view class="sentence-list-head">
+            <view class="list-title">{{ recommend.sentence }}</view>
+            <view class="list-side">{{ recommend.point.title }}</view>
+          </view>
+          <view class="list-desc">{{ recommend.translation_cn }}</view>
+        </view>
+      </block>
+
+      <view wx:else>
+        <empty-state text="还没有推荐句子" hint="先浏览或筛选一些句子后再试试" />
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">当前句库列表</view>
+      <view class="card-subtitle">当前筛选下共 {{ sentenceTotal }} 句，点击任意句子可立即切换到详细拆解。</view>
+
+      <block wx:if="{{sentences.length}}">
+        <view
+          wx:for="{{sentences}}"
+          wx:key="id"
+          wx:for-item="sentence"
+          class="sentence-list-item {{currentSentence && currentSentence.id === sentence.id ? 'active' : ''}}"
+          data-sentence-id="{{sentence.id}}"
+          bindtap="handlePickSentence"
+        >
+          <view class="sentence-list-head">
+            <view class="list-title">{{ sentence.sentence }}</view>
+            <view class="list-side">{{ sentence.difficulty_label }}</view>
+          </view>
+          <view class="list-desc">{{ sentence.translation_cn }}</view>
+          <view class="sentence-list-meta">{{ sentence.point.title }} · {{ sentence.scene_tag }}</view>
+        </view>
+      </block>
+
+      <view wx:else>
+        <empty-state text="当前条件下没有匹配句子" hint="试试切换专题、难度或重新搜索" />
+      </view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{progress && progress.topic_progress.length}}">
+      <view class="card-title">专题学习进度</view>
+      <view class="topic-progress-item" wx:for="{{progress.topic_progress}}" wx:key="point_id" wx:for-item="topicProgress">
+        <view class="topic-progress-head">
+          <view class="list-title">{{ topicProgress.point_title }}</view>
+          <view class="list-side">{{ topicProgress.studied_sentence_count }}/{{ topicProgress.sentence_count }}</view>
+        </view>
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{topicProgress.completion_rate}}%;"></view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>

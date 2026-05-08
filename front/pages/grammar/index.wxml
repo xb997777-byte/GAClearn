@@ -1,0 +1,104 @@
+<view class="page-shell {{themePageClass}} grammar-page grammar-hub-page {{grammarThemeClass}} {{themeFontClass}} {{themeMotionClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="语法" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view class="section hero-card hub-hero">
+      <view class="hero-badge">Grammar Lab</view>
+      <view class="hub-title">先选学习方式，再进入最适合你的语法场景。</view>
+      <view class="card-subtitle light-text">
+        不再把所有功能硬塞进一个页面里。你可以直接选“语法总览”“自动拆句”或“例句学语法”。
+      </view>
+
+      <view class="metric-grid hub-metrics">
+        <view class="metric-item hub-metric">
+          <view class="metric-label">句库总量</view>
+          <view class="metric-value">{{ sentenceCount || '--' }}</view>
+        </view>
+        <view class="metric-item hub-metric">
+          <view class="metric-label">专题数量</view>
+          <view class="metric-value">{{ topicCount || '--' }}</view>
+        </view>
+        <view class="metric-item hub-metric">
+          <view class="metric-label">已学句子</view>
+          <view class="metric-value">{{ progress ? progress.studied_sentence_count : '--' }}</view>
+        </view>
+      </view>
+
+      <view class="hero-entry-btn" bindtap="handleContinueExamples" hover-class="{{grammarActionHoverClass}}" hover-start-time="20" hover-stay-time="90">
+        <text class="hero-entry-btn-text">先看语法总览</text>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">功能分块</view>
+      <view class="card-subtitle">每个入口只做一件事，阅读路径会清楚很多。</view>
+
+      <view
+        wx:for="{{modules}}"
+        wx:key="id"
+        class="module-card module-{{item.theme}}"
+      >
+        <view class="module-card-top">
+          <view class="module-mark">{{ index + 1 }}</view>
+          <view class="module-main">
+            <view class="module-title">{{ item.title }}</view>
+            <view class="module-subtitle">{{ item.subtitle }}</view>
+          </view>
+        </view>
+
+        <view class="module-fit">{{ item.fit }}</view>
+
+        <view class="module-tags">
+          <view wx:for="{{item.tags}}" wx:key="index" wx:for-item="tag" class="module-tag">{{ tag }}</view>
+        </view>
+
+        <view
+          class="module-entry-row"
+          data-url="{{item.url}}"
+          bindtap="handleOpenModule"
+          hover-class="{{grammarActionHoverClass}}"
+          hover-start-time="20"
+          hover-stay-time="90"
+        >
+          <view class="module-entry-btn">
+            <text class="module-entry-btn-text">{{ item.buttonText }}</text>
+          </view>
+          <view class="module-entry-chevron">
+            <text class="module-entry-chevron-icon">></text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">现在的学习顺序</view>
+      <view class="path-list">
+        <view class="path-item">
+          <view class="path-index">01</view>
+          <view class="path-text">
+            先在“语法总览”里按照类似实体语法书的顺序，从最简单的基础句一路学到复杂句和长难句。
+          </view>
+        </view>
+        <view class="path-item">
+          <view class="path-index">02</view>
+          <view class="path-text">
+            再用“自动拆句”把你眼前碰到的句子立刻拆开，边学规则边验证规则。
+          </view>
+        </view>
+        <view class="path-item">
+          <view class="path-index">03</view>
+          <view class="path-text">
+            最后进入“例句学语法”，按专题和难度系统刷句子，把语法真正练熟。
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">AI 语法教练</view>
+      <view class="card-subtitle">如果你想直接把一句话丢给 AI 拆解、解释和继续追问，可以从这里进入应用工作台。</view>
+      <view class="button-row" style="margin-top:20rpx;">
+        <button class="secondary-btn full-btn" bindtap="goAiGrammar">去 AI 语法问答</button>
+      </view>
+    </view>
+  </scroll-view>
+</view>

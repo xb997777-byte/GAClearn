@@ -1,0 +1,63 @@
+{
+  "pages": [
+    "pages/login/index",
+    "pages/home/index",
+    "pages/books/index",
+    "pages/exam/index",
+    "pages/settings/index",
+    "pages/grammar/index",
+    "pages/grammar-examples/index",
+    "pages/grammar-analyze/index",
+    "pages/grammar-guide/index",
+    "pages/grammar-guide-volume/index",
+    "pages/stats/index",
+    "pages/profile/index",
+    "pages/feedback/index",
+    "pages/ai-center/index",
+    "pages/plan/index",
+    "pages/learn/index",
+    "pages/review/index",
+    "pages/word-detail/index",
+    "pages/wrong-words/index",
+    "pages/favorites/index"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "navigationBarTitleText": "英语单词学习",
+    "navigationBarTextStyle": "black",
+    "backgroundTextStyle": "light",
+    "backgroundColor": "#f4f7fb"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#75829b",
+    "selectedColor": "#2c5dff",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/books/index",
+        "text": "词书"
+      },
+      {
+        "pagePath": "pages/grammar/index",
+        "text": "语法"
+      },
+      {
+        "pagePath": "pages/ai-center/index",
+        "text": "AI"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}

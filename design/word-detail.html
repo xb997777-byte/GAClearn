@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>英语单词微信小程序 - 单词详情</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="./assets/prototype.css">
+</head>
+<body class="prototype-page">
+  <div class="phone-shell">
+    <div class="phone-screen">
+      <div class="page-backdrop page-backdrop--ocean"></div>
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <div>9:41</div>
+        <div class="status-meta">
+          <i class="ri-signal-wifi-3-line"></i>
+          <i class="ri-wifi-line"></i>
+          <i class="ri-battery-charge-line"></i>
+        </div>
+      </div>
+
+      <main class="screen-scroll">
+        <section class="section">
+          <div class="row row--between row--center">
+            <a class="pill" href="./learn.html"><i class="ri-arrow-left-line"></i> 返回学习</a>
+            <button class="btn btn-secondary btn-inline" type="button" data-favorite>
+              <i class="ri-heart-3-line"></i> 收藏
+            </button>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="card card--accent">
+            <div class="row row--between row--center">
+              <p class="eyebrow eyebrow--light">Word Detail</p>
+              <button class="btn btn-dark btn-inline" type="button" data-toast="正在播放单词发音">
+                <i class="ri-volume-up-line"></i> 发音
+              </button>
+            </div>
+            <h1 class="hero-title">resilient</h1>
+            <p class="subtitle subtitle--light">/rɪˈzɪliənt/ · adj. 有恢复力的；适应力强的</p>
+            <div class="chip-row" style="margin-top: 16px;">
+              <span class="chip chip--dark"><i class="ri-flashlight-line"></i> 高频词</span>
+              <span class="chip chip--dark"><i class="ri-brain-line"></i> 当前掌握度 3/5</span>
+              <span class="chip chip--dark"><i class="ri-history-line"></i> 下次复习 明晚</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section stack">
+          <div class="card">
+            <p class="eyebrow">例句</p>
+            <h2 class="title-md">A resilient person can recover quickly from difficulties.</h2>
+            <p class="subtitle">一个有恢复力的人可以在困难之后迅速恢复状态。</p>
+            <div class="note" style="margin-top: 14px;">
+              记忆建议：把它和“回弹、恢复、适应”这些语义场景绑定，会更容易长期记住。
+            </div>
+          </div>
+
+          <div class="card">
+            <p class="eyebrow">近义词 / 词组</p>
+            <div class="chip-row" style="margin-top: 10px;">
+              <span class="chip">adaptive</span>
+              <span class="chip">tough</span>
+              <span class="chip">bounce back</span>
+              <span class="chip">mental resilience</span>
+            </div>
+          </div>
+
+          <div class="card card--soft">
+            <div class="row row--between row--center">
+              <div>
+                <p class="eyebrow">学习轨迹</p>
+                <h2 class="title-md">最近 3 次接触情况</h2>
+              </div>
+              <a class="pill" href="./stats.html">更多统计</a>
+            </div>
+            <div class="stack" style="margin-top: 14px;">
+              <div>
+                <div class="row row--between row--center">
+                  <span class="subtitle">初次学习</span>
+                  <span class="subtitle">掌握度 2</span>
+                </div>
+                <div class="bar"><span style="width: 40%;"></span></div>
+              </div>
+              <div>
+                <div class="row row--between row--center">
+                  <span class="subtitle">昨日复习</span>
+                  <span class="subtitle">掌握度 3</span>
+                </div>
+                <div class="bar bar--green"><span style="width: 62%;"></span></div>
+              </div>
+              <div>
+                <div class="row row--between row--center">
+                  <span class="subtitle">今日测试</span>
+                  <span class="subtitle">掌握度待确认</span>
+                </div>
+                <div class="bar bar--warm"><span style="width: 58%;"></span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="btn btn-primary" type="button" data-toast="已加入今晚重点复习"><i class="ri-focus-2-line"></i> 强化复习</button>
+            <a class="btn btn-secondary" href="./wrong-words.html"><i class="ri-bookmark-line"></i> 去错词本</a>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav">
+        <a class="nav-item is-active" href="./home.html">
+          <i class="ri-home-5-line"></i>
+          <span>首页</span>
+        </a>
+        <a class="nav-item" href="./books.html">
+          <i class="ri-book-2-line"></i>
+          <span>词书</span>
+        </a>
+        <a class="nav-item" href="./stats.html">
+          <i class="ri-bar-chart-box-line"></i>
+          <span>统计</span>
+        </a>
+        <a class="nav-item" href="./profile.html">
+          <i class="ri-user-3-line"></i>
+          <span>我的</span>
+        </a>
+      </nav>
+
+      <div class="toast">模拟交互已响应</div>
+    </div>
+  </div>
+  <script src="./assets/prototype.js"></script>
+</body>
+</html>

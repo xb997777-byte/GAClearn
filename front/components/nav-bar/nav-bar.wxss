@@ -1,0 +1,116 @@
+.nav-wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--theme-nav-bg, rgba(244, 247, 251, 0.94));
+  color: var(--theme-nav-text, #101828);
+  border-bottom: 1rpx solid var(--theme-nav-border, transparent);
+  box-shadow: var(--theme-nav-shadow, none);
+  backdrop-filter: blur(18rpx);
+  -webkit-backdrop-filter: blur(18rpx);
+}
+
+.nav-wrap.light {
+  background: transparent;
+  color: #ffffff;
+  border-bottom-color: transparent;
+  box-shadow: none;
+}
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  padding: 0 28rpx;
+}
+
+.nav-left,
+.detail-right {
+  width: 120rpx;
+  font-size: 26rpx;
+  color: inherit;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+}
+
+.detail-bar {
+  justify-content: space-between;
+}
+
+.root-bar {
+  justify-content: flex-start;
+}
+
+.nav-title {
+  color: inherit;
+}
+
+.detail-title {
+  flex: 1;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.root-title {
+  flex: 1;
+  text-align: left;
+  font-size: 40rpx;
+  font-weight: 800;
+  letter-spacing: 0.2rpx;
+}
+
+.root-right {
+  margin-left: 16rpx;
+  min-width: 40rpx;
+  color: inherit;
+}
+
+.nav-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8rpx;
+  min-height: 64rpx;
+  padding: 0 18rpx 0 14rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.52);
+  border: 1rpx solid rgba(148, 163, 184, 0.18);
+  box-sizing: border-box;
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+
+.nav-back-hover {
+  transform: translateY(-1rpx);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 10rpx 24rpx rgba(15, 23, 42, 0.08);
+}
+
+.nav-back-icon {
+  width: 28rpx;
+  height: 28rpx;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.nav-back-arrow {
+  position: absolute;
+  left: 8rpx;
+  top: 6rpx;
+  width: 12rpx;
+  height: 12rpx;
+  border-left: 4rpx solid currentColor;
+  border-bottom: 4rpx solid currentColor;
+  transform: rotate(45deg);
+  border-bottom-left-radius: 2rpx;
+}
+
+.nav-back-label {
+  font-size: 26rpx;
+  line-height: 1;
+  font-weight: 600;
+}

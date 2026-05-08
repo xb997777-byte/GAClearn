@@ -1,0 +1,127 @@
+<view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="学习设置" showBack="{{true}}" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view class="section hero-card" wx:if="{{user}}">
+      <view class="card-title" style="color:#fff;">{{ user.nickname || '学习者' }}</view>
+      <view class="card-subtitle light-text">这里集中管理提醒、发音、复习和分级测试相关设置。</view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{settings}}">
+      <view class="card-title">当前档案</view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">CEFR 等级</view>
+          <view class="list-desc">{{ settings.cefr_level || '未测试' }}</view>
+        </view>
+      </view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">分级测试得分</view>
+          <view class="list-desc">{{ settings.placement_score || 0 }}</view>
+        </view>
+      </view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">提醒时间</view>
+          <view class="list-desc">{{ settings.reminder_time }}</view>
+        </view>
+        <picker mode="time" value="{{settings.reminder_time}}" bindchange="handleReminderTimeChange">
+          <view class="list-side">修改</view>
+        </picker>
+      </view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">提醒订阅状态</view>
+          <view class="list-desc">{{ settings.reminder_subscription_status || 'unknown' }}</view>
+        </view>
+        <view class="list-side">{{ saving ? '同步中...' : '' }}</view>
+      </view>
+      <view class="button-row" style="margin-top:20rpx;">
+        <button class="secondary-btn" bindtap="handleSubscribeReminders">开启消息提醒</button>
+      </view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{settings}}">
+      <view class="card-title">学习行为</view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">自动播放发音</view>
+          <view class="list-desc">学习页切换单词时自动朗读当前单词。</view>
+        </view>
+        <switch checked="{{settings.auto_play_audio}}" bindchange="handleAutoAudioChange" color="#2c5dff" />
+      </view>
+      <view class="settings-block">
+        <view class="list-title">发音语速</view>
+        <view class="list-desc">当前 {{settings.speech_speed || 1}}x</view>
+        <view class="speed-row">
+          <view
+            wx:for="{{speechSpeedOptions}}"
+            wx:key="value"
+            class="{{item.className}}"
+            data-speed="{{item.value}}"
+            bindtap="handleSpeechSpeedSelect"
+          >
+            {{item.label}}
+          </view>
+        </view>
+      </view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">启用复习</view>
+          <view class="list-desc">关闭后不再推送复习任务。</view>
+        </view>
+        <switch checked="{{settings.review_enabled}}" bindchange="handleReviewEnabledChange" color="#2c5dff" />
+      </view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">语音播放</view>
+          <view class="list-desc">{{ playbackReady ? '已启用，可用于单词与句子朗读' : '当前环境暂未启用语音播放' }}</view>
+        </view>
+      </view>
+      <view wx:if="{{playbackReady}}" class="button-row" style="margin-top:20rpx;">
+        <button class="ghost-btn" bindtap="handlePlayDemo">试听朗读</button>
+      </view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{settings}}">
+      <view class="card-title">个性化 RAG</view>
+      <view class="card-subtitle">只有在你主动开启后，AI 才会根据你的学习记录创建个人知识库；开启授权后，仍需要你手动点击创建或刷新。</view>
+      <view class="list-item">
+        <view class="list-main">
+          <view class="list-title">启用个性化 RAG</view>
+          <view class="list-desc">把学习计划、错词本、最近记录和语法薄弱点提供给 AI 检索层使用</view>
+        </view>
+        <switch checked="{{settings.personalized_rag_enabled}}" bindchange="handlePersonalizedRagToggle" color="#2c5dff" />
+      </view>
+      <view class="rag-status-block">
+        <view class="rag-status-row">
+          <text class="rag-status-label">当前状态</text>
+          <text class="rag-status-value">{{settings.personalized_rag_status || 'idle'}}</text>
+        </view>
+        <view class="rag-status-row">
+          <text class="rag-status-label">知识块数量</text>
+          <text class="rag-status-value">{{settings.personalized_rag_chunk_count || 0}}</text>
+        </view>
+        <view class="rag-status-row" wx:if="{{settings.personalized_rag_updated_at}}">
+          <text class="rag-status-label">最近更新时间</text>
+          <text class="rag-status-value">{{settings.personalized_rag_updated_at}}</text>
+        </view>
+        <view class="rag-error" wx:if="{{settings.personalized_rag_last_error}}">
+          {{settings.personalized_rag_last_error}}
+        </view>
+      </view>
+      <view class="button-row" style="margin-top:20rpx;">
+        <button class="secondary-btn" loading="{{personalizedRagBuilding}}" disabled="{{personalizedRagBuilding || !settings.personalized_rag_enabled}}" bindtap="handleRebuildPersonalizedRag">创建 / 刷新我的个性知识库</button>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">能力测评</view>
+      <view class="card-subtitle">普通测试用于日常刷题，分级测试会给出 CEFR 估计等级和建议学习强度。</view>
+      <view class="button-row" style="margin-top:20rpx;">
+        <button class="secondary-btn" bindtap="handlePracticeTest">开始词汇测试</button>
+        <button class="ghost-btn" bindtap="handlePlacementRetest">重做分级测试</button>
+      </view>
+    </view>
+  </scroll-view>
+</view>

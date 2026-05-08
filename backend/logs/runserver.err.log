@@ -1,0 +1,24 @@
+[30/Apr/2026 15:52:49] "POST /api/v1/auth/wx-login HTTP/1.1" 200 782
+[30/Apr/2026 15:53:04] "POST /api/v1/ai/writing/prompt HTTP/1.1" 200 8881
+[30/Apr/2026 15:53:10] "POST /api/v1/ai/rag/vector-search HTTP/1.1" 200 2718
+[30/Apr/2026 15:53:16] "POST /api/v1/ai/scenario/dialogue HTTP/1.1" 200 13392
+[30/Apr/2026 15:53:16] "GET /api/v1/ai/observability HTTP/1.1" 200 1027
+[30/Apr/2026 15:53:16] "GET /api/v1/ai/mcp/manifest HTTP/1.1" 200 4534
+[30/Apr/2026 15:53:19] "POST /api/v1/ai/mcp/tools/call HTTP/1.1" 200 3493
+[30/Apr/2026 15:53:19,358] - Broken pipe from ('127.0.0.1', 60908)
+[30/Apr/2026 15:53:37] "POST /api/v1/auth/wx-login HTTP/1.1" 200 775
+[30/Apr/2026 15:53:37] "GET /api/v1/ai/mcp/manifest HTTP/1.1" 200 4534
+[30/Apr/2026 15:53:37,976] - Broken pipe from ('127.0.0.1', 57389)
+[30/Apr/2026 15:55:29] "POST /api/v1/auth/wx-login HTTP/1.1" 200 785
+[30/Apr/2026 15:55:29] "POST /api/v1/ai/writing/prompt HTTP/1.1" 200 8922
+[30/Apr/2026 15:55:29] "POST /api/v1/ai/writing/prompt HTTP/1.1" 200 8922
+[30/Apr/2026 15:55:29,197] - Broken pipe from ('127.0.0.1', 60197)
+[30/Apr/2026 16:15:53] "GET /api/v1/system/bootstrap HTTP/1.1" 200 184
+[30/Apr/2026 16:16:09] "POST /api/v1/auth/wx-login HTTP/1.1" 200 920
+[30/Apr/2026 16:16:09] "GET /api/v1/plans/current HTTP/1.1" 200 35
+[30/Apr/2026 16:16:10] "GET /api/v1/tasks/today HTTP/1.1" 200 153
+[30/Apr/2026 16:16:10] "GET /api/v1/users/me HTTP/1.1" 200 687
+[30/Apr/2026 16:16:10] "GET /api/v1/stats/overview HTTP/1.1" 200 255
+[30/Apr/2026 16:16:19] "GET /api/v1/ai/capabilities HTTP/1.1" 200 4743
+[30/Apr/2026 16:16:19] "GET /api/v1/ai/reports?limit=5 HTTP/1.1" 200 44
+[30/Apr/2026 16:16:19] "GET /api/v1/ai/conversations?limit=5 HTTP/1.1" 200 44

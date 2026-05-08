@@ -1,0 +1,247 @@
+<view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="首页" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view class="section hero-card">
+      <view class="card-title" style="color:#fff;">你好，{{ userName }}</view>
+      <view class="card-subtitle light-text">今天继续把单词、复习、测试和语法一起推进。</view>
+      <view class="tag-row" style="margin-top:18rpx;" wx:if="{{cefrLevel}}">
+        <view class="chip">当前 CEFR：{{cefrLevel}}</view>
+      </view>
+      <view class="metric-grid" style="margin-top:24rpx;">
+        <view class="metric-item">
+          <view class="metric-label">今日新词</view>
+          <view class="metric-value">{{ taskProgressText }}</view>
+        </view>
+        <view class="metric-item">
+          <view class="metric-label">待复习</view>
+          <view class="metric-value">{{ reviewRemainingText }}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section hero-card plan-hero-card" wx:if="{{hasPlan}}">
+      <view class="plan-hero-head">
+        <view class="plan-hero-state">进行中</view>
+      </view>
+
+      <view class="plan-book-stack">
+        <view class="plan-book-layer back"></view>
+        <view class="plan-book-layer middle"></view>
+        <view class="plan-book-cover">
+          <view class="plan-book-spine"></view>
+          <view class="plan-book-main">
+            <view class="plan-book-bookmark">
+              <view class="plan-book-bookmark-tail"></view>
+            </view>
+            <view class="plan-book-corner">
+              <view class="plan-book-corner-fold"></view>
+            </view>
+            <view class="plan-book-top">
+              <view class="plan-book-kicker">当前主词书</view>
+              <view class="plan-book-badges">
+                <view wx:if="{{plan.book.category}}" class="plan-book-badge">{{ plan.book.category }}</view>
+                <view wx:if="{{plan.book.word_count}}" class="plan-book-badge ghost">{{ plan.book.word_count }} 词</view>
+              </view>
+            </view>
+            <view class="plan-book-title">{{ plan.book.name }}</view>
+            <view class="plan-book-summary">今天的学习、复习和 AI 教练建议都会默认围绕这本词书展开。</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="plan-hero-progress-card">
+        <view class="plan-hero-progress-head">
+          <view class="plan-hero-progress-title">当前总进度</view>
+          <view class="plan-hero-progress-text">{{ planProgressText }} · {{ planProgressPercent }}%</view>
+        </view>
+        <view class="plan-hero-progress-track">
+          <view class="plan-hero-progress-fill" style="{{planProgressWidth}}"></view>
+        </view>
+        <view class="plan-hero-progress-tip">还剩 {{ planRemainingCountText }} 个词，按当前节奏预计 {{ plan.estimated_days }} 天学完。</view>
+      </view>
+
+      <view class="plan-hero-grid">
+        <view class="plan-hero-metric">
+          <view class="plan-hero-label">每日目标</view>
+          <view class="plan-hero-value">{{ plan.daily_target }} 个</view>
+        </view>
+        <view class="plan-hero-metric">
+          <view class="plan-hero-label">今日新词</view>
+          <view class="plan-hero-value">{{ taskProgressText }}</view>
+        </view>
+        <view class="plan-hero-metric">
+          <view class="plan-hero-label">待复习</view>
+          <view class="plan-hero-value">{{ reviewRemainingText }}</view>
+        </view>
+      </view>
+
+      <view class="plan-hero-tip">需要切换词书时，可以到“调整计划”或“查看词书”中修改。</view>
+
+      <view class="button-row plan-hero-actions">
+        <button class="ghost-btn plan-hero-main-btn" bindtap="handleStartTask">继续学习</button>
+        <button class="ghost-btn plan-hero-sub-btn" bindtap="goReview">开始复习</button>
+      </view>
+      <view class="button-row plan-hero-actions compact">
+        <button class="ghost-btn full-btn plan-hero-switch-btn" bindtap="goBooks">查看或切换词书</button>
+      </view>
+    </view>
+
+    <view class="section panel-card" wx:else>
+      <empty-state text="还没有学习计划" hint="先选一本词书并设置每日目标" />
+      <button class="primary-btn full-btn" bindtap="goBooks">去选词书</button>
+    </view>
+
+    <view class="section panel-card adaptive-card" wx:if="{{hasPlan && adaptive}}">
+      <view class="adaptive-header">
+        <view>
+          <view class="card-title">今日个性化建议</view>
+          <view class="card-subtitle">{{ adaptive.mode_label }}</view>
+        </view>
+        <view class="adaptive-pill">{{ adaptive.target_difficulty_label }}</view>
+      </view>
+      <view class="adaptive-tip">{{ adaptive.focus_tip }}</view>
+      <view class="adaptive-grid">
+        <view class="adaptive-metric">
+          <view class="adaptive-label">建议新词</view>
+          <view class="adaptive-value">{{ adaptive.recommended_new_word_target }}</view>
+        </view>
+        <view class="adaptive-metric">
+          <view class="adaptive-label">建议复习</view>
+          <view class="adaptive-value">{{ adaptive.recommended_review_word_target }}</view>
+        </view>
+        <view class="adaptive-metric">
+          <view class="adaptive-label">待复习</view>
+          <view class="adaptive-value">{{ adaptive.due_review_count }}</view>
+        </view>
+        <view class="adaptive-metric">
+          <view class="adaptive-label">近期正确率</view>
+          <view class="adaptive-value">{{ adaptive.recent_accuracy_percent || '--' }}%</view>
+        </view>
+      </view>
+      <view class="tag-row" style="margin-top:18rpx;" wx:if="{{adaptive.weak_points && adaptive.weak_points.length}}">
+        <view class="adaptive-chip" wx:for="{{adaptive.weak_points}}" wx:key="label">{{ item.label }}</view>
+      </view>
+    </view>
+
+    <view class="section panel-card coach-card">
+      <view class="coach-head">
+        <view>
+          <view class="card-title">AI学习教练</view>
+          <view class="card-subtitle">{{ studyCoachEnabled ? '已开启 AI 学习教练，正在基于你的计划、已学词和学习记录给出建议。' : '默认关闭。开启后，后端会把当前计划、已学词、错词和学习趋势交给 AI 教练分析。' }}</view>
+        </view>
+        <view class="coach-action-wrap">
+          <button
+            wx:if="{{!studyCoachEnabled}}"
+            class="secondary-btn ai-refresh-btn"
+            loading="{{studyCoachLoading}}"
+            bindtap="handleEnableStudyCoach"
+          >
+            开启AI教练
+          </button>
+          <block wx:else>
+            <button class="ghost-btn ai-refresh-btn" loading="{{studyCoachLoading}}" bindtap="handleReloadStudyCoach">刷新</button>
+            <button class="ghost-btn ai-refresh-btn" bindtap="handleDisableStudyCoach">关闭</button>
+          </block>
+        </view>
+      </view>
+
+      <view wx:if="{{!studyCoachEnabled}}" class="coach-disabled">
+        <view class="coach-section-title">一键开启后再生成 AI 训练建议</view>
+        <view class="coach-disabled-text">基础学习策略仍会显示在上方，AI 教练只在你主动开启后请求。</view>
+      </view>
+
+      <view wx:elif="{{studyCoachLoading}}" class="coach-loading">AI 正在整理你今天更适合的学习顺序…</view>
+      <view wx:elif="{{studyCoachError}}" class="coach-error">{{ studyCoachError }}</view>
+
+      <view wx:if="{{studyCoachEnabled && studyCoach}}" class="coach-body">
+        <view class="coach-highlight">
+          <view class="coach-headline">{{ studyCoach.headline }}</view>
+          <view class="coach-strategy">{{ studyCoach.today_strategy }}</view>
+        </view>
+
+        <view class="coach-tip-box">{{ studyCoach.coach_tip }}</view>
+
+        <view wx:if="{{studyCoachContextSources.length}}" class="coach-section">
+          <view class="coach-section-title">本次建议来自哪些上下文</view>
+          <view class="coach-source-grid">
+            <view wx:for="{{studyCoachContextSources}}" wx:key="key" class="coach-source-card">
+              <view class="coach-source-title">{{ item.label }}</view>
+              <view class="coach-source-detail">{{ item.detail }}</view>
+            </view>
+          </view>
+        </view>
+
+        <view wx:if="{{studyCoach.focus_items && studyCoach.focus_items.length}}" class="coach-focus-grid">
+          <view wx:for="{{studyCoach.focus_items}}" wx:key="title" class="coach-focus-card">
+            <view class="coach-focus-title">{{ item.title }}</view>
+            <view class="coach-focus-detail">{{ item.detail }}</view>
+          </view>
+        </view>
+
+        <view wx:if="{{studyCoach.recommended_order && studyCoach.recommended_order.length}}" class="coach-section">
+          <view class="coach-section-title">建议顺序</view>
+          <view class="tag-row">
+            <view wx:for="{{studyCoach.recommended_order}}" wx:key="index" class="coach-chip">{{ index + 1 }}. {{ item }}</view>
+          </view>
+        </view>
+
+        <view class="coach-next-card">
+          <view class="coach-section-title">下一步</view>
+          <view class="coach-next-text">{{ studyCoach.next_action }}</view>
+        </view>
+
+        <view class="coach-motivation">{{ studyCoach.motivation_line }}</view>
+        <ai-evidence evidence="{{studyCoachEvidence}}" title="AI 教练证据区" />
+      </view>
+    </view>
+
+    <view class="section stat-grid" wx:if="{{overview}}">
+      <view class="stat-card">
+        <view class="card-subtitle">累计学习</view>
+        <view class="stat-number">{{ overview.learned_word_count }}</view>
+      </view>
+      <view class="stat-card">
+        <view class="card-subtitle">复习次数</view>
+        <view class="stat-number">{{ overview.review_count }}</view>
+      </view>
+      <view class="stat-card">
+        <view class="card-subtitle">测试次数</view>
+        <view class="stat-number">{{ overview.test_count }}</view>
+      </view>
+      <view class="stat-card">
+        <view class="card-subtitle">平均分</view>
+        <view class="stat-number">{{ overview.average_test_score }}</view>
+      </view>
+    </view>
+
+    <view class="section panel-card" wx:if="{{overview}}">
+      <view class="card-title">学习数据</view>
+      <view class="card-subtitle">统计模块已合并到首页，详细趋势和每日打卡从这里进入。</view>
+      <view class="button-row" style="margin-top:20rpx;">
+        <button class="secondary-btn" bindtap="goStats">详细统计与打卡</button>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">学习快捷入口</view>
+      <view class="card-subtitle">把最常用的学习入口集中放在这里，不用再去“我的”里翻。</view>
+      <view class="button-row" style="margin-top:20rpx;">
+        <button class="secondary-btn" bindtap="goPlan">学习计划</button>
+        <button class="secondary-btn" bindtap="goReview">复习</button>
+        <button class="ghost-btn" bindtap="goWrongWords">错词本</button>
+      </view>
+      <view class="button-row" style="margin-top:16rpx;">
+        <button class="secondary-btn" bindtap="goFavorites">收藏夹</button>
+        <button class="secondary-btn" bindtap="goBooks">词书</button>
+        <button class="ghost-btn" bindtap="goGrammar">语法</button>
+      </view>
+      <view class="button-row" style="margin-top:16rpx;">
+        <button class="secondary-btn" bindtap="goExam">词汇测试</button>
+        <button class="ghost-btn" bindtap="goPlacement">分级测试</button>
+      </view>
+      <view class="button-row" style="margin-top:16rpx;">
+        <button class="ghost-btn" bindtap="goSettings">学习设置</button>
+      </view>
+    </view>
+  </scroll-view>
+</view>

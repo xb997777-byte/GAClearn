@@ -1,0 +1,42 @@
+<view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="登录" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view class="section hero-card">
+      <view class="card-title" style="color:#fff;">英语单词学习</view>
+      <view class="card-subtitle light-text">现在这版已经支持真实微信登录路径、语法 AI 能力接线、词汇测试和全局发音语速。</view>
+      <view class="metric-grid" style="margin-top:24rpx;">
+        <view class="metric-item">
+          <view class="metric-label">学习链路</view>
+          <view class="metric-value">单词 + 复习 + 测试</view>
+        </view>
+        <view class="metric-item">
+          <view class="metric-label">语法能力</view>
+          <view class="metric-value">拆句 + 问答</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">一键进入</view>
+      <view class="card-subtitle">{{loginModeText}}</view>
+      <view class="tag-row" style="margin-top:20rpx;">
+        <view wx:for="{{featureTips}}" wx:key="index" class="chip-light chip">{{item}}</view>
+      </view>
+      <view wx:if="{{isMockLoginMode}}" class="login-debug-block">
+        <view class="login-debug-label">测试账号标识</view>
+        <input
+          class="login-debug-input"
+          value="{{debugIdentity}}"
+          bindinput="handleDebugIdentityInput"
+          maxlength="32"
+          placeholder="例如 local_tester"
+        />
+        <view class="login-debug-tip">开发调试时请固定使用同一个标识。即使清空模拟器缓存，只要这里不变，仍会回到同一份后端学习记录。</view>
+      </view>
+      <view class="button-row" style="margin-top:24rpx;">
+        <button class="primary-btn full-btn" loading="{{loading}}" bindtap="handleLogin">微信授权并登录</button>
+        <button wx:if="{{hasToken}}" class="ghost-btn full-btn" bindtap="handleClearSession">清除上次登录状态</button>
+      </view>
+    </view>
+  </scroll-view>
+</view>

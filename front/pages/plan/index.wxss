@@ -1,0 +1,117 @@
+@import "../../styles/theme.wxss";
+
+.plan-status-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.plan-status-pill {
+  flex-shrink: 0;
+  min-width: 112rpx;
+  min-height: 48rpx;
+  padding: 0 18rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-size: var(--theme-font-size-subtitle);
+  font-weight: 700;
+  color: var(--theme-accent);
+  background: var(--theme-secondary-bg);
+  border: 2rpx solid var(--theme-card-border);
+}
+
+.plan-status-pill.paused {
+  color: #b45309;
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.plan-status-pill.completed {
+  color: #15803d;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.plan-switch-note {
+  margin-top: 18rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 20rpx;
+  background: var(--theme-secondary-bg);
+  color: var(--theme-text-secondary);
+  font-size: var(--theme-font-size-list-desc);
+  line-height: 1.6;
+}
+
+.plan-ai-card {
+  margin-top: 20rpx;
+  padding: 22rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, rgba(44, 93, 255, 0.08) 0%, rgba(92, 157, 255, 0.14) 100%);
+  border: 2rpx solid rgba(44, 93, 255, 0.14);
+}
+
+.plan-ai-kicker {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: var(--theme-secondary-text);
+}
+
+.plan-ai-title {
+  margin-top: 10rpx;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--theme-text-primary);
+}
+
+.plan-ai-summary {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  line-height: 1.8;
+  color: var(--theme-text-primary);
+}
+
+.plan-ai-list {
+  margin-top: 16rpx;
+}
+
+.plan-ai-section-title {
+  margin-top: 4rpx;
+  margin-bottom: 10rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: var(--theme-text-secondary);
+}
+
+.plan-ai-item {
+  margin-top: 10rpx;
+  padding: 16rpx 18rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: var(--theme-text-primary);
+}
+
+.plan-ai-emphasis {
+  border: 2rpx solid rgba(44, 93, 255, 0.18);
+  background: rgba(255, 255, 255, 0.98);
+  font-weight: 700;
+}
+
+.plan-history-block {
+  margin-top: 18rpx;
+}
+
+.plan-history-item {
+  margin-top: 10rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 20rpx;
+  background: var(--theme-secondary-bg);
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: var(--theme-text-secondary);
+}

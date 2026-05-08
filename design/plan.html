@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>英语单词微信小程序 - 学习计划</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="./assets/prototype.css">
+</head>
+<body class="prototype-page">
+  <div class="phone-shell">
+    <div class="phone-screen">
+      <div class="page-backdrop page-backdrop--ocean"></div>
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <div>9:41</div>
+        <div class="status-meta">
+          <i class="ri-signal-wifi-3-line"></i>
+          <i class="ri-wifi-line"></i>
+          <i class="ri-battery-charge-line"></i>
+        </div>
+      </div>
+
+      <main class="screen-scroll">
+        <section class="section">
+          <div class="row row--between row--center">
+            <a class="pill" href="./books.html"><i class="ri-arrow-left-line"></i> 返回</a>
+            <span class="chip chip--active"><i class="ri-rocket-line"></i> 新计划</span>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="card card--green">
+            <p class="eyebrow eyebrow--light">Selected Book</p>
+            <h1 class="hero-title">2026 考研高频核心词</h1>
+            <p class="subtitle subtitle--light">3500 词，适合系统推进。你可以先把节奏设轻一点，再靠复习把记忆留住。</p>
+            <div class="metric-grid" style="margin-top: 18px;">
+              <div class="metric-card metric-card--dark">
+                <p class="metric-label metric-label--light">预计完成</p>
+                <p class="metric-value">175 天</p>
+                <p class="metric-helper metric-helper--light">按 20 词/天估算</p>
+              </div>
+              <div class="metric-card metric-card--dark">
+                <p class="metric-label metric-label--light">建议起步</p>
+                <p class="metric-value">20</p>
+                <p class="metric-helper metric-helper--light">兼顾新学与复习强度</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section stack">
+          <div class="card">
+            <p class="eyebrow">每日目标</p>
+            <h2 class="title-md">先选一个舒服但能坚持的节奏</h2>
+            <div class="segmented" data-toggle-group style="margin-top: 14px;">
+              <button type="button">10</button>
+              <button type="button" class="is-active">20</button>
+              <button type="button">30</button>
+              <button type="button">50</button>
+            </div>
+            <div class="note" style="margin-top: 14px;">
+              以当前词书规模估算，20 词/天是首版默认推荐目标，既能推进新词，也不会挤压复习时间。
+            </div>
+          </div>
+
+          <div class="card">
+            <p class="eyebrow">提醒时间</p>
+            <h2 class="title-md">把学习放到你的惯常节奏里</h2>
+            <div class="chip-row" data-toggle-group style="margin-top: 14px;">
+              <button class="chip" type="button" data-toast="已切换到早起模式">07:30 早起背词</button>
+              <button class="chip is-active" type="button" data-toast="已切换到晚间模式">20:30 晚间专注</button>
+              <button class="chip" type="button" data-toast="已切换到午休模式">13:00 午休轻学</button>
+            </div>
+          </div>
+
+          <div class="card card--soft">
+            <div class="row row--between row--center">
+              <div>
+                <p class="eyebrow">本周节奏预览</p>
+                <h2 class="title-md">默认会安排新学 + 复习混合推进</h2>
+              </div>
+              <a class="badge badge--warm" href="#" data-toast="日历配置为原型示意"><i class="ri-calendar-line"></i></a>
+            </div>
+
+            <div class="chart" style="height: 130px;">
+              <div class="chart__group"><div class="chart__bar" style="height: 55%;"></div><span class="chart__label">一</span></div>
+              <div class="chart__group"><div class="chart__bar" style="height: 68%;"></div><span class="chart__label">二</span></div>
+              <div class="chart__group"><div class="chart__bar" style="height: 72%;"></div><span class="chart__label">三</span></div>
+              <div class="chart__group"><div class="chart__bar" style="height: 60%;"></div><span class="chart__label">四</span></div>
+              <div class="chart__group"><div class="chart__bar" style="height: 78%;"></div><span class="chart__label">五</span></div>
+              <div class="chart__group"><div class="chart__bar" style="height: 42%;"></div><span class="chart__label">六</span></div>
+              <div class="chart__group"><div class="chart__bar" style="height: 38%;"></div><span class="chart__label">日</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="data-grid">
+              <div class="mini-card">
+                <p class="mini-card__label">开始日期</p>
+                <p class="mini-card__value">2026-04-08</p>
+              </div>
+              <div class="mini-card">
+                <p class="mini-card__label">复习阈值</p>
+                <p class="mini-card__value">每日自动开启</p>
+              </div>
+            </div>
+            <div class="stack" style="margin-top: 14px;">
+              <a class="btn btn-primary" href="./home.html"><i class="ri-rocket-2-line"></i> 创建并开始计划</a>
+              <a class="btn btn-secondary" href="./books.html"><i class="ri-repeat-line"></i> 重新选择词书</a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav">
+        <a class="nav-item" href="./home.html">
+          <i class="ri-home-5-line"></i>
+          <span>首页</span>
+        </a>
+        <a class="nav-item is-active" href="./books.html">
+          <i class="ri-book-2-line"></i>
+          <span>词书</span>
+        </a>
+        <a class="nav-item" href="./stats.html">
+          <i class="ri-bar-chart-box-line"></i>
+          <span>统计</span>
+        </a>
+        <a class="nav-item" href="./profile.html">
+          <i class="ri-user-3-line"></i>
+          <span>我的</span>
+        </a>
+      </nav>
+
+      <div class="toast">模拟交互已响应</div>
+    </div>
+  </div>
+  <script src="./assets/prototype.js"></script>
+</body>
+</html>

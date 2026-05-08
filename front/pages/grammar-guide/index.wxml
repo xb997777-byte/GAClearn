@@ -1,0 +1,74 @@
+<view class="page-shell {{themePageClass}} grammar-page guide-page {{grammarThemeClass}} {{themeFontClass}} {{themeMotionClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="语法总览" showBack="{{true}}" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view class="section hero-card guide-hero">
+      <view class="guide-hero-badge">Grammar Course</view>
+      <view class="guide-hero-title">先看整套学习路径，再进入某一册详细学习。</view>
+      <view class="card-subtitle light-text">
+        这个页面现在只保留轻量目录，保证切换和滚动更顺畅。每一册的详细内容会进入单独页面查看。
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">学习顺序</view>
+      <view class="card-subtitle">建议从第 1 步开始，按顺序进入对应分册，不要一上来就跳到长难句。</view>
+
+      <view class="path-grid">
+        <view wx:for="{{paths}}" wx:key="id" wx:for-item="path" class="guide-path-card">
+          <view class="guide-path-title">{{ path.title }}</view>
+          <view class="guide-path-desc">{{ path.description }}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">分册目录</view>
+      <view class="card-subtitle">先选你当前该学的这一册，点进去再看完整章节、易错点和学习目标。</view>
+
+      <view
+        wx:for="{{volumes}}"
+        wx:key="id"
+        wx:for-item="volume"
+        class="volume-card"
+      >
+        <view class="volume-top">
+          <view class="volume-badge">{{ volume.volume }}</view>
+          <view class="volume-level">{{ volume.level }}</view>
+        </view>
+
+        <view class="volume-title">{{ volume.title }}</view>
+        <view class="volume-subtitle">{{ volume.subtitle }}</view>
+
+        <view class="volume-meta-row">
+          <view class="volume-meta-chip">共 {{ volume.chapterCount }} 章</view>
+          <view class="volume-meta-chip">进入查看详细目录</view>
+        </view>
+
+        <view
+          class="volume-entry-btn"
+          data-module-id="{{volume.id}}"
+          bindtap="handleOpenVolume"
+          hover-class="{{grammarActionHoverClass}}"
+          hover-start-time="20"
+          hover-stay-time="90"
+        >
+          <text class="volume-entry-btn-text">进入这一册</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section panel-card">
+      <view class="card-title">教材组织参考</view>
+      <view class="card-subtitle">这一套分册结构参考了主流英语语法教材的分级组织方式。</view>
+
+      <view wx:for="{{books}}" wx:key="id" wx:for-item="book" class="book-card">
+        <view class="book-top">
+          <view class="book-source">{{ book.source }}</view>
+          <view class="book-audience">{{ book.audience }}</view>
+        </view>
+        <view class="book-title">{{ book.title }}</view>
+        <view class="book-desc">{{ book.description }}</view>
+      </view>
+    </view>
+  </scroll-view>
+</view>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>英语单词微信小程序 - 复习</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+  <link rel="stylesheet" href="./assets/prototype.css">
+</head>
+<body class="prototype-page">
+  <div class="phone-shell">
+    <div class="phone-screen">
+      <div class="page-backdrop page-backdrop--forest"></div>
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <div>9:41</div>
+        <div class="status-meta">
+          <i class="ri-signal-wifi-3-line"></i>
+          <i class="ri-wifi-line"></i>
+          <i class="ri-battery-charge-line"></i>
+        </div>
+      </div>
+
+      <main class="screen-scroll">
+        <section class="section">
+          <div class="card card--green">
+            <div class="row row--between row--center">
+              <div style="max-width: 220px;">
+                <p class="eyebrow eyebrow--light">Review Mission</p>
+                <h1 class="title-lg">今晚复习 18 个词</h1>
+                <p class="subtitle subtitle--light">优先复习最近答错和掌握度波动大的词，让新词留得更稳。</p>
+              </div>
+              <div class="progress-ring" style="--progress: 0.42turn;">
+                <div class="progress-ring__content">
+                  <p class="progress-ring__value">8/18</p>
+                  <p class="progress-ring__label">已完成</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="segmented" data-toggle-group>
+            <button class="is-active" type="button" data-toast="当前题型：释义选词">释义选词</button>
+            <button type="button" data-toast="当前题型：单词选释义">单词选义</button>
+            <button type="button" data-toast="当前题型：拼写填空">拼写填空</button>
+          </div>
+        </section>
+
+        <section class="section stack">
+          <div class="card">
+            <p class="eyebrow">第 9 题 / 共 18 题</p>
+            <h2 class="title-lg">“能够迅速恢复、适应变化的” 对应哪个词？</h2>
+            <p class="subtitle">请选择最贴切的一项，点击后会出现即时交互反馈。</p>
+
+            <div class="choice-list" data-choice-group style="margin-top: 16px;">
+              <button class="choice" type="button" data-result="wrong" data-toast="这项更接近“简洁的”">
+                <span class="choice__index">A</span>
+                <span class="choice__body">
+                  <span class="choice__title">concise</span>
+                  <span class="choice__meta">简洁的，简明的</span>
+                </span>
+              </button>
+              <button class="choice" type="button" data-result="correct" data-toast="回答正确，已提升掌握度">
+                <span class="choice__index">B</span>
+                <span class="choice__body">
+                  <span class="choice__title">resilient</span>
+                  <span class="choice__meta">有恢复力的，适应力强的</span>
+                </span>
+              </button>
+              <button class="choice" type="button" data-result="wrong" data-toast="这项更接近“推断”">
+                <span class="choice__index">C</span>
+                <span class="choice__body">
+                  <span class="choice__title">infer</span>
+                  <span class="choice__meta">推断，推论</span>
+                </span>
+              </button>
+              <button class="choice" type="button" data-result="wrong" data-toast="这项更接近“培养”">
+                <span class="choice__index">D</span>
+                <span class="choice__body">
+                  <span class="choice__title">cultivate</span>
+                  <span class="choice__meta">培养，逐步建立</span>
+                </span>
+              </button>
+            </div>
+
+            <div class="row" style="margin-top: 16px;">
+              <button class="btn btn-primary" type="button" data-toast="本题结果已保存">提交本题</button>
+              <button class="btn btn-secondary" type="button" data-toast="已跳过到下一题">跳过</button>
+            </div>
+          </div>
+
+          <div class="card card--soft">
+            <div class="row row--between row--center">
+              <div>
+                <p class="eyebrow">近期高风险词</p>
+                <h2 class="title-md">建议今晚顺手强化一遍</h2>
+              </div>
+              <a class="pill" href="./wrong-words.html">错词本</a>
+            </div>
+            <div class="list" style="margin-top: 14px;">
+              <a class="list-item" href="./word-detail.html">
+                <span class="badge badge--warm"><i class="ri-alarm-warning-line"></i></span>
+                <div class="list-item__body">
+                  <h3 class="list-item__title">coherent</h3>
+                  <p class="list-item__text">最近 3 次中有 2 次答错，建议加入强化复习。</p>
+                </div>
+              </a>
+              <a class="list-item" href="./wrong-words.html">
+                <span class="badge badge--soft"><i class="ri-history-line"></i></span>
+                <div class="list-item__body">
+                  <h3 class="list-item__title">plausible</h3>
+                  <p class="list-item__text">已连续 5 天处于待确认状态，还未稳定掌握。</p>
+                </div>
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav">
+        <a class="nav-item is-active" href="./home.html">
+          <i class="ri-home-5-line"></i>
+          <span>首页</span>
+        </a>
+        <a class="nav-item" href="./books.html">
+          <i class="ri-book-2-line"></i>
+          <span>词书</span>
+        </a>
+        <a class="nav-item" href="./stats.html">
+          <i class="ri-bar-chart-box-line"></i>
+          <span>统计</span>
+        </a>
+        <a class="nav-item" href="./profile.html">
+          <i class="ri-user-3-line"></i>
+          <span>我的</span>
+        </a>
+      </nav>
+
+      <div class="toast">模拟交互已响应</div>
+    </div>
+  </div>
+  <script src="./assets/prototype.js"></script>
+</body>
+</html>

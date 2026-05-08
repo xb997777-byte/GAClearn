@@ -1,0 +1,169 @@
+<view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
+  <nav-bar title="单词学习" showBack="{{true}}" />
+  <scroll-view class="page-scroll" scroll-y>
+    <view wx:if="{{adaptive}}" class="section panel-card adaptive-card">
+      <view class="adaptive-header">
+        <view>
+          <view class="card-title">今日学习策略</view>
+          <view class="card-subtitle">{{ adaptive.mode_label }}</view>
+        </view>
+        <view class="adaptive-pill">{{ adaptive.target_difficulty_label }}</view>
+      </view>
+      <view class="adaptive-tip">{{ adaptive.focus_tip }}</view>
+    </view>
+
+    <view wx:if="{{words.length}}" class="section hero-card">
+      <view class="tag-row">
+        <view class="chip">{{ currentIndex + 1 }} / {{ targetCount || words.length }}</view>
+        <view wx:if="{{words[currentIndex].adaptive_reason}}" class="chip hero-reason">{{ words[currentIndex].adaptive_reason }}</view>
+      </view>
+      <view class="word-title">{{ words[currentIndex].word }}</view>
+      <view class="word-phonetic">{{ words[currentIndex].phonetic }} / {{ words[currentIndex].part_of_speech }}</view>
+      <view class="word-meaning-mask">
+        {{ meaningVisible ? words[currentIndex].meaning_cn : (decisionStage === 'reviewing' ? '已经进入讲解模式，你也可以重新展开中文释义。' : '先听发音、看例句，再决定自己是否认识。') }}
+      </view>
+      <view class="hero-stage-tip {{decisionStage === 'reviewing' ? 'reviewing' : ''}}">
+        {{ decisionStage === 'reviewing' ? '先看下面的讲解和例句，再做最终判断。' : '先凭发音和印象判断，减少一上来就看到答案的干扰。' }}
+      </view>
+      <view class="tag-row" style="margin-top:18rpx;" wx:if="{{words[currentIndex].adaptive_tags && words[currentIndex].adaptive_tags.length}}">
+        <view class="chip hero-tag" wx:for="{{words[currentIndex].adaptive_tags}}" wx:key="*this">{{ item }}</view>
+      </view>
+      <view class="button-row hero-action-row">
+        <button class="secondary-btn hero-action-btn" loading="{{audioBusy}}" bindtap="handlePlayWord">听单词</button>
+        <button wx:if="{{playbackReady}}" class="ghost-btn hero-action-btn" loading="{{audioBusy}}" bindtap="handlePlayExample">听例句</button>
+      </view>
+      <view class="button-row hero-action-row tight">
+        <button class="ghost-btn full-btn" bindtap="handleToggleMeaning">{{ meaningVisible ? '收起中文释义' : '显示中文释义' }}</button>
+      </view>
+
+      <view wx:if="{{decisionStage === 'reviewing'}}" class="hero-ai-entry {{aiTutorEnabled ? 'enabled' : ''}}">
+        <view class="hero-ai-entry-main">
+          <view class="hero-ai-entry-kicker">AI 讲词</view>
+          <view class="hero-ai-entry-title">{{ aiTutorEnabled ? '已开启 AI 讲词' : '当前默认是本地讲词' }}</view>
+          <view class="hero-ai-entry-text">
+            {{ aiTutorEnabled ? '现在显示的是 AI 版讲词，会补充更细的记忆提示、易混提醒和微练习。' : '默认先用本地讲词，想看更深入的解释时，再一键切换成 AI 讲词。' }}
+          </view>
+        </view>
+        <view class="hero-ai-entry-actions">
+          <button
+            wx:if="{{!aiTutorEnabled}}"
+            class="secondary-btn hero-ai-main-btn"
+            loading="{{aiTutorLoading}}"
+            bindtap="handleEnableAiTutor"
+          >开启 AI 讲词</button>
+          <button
+            wx:if="{{aiTutorEnabled}}"
+            class="secondary-btn hero-ai-main-btn"
+            loading="{{aiTutorLoading}}"
+            bindtap="handleReloadAiTutor"
+          >AI 重讲</button>
+          <button
+            wx:if="{{aiTutorEnabled}}"
+            class="ghost-btn hero-ai-sub-btn"
+            bindtap="handleDisableAiTutor"
+          >切回本地讲词</button>
+        </view>
+      </view>
+
+      <view class="button-row hero-decision-row">
+        <button class="primary-btn hero-decision-btn" bindtap="handleKnown">{{ decisionStage === 'reviewing' ? '我记住了' : '认识，下一个词' }}</button>
+        <button class="secondary-btn hero-decision-btn" bindtap="handleUnknown">{{ decisionStage === 'reviewing' ? '加入重点复习' : '不太熟，先看讲解' }}</button>
+      </view>
+      <view wx:if="{{decisionStage === 'reviewing'}}" class="button-row hero-action-row tight">
+        <button class="ghost-btn full-btn" bindtap="handleBackToDecision">回到先判断模式</button>
+      </view>
+    </view>
+
+    <view wx:if="{{words.length && decisionStage === 'reviewing'}}" class="section panel-card learn-ai-card">
+      <view class="learn-ai-head">
+        <view>
+          <view class="card-title">讲词助手</view>
+          <view class="card-subtitle">{{ aiTutorEnabled ? '当前区域只显示 AI 讲词内容，会清除上一轮本地讲词，避免两种解释混在一起。' : '现在显示的是本地讲词；首屏里可以直接一键切到 AI 讲词。' }}</view>
+        </view>
+        <view class="learn-ai-state-badge {{aiTutorEnabled ? 'enabled' : ''}}">{{ aiTutorEnabled ? 'AI 模式' : '本地模式' }}</view>
+      </view>
+
+      <view class="button-row learn-ai-toolbar">
+        <button
+          wx:if="{{!aiTutorEnabled}}"
+          class="secondary-btn ai-refresh-btn"
+          loading="{{aiTutorLoading}}"
+          bindtap="handleEnableAiTutor"
+        >开启 AI 讲词</button>
+        <button
+          wx:if="{{aiTutorEnabled}}"
+          class="ghost-btn ai-refresh-btn"
+          loading="{{aiTutorLoading}}"
+          bindtap="handleReloadAiTutor"
+        >AI 重讲</button>
+        <button
+          wx:if="{{aiTutorEnabled}}"
+          class="ghost-btn ai-refresh-btn"
+          bindtap="handleDisableAiTutor"
+        >切回本地</button>
+      </view>
+
+      <view wx:if="{{aiTutorEnabled && aiTutorLoading}}" class="learn-ai-loading">AI 正在整理这个词的记忆点、易混点和微练习...</view>
+      <view wx:elif="{{aiTutorEnabled && aiTutorError}}" class="learn-ai-error">{{ aiTutorError }}</view>
+
+      <view class="ai-card-tip" wx:if="{{aiTutorEnabled}}">已切换到 AI 讲词视图。当前区域只展示 AI 结果，不再混入上一轮本地讲词内容。</view>
+
+      <view wx:if="{{activeTutor}}" class="learn-ai-body">
+        <view class="learn-ai-highlight">
+          <view class="learn-ai-title">{{ aiTutorEnabled ? 'AI 一句话讲清' : '本地一句话讲清' }}</view>
+          <view class="learn-ai-text">{{ activeTutor.simple_explanation_cn }}</view>
+        </view>
+
+        <view class="learn-ai-grid">
+          <view class="learn-ai-note-card">
+            <view class="learn-ai-title">记忆提示</view>
+            <view class="learn-ai-text">{{ activeTutor.memory_tip }}</view>
+          </view>
+          <view class="learn-ai-note-card">
+            <view class="learn-ai-title">使用提醒</view>
+            <view class="learn-ai-text">{{ activeTutor.usage_tip }}</view>
+          </view>
+        </view>
+
+        <view wx:if="{{activeTutor.why_recommended}}" class="learn-ai-why">
+          <view class="learn-ai-title">为什么先学它</view>
+          <view class="learn-ai-text">{{ activeTutor.why_recommended }}</view>
+        </view>
+
+        <view wx:if="{{activeTutor.mini_quiz}}" class="learn-ai-quiz">
+          <view class="learn-ai-title">{{ aiTutorEnabled ? 'AI 微练习' : '本地微练习' }}</view>
+          <view class="learn-ai-text">{{ activeTutor.mini_quiz.prompt }}</view>
+          <view wx:for="{{activeTutor.mini_quiz.options}}" wx:key="index" class="learn-ai-option">{{ index + 1 }}. {{ item }}</view>
+          <button class="secondary-btn full-btn" bindtap="handleToggleAiQuizAnswer">
+            {{ aiQuizAnswerVisible ? '收起答案' : '查看答案' }}
+          </button>
+          <view wx:if="{{aiQuizAnswerVisible}}" class="learn-ai-answer">
+            <view class="learn-ai-title">答案</view>
+            <view class="learn-ai-text">{{ activeTutor.mini_quiz.answer }}</view>
+            <view class="learn-ai-answer-tip">{{ activeTutor.mini_quiz.explanation }}</view>
+          </view>
+        </view>
+
+        <ai-evidence wx:if="{{aiTutorEnabled && aiTutorEvidence}}" evidence="{{aiTutorEvidence}}" title="AI 讲词证据区" />
+      </view>
+    </view>
+
+    <view wx:if="{{words.length && decisionStage === 'reviewing'}}" class="section panel-card">
+      <view class="card-title">例句</view>
+      <view class="card-subtitle">{{ words[currentIndex].example_sentence }}</view>
+      <view class="card-subtitle" style="margin-top:8rpx;">{{ words[currentIndex].example_translation }}</view>
+    </view>
+
+    <view wx:if="{{words.length}}" class="section panel-card">
+      <view class="card-title">更多操作</view>
+      <view class="button-row" style="margin-top:16rpx;">
+        <button class="ghost-btn" bindtap="handleFavorite">收藏</button>
+        <button class="ghost-btn" bindtap="goDetail">详情</button>
+      </view>
+    </view>
+
+    <view wx:else class="section panel-card">
+      <empty-state text="暂无待学单词" hint="请先创建计划，或者今天的学习已经完成。" />
+    </view>
+  </scroll-view>
+</view>

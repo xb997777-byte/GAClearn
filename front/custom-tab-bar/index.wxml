@@ -1,0 +1,16 @@
+<view class="tab-bar" style="{{tabBarStyle}}">
+  <view
+    wx:for="{{list}}"
+    wx:key="pagePath"
+    class="tab-item {{selected === index ? 'active' : ''}}"
+    style="{{selected === index ? tabActiveTextStyle : tabTextStyle}}"
+    data-path="{{item.pagePath}}"
+    data-index="{{index}}"
+    bindtap="switchTab"
+  >
+    <view class="tab-item-surface">
+      <view class="tab-icon" style="{{selected === index ? tabActiveIconStyle : tabIconStyle}}">{{item.short}}</view>
+      <view class="tab-text">{{item.text}}</view>
+    </view>
+  </view>
+</view>
