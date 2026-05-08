@@ -34,6 +34,14 @@ Page(withThemePage({
     this.aiTutorRequestToken = 0;
   },
 
+  onHide() {
+    this.aiTutorRequestToken += 1;
+  },
+
+  onUnload() {
+    this.aiTutorRequestToken += 1;
+  },
+
   onShow() {
     if (this.loadedOnce && this.data.words.length) {
       return;
@@ -142,14 +150,14 @@ Page(withThemePage({
     }
 
     const token = ++this.aiTutorRequestToken;
-      this.setData({
-        aiTutorLoading: true,
-        aiTutorError: '',
-        aiTutor: null,
-        activeTutor: null,
-        aiTutorEvidence: null,
-        aiQuizAnswerVisible: false
-      });
+    this.setData({
+      aiTutorLoading: true,
+      aiTutorError: '',
+      aiTutor: null,
+      activeTutor: null,
+      aiTutorEvidence: null,
+      aiQuizAnswerVisible: false
+    });
     try {
       const data = await aiApi.explainWord({ word_id: currentWord.id });
       if (token !== this.aiTutorRequestToken) {
@@ -216,6 +224,9 @@ Page(withThemePage({
         this.loadRemoteAiTutor(true);
       }
     });
+    if (!enabled) {
+      this.aiTutorRequestToken += 1;
+    }
   },
 
   handleEnableAiTutor() {
@@ -333,7 +344,7 @@ Page(withThemePage({
       this.setData({
         currentIndex: nextIndex,
         localTutor: null,
-        aiTutor: this.data.aiTutorEnabled ? null : this.data.aiTutor,
+        aiTutor: null,
         aiTutorEvidence: null,
         activeTutor: null,
         aiTutorError: '',
@@ -341,6 +352,7 @@ Page(withThemePage({
         meaningVisible: false,
         decisionStage: 'initial'
       }, () => {
+        this.aiTutorRequestToken += 1;
         this.applyAiTutorForCurrentWord(true);
         this.autoPlayCurrentWord();
       });

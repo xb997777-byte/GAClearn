@@ -225,23 +225,27 @@ def get_or_create_today_task(user, plan):
         review_due_at__isnull=False,
         review_due_at__lte=timezone.now(),
     ).count()
+    next_new_target = max(int(getattr(plan, "daily_target", 0) or 0), 1)
+    next_review_target = max(review_target, adaptive_profile["recommended_review_word_target"])
     task, _ = DailyTask.objects.get_or_create(
         user=user,
         task_date=timezone.localdate(),
         defaults={
             "plan": plan,
-            "new_word_target": adaptive_profile["recommended_new_word_target"],
-            "review_word_target": max(review_target, adaptive_profile["recommended_review_word_target"]),
+            "new_word_target": next_new_target,
+            "review_word_target": next_review_target,
         },
     )
     if not task.is_started and not task.is_finished:
-        next_new_target = adaptive_profile["recommended_new_word_target"]
-        next_review_target = max(review_target, adaptive_profile["recommended_review_word_target"])
         dirty_fields = []
+        plan_changed = task.plan_id != plan.id
         if task.plan_id != plan.id:
             task.plan = plan
             dirty_fields.append("plan")
-        if task.new_word_target != next_new_target:
+        if plan_changed and task.new_word_target != next_new_target:
+            task.new_word_target = next_new_target
+            dirty_fields.append("new_word_target")
+        elif int(task.new_word_target or 0) <= 0:
             task.new_word_target = next_new_target
             dirty_fields.append("new_word_target")
         if task.review_word_target != next_review_target:

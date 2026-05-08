@@ -27,6 +27,14 @@ Page(withThemePage({
     await this.loadWordDetail(Number(options.id));
   },
 
+  onHide() {
+    this.aiTutorRequestToken += 1;
+  },
+
+  onUnload() {
+    this.aiTutorRequestToken += 1;
+  },
+
   async loadWordDetail(wordId) {
     try {
       const word = await learnApi.getLearnWordDetail(wordId);
@@ -49,14 +57,14 @@ Page(withThemePage({
       return;
     }
     const token = ++this.aiTutorRequestToken;
-      this.setData({
-        aiTutorLoading: true,
-        aiTutorError: '',
-        aiTutor: null,
-        activeTutor: null,
-        aiTutorEvidence: null,
-        aiQuizAnswerVisible: false
-      });
+    this.setData({
+      aiTutorLoading: true,
+      aiTutorError: '',
+      aiTutor: null,
+      activeTutor: null,
+      aiTutorEvidence: null,
+      aiQuizAnswerVisible: false
+    });
     try {
       const data = await aiApi.explainWord({ word_id: wordId });
       if (token !== this.aiTutorRequestToken) {
@@ -102,6 +110,7 @@ Page(withThemePage({
     const enabled = !!event.detail.value;
     const nextData = {
       aiTutorEnabled: enabled,
+      aiTutor: enabled ? (this.data.aiTutor || null) : null,
       aiQuizAnswerVisible: false,
       aiTutorError: '',
       aiTutorLoading: false,
@@ -114,6 +123,9 @@ Page(withThemePage({
         this.loadAiTutor(this.data.word.id);
       }
     });
+    if (!enabled) {
+      this.aiTutorRequestToken += 1;
+    }
   },
 
   handleReloadAiTutor() {

@@ -43,6 +43,14 @@ Page(withThemePage({
     this.reviewAiRequestToken = 0;
   },
 
+  onHide() {
+    this.reviewAiRequestToken += 1;
+  },
+
+  onUnload() {
+    this.reviewAiRequestToken += 1;
+  },
+
   onShow() {
     this.loadTasks();
   },
@@ -67,6 +75,7 @@ Page(withThemePage({
   },
 
   resetReviewAiState() {
+    this.reviewAiRequestToken += 1;
     this.setData({
       reviewAiTutor: null,
       reviewAiEvidence: null,

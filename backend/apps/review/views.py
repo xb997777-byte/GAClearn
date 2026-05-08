@@ -11,7 +11,12 @@ class ReviewTaskView(APIView):
     permission_classes = [IsWxAuthenticated]
 
     def get(self, request):
-        limit = int(request.query_params.get("limit", 10))
+        raw_limit = request.query_params.get("limit", 10)
+        try:
+            limit = int(raw_limit)
+        except (TypeError, ValueError):
+            limit = 10
+        limit = min(max(limit, 1), 50)
         return success_response(generate_review_tasks(request.user, limit))
 
 

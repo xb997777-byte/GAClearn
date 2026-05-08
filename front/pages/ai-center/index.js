@@ -940,6 +940,8 @@ Page(withThemePage({
     this.profileMemoryRefreshing = false;
     this.mcpToolRunning = false;
     this.ragIndexPollingTimer = null;
+    this.applicationsLoaded = false;
+    this.observabilityLoaded = false;
     this.pendingOptions = options || {};
     this.applyAiCenterIntent(options || {}, { silent: true });
     this.loadOverview();
@@ -1000,10 +1002,10 @@ Page(withThemePage({
         evaluationRuns: (evaluationData.runs || []).map(normalizeEvaluationRun),
         evaluationSummary: evaluationData.summary || null
       });
-      if (this.data.activeTab === 'apps') {
+      if (this.data.activeTab === 'apps' && !this.applicationsLoaded) {
         this.loadApplications();
       }
-      if (this.data.activeTab === 'ops') {
+      if (this.data.activeTab === 'ops' && !this.observabilityLoaded) {
         this.loadObservability();
       }
       this.syncRagIndexPolling();
@@ -1024,10 +1026,10 @@ Page(withThemePage({
     } else {
       this.stopRagIndexPolling();
     }
-    if (tab === 'apps' && !this.data.grammarGuide && !this.data.agentsBrief) {
+    if (tab === 'apps' && !this.applicationsLoaded) {
       this.loadApplications();
     }
-    if (tab === 'ops' && !this.data.observability) {
+    if (tab === 'ops' && !this.observabilityLoaded) {
       this.loadObservability();
     }
   },
@@ -1059,10 +1061,10 @@ Page(withThemePage({
     }
     this.setData(nextState);
     if (!options.silent) {
-      if (nextState.activeTab === 'apps' && !this.data.grammarGuide) {
+      if (nextState.activeTab === 'apps' && !this.applicationsLoaded) {
         this.loadApplications();
       }
-      if (nextState.activeTab === 'ops' && !this.data.observability) {
+      if (nextState.activeTab === 'ops' && !this.observabilityLoaded) {
         this.loadObservability();
       }
       if (nextState.activeTab === 'rag') {
@@ -1139,6 +1141,7 @@ Page(withThemePage({
       await task();
     } catch (error) {
       wx.showToast({ title: (error.message || failText).slice(0, 20), icon: 'none' });
+      throw error;
     } finally {
       this.setData({ [flagName]: false });
     }
@@ -1513,7 +1516,7 @@ Page(withThemePage({
   },
 
   loadApplications() {
-    this.runWithLoading('appsLoading', async () => {
+    return this.runWithLoading('appsLoading', async () => {
       const [grammarGuide, agentsBrief, quality, observability, scenarioTemplates, conversations] = await Promise.all([
         aiApi.getGrammarGuide(),
         aiApi.getAgentsBrief(),
@@ -1530,11 +1533,12 @@ Page(withThemePage({
         appScenarioTemplates: normalizeScenarioTemplates((scenarioTemplates || {}).list),
         appConversationList: normalizeConversationList((conversations || {}).list)
       });
+      this.applicationsLoaded = true;
     }, 'AI 应用加载失败');
   },
 
   loadObservability() {
-    this.runWithLoading('opsLoading', async () => {
+    return this.runWithLoading('opsLoading', async () => {
       const [quality, observability, evaluationData] = await Promise.all([
         aiApi.getQuality(),
         aiApi.getObservability(),
@@ -1547,6 +1551,7 @@ Page(withThemePage({
         evaluationRuns: (evaluationData.runs || []).map(normalizeEvaluationRun),
         evaluationSummary: evaluationData.summary || null
       });
+      this.observabilityLoaded = true;
     }, '观测加载失败');
   },
 

@@ -83,30 +83,30 @@ def serialize_word(word, progress=None, adaptive_reason="", adaptive_tags=None):
 
 
 def _resolve_today_target(user, plan, requested_limit=None):
-    requested_limit = int(requested_limit or 0)
+    requested_limit = max(int(requested_limit or 0), 0)
     if requested_limit > 0:
-        return requested_limit, None
+        return min(requested_limit, 200), None
 
     task_new_word_target = None
     if plan:
         task = get_or_create_today_task(user, plan)
         task_new_word_target = max(int(task.new_word_target or 0), 0)
         if task_new_word_target > 0:
-          return task_new_word_target, task
+            return min(task_new_word_target, 200), task
 
     plan_daily_target = max(int(getattr(plan, "daily_target", 0) or 0), 0)
     if plan_daily_target > 0:
-        return plan_daily_target, None
+        return min(plan_daily_target, 200), None
 
     user_setting = ensure_user_setting(user)
     setting_daily_target = max(int(getattr(user_setting, "daily_target", 0) or 0), 0)
     if setting_daily_target > 0:
-        return setting_daily_target, None
+        return min(setting_daily_target, 200), None
 
     return 20, None
 
 
-def get_today_words(user, limit=20):
+def get_today_words(user, limit=0):
     plan = get_current_plan(user)
     if not plan:
         return {
