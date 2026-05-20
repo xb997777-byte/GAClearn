@@ -1,6 +1,8 @@
 from collections import Counter
 from typing import Dict, List
 
+from django.utils import timezone
+
 from apps.learn.adaptive import build_adaptive_profile
 from apps.learn.models import WordProgress
 from apps.plans.services import build_today_task_payload, get_current_plan
@@ -17,12 +19,15 @@ def _serialize_wrong_word(item, reason: str) -> Dict:
     }
 
 
-def _build_priority_wrong_words(user, limit=5) -> List[Dict]:
-    queryset = (
-        WrongWord.objects.filter(user=user, is_active=True)
-        .select_related("word")
-        .order_by("-wrong_count", "-last_wrong_at", "-id")[:limit]
-    )
+def _build_wrong_word_queryset(user, current_plan):
+    queryset = WrongWord.objects.filter(user=user, is_active=True).select_related("word")
+    if current_plan and getattr(current_plan, "book_id", None):
+        queryset = queryset.filter(word__book_id=current_plan.book_id)
+    return queryset
+
+
+def _build_priority_wrong_words(user, current_plan, limit=5) -> List[Dict]:
+    queryset = _build_wrong_word_queryset(user, current_plan).order_by("-wrong_count", "-last_wrong_at", "-id")[:limit]
     result = []
     for item in queryset:
         reason = "重复出错次数较多，建议优先回收。"
@@ -32,12 +37,15 @@ def _build_priority_wrong_words(user, limit=5) -> List[Dict]:
     return result
 
 
-def _build_due_review_words(user, limit=5) -> List[Dict]:
-    queryset = (
-        WordProgress.objects.filter(user=user, review_due_at__isnull=False)
-        .select_related("word")
-        .order_by("review_due_at", "-wrong_count", "id")[:limit]
-    )
+def _build_due_review_words(user, current_plan, limit=5) -> List[Dict]:
+    queryset = WordProgress.objects.filter(
+        user=user,
+        review_due_at__isnull=False,
+        review_due_at__lte=timezone.now(),
+    ).select_related("word")
+    if current_plan and getattr(current_plan, "book_id", None):
+        queryset = queryset.filter(book_id=current_plan.book_id)
+    queryset = queryset.order_by("review_due_at", "-wrong_count", "id")[:limit]
     return [
         {
             "word": item.word.word,
@@ -49,13 +57,9 @@ def _build_due_review_words(user, limit=5) -> List[Dict]:
     ]
 
 
-def _build_wrong_patterns(user, limit=3) -> List[str]:
+def _build_wrong_patterns(user, current_plan, limit=3) -> List[str]:
     counter = Counter()
-    queryset = (
-        WrongWord.objects.filter(user=user, is_active=True)
-        .select_related("word")
-        .order_by("-wrong_count", "-last_wrong_at")[:30]
-    )
+    queryset = _build_wrong_word_queryset(user, current_plan).order_by("-wrong_count", "-last_wrong_at")[:30]
     for item in queryset:
         part_of_speech = (item.word.part_of_speech or "").strip()
         if part_of_speech:
@@ -79,9 +83,9 @@ def build_study_coach_bundle(user, trend_days=7) -> Dict:
         "overview": overview,
         "adaptive": adaptive,
         "trend": trend,
-        "priority_wrong_words": _build_priority_wrong_words(user, limit=5),
-        "due_review_words": _build_due_review_words(user, limit=5),
-        "wrong_patterns": _build_wrong_patterns(user, limit=3),
+        "priority_wrong_words": _build_priority_wrong_words(user, current_plan, limit=5),
+        "due_review_words": _build_due_review_words(user, current_plan, limit=5),
+        "wrong_patterns": _build_wrong_patterns(user, current_plan, limit=3),
     }
 
 

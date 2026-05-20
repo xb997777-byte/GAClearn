@@ -8,7 +8,7 @@
     data-index="{{index}}"
     bindtap="switchTab"
   >
-    <view class="tab-item-surface">
+    <view class="tab-item-surface" style="{{selected === index ? tabActiveSurfaceStyle : ''}}">
       <view class="tab-icon" style="{{selected === index ? tabActiveIconStyle : tabIconStyle}}">{{item.short}}</view>
       <view class="tab-text">{{item.text}}</view>
     </view>

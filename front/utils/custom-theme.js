@@ -221,6 +221,7 @@ module.exports = {
   DEFAULT_CUSTOM_THEME,
   HUE_PRESETS,
   normalizeCustomTheme,
+  hexToRgba,
   buildCustomTheme,
   buildFontSizeTokens
 };

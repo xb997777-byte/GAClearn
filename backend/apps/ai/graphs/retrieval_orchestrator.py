@@ -73,7 +73,7 @@ def _guess_focus(query: str) -> Dict[str, str]:
         return {"focus": "grammar_rule", "focus_label": "语法规则理解", "preferred_mode": "structured"}
     if any(token in text for token in ["区别", "近义", "表达", "怎么说", "搭配", "例句", "用法"]):
         return {"focus": "usage_and_difference", "focus_label": "词义区别与例句用法", "preferred_mode": "hybrid"}
-    return {"focus": "general_lookup", "focus_label": "通用知识检索", "preferred_mode": "auto"}
+    return {"focus": "general_lookup", "focus_label": "通用知识检索", "preferred_mode": "hybrid"}
 
 
 def _build_query_analysis(query: str) -> Dict[str, Any]:
@@ -138,7 +138,7 @@ def _build_selection(state: RetrievalOrchestratorState) -> Dict[str, Any]:
     structured_hits = _structured_hit_count(structured)
     hybrid_hits = _hybrid_hit_count(hybrid)
     dual_source_hits = _hybrid_dual_source_count(hybrid)
-    preferred_mode = query_analysis.get("preferred_mode", "auto")
+    preferred_mode = query_analysis.get("preferred_mode", "hybrid")
     selected_path = "hybrid_rag"
     selected_label = "Hybrid RAG"
     reasons: List[str] = []
@@ -278,7 +278,7 @@ def _node_summarize_result(state: RetrievalOrchestratorState) -> Dict[str, Any]:
     knowledge = state.get("knowledge") or {}
     agent_flow = {
         "title": "LangGraph 检索编排 Multi-Agent",
-        "inputs": [f"query：{state.get('query', '')}", f"focus：{query_analysis.get('focus_label', '通用检索')}", f"preferred_mode：{query_analysis.get('preferred_mode', 'auto')}"],
+        "inputs": [f"query：{state.get('query', '')}", f"focus：{query_analysis.get('focus_label', '通用检索')}", f"preferred_mode：{query_analysis.get('preferred_mode', 'hybrid')}"],
         "steps": [
             {"name": "planner", "detail": "问题分析员识别 query 焦点、关键词和 preferred_mode。"},
             {"name": "retriever", "detail": "检索执行员依次运行 structured 和 hybrid 检索。"},

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import re
+from time import monotonic
 from typing import Any, Callable, Dict, List
 
 from django.db.models import Q
@@ -28,9 +29,12 @@ from ..learning_assistant import (
     summarize_ai_quality,
 )
 from ..learning_reports import list_study_reports
+from ..agent_runtime import create_approval, maybe_require_approval
 from ..observability import build_observability_summary
 from ..profile_memory import get_or_refresh_profile_memory, serialize_profile_memory
 from ..rag.sync_service import sync_rag_index
+from ..response_contracts import normalize_feature_contract
+from ..evidence import attach_feature_evidence
 
 
 @dataclass(frozen=True)
@@ -58,6 +62,316 @@ class MCPPromptDef:
 
 
 RESOURCE_URI_PATTERN = re.compile(r"^(?P<scheme>[a-z_]+)://(?P<kind>[a-z\-]+)/(?P<value>.+)$")
+TOOL_FEATURE_TYPE_MAP = {
+    "rag_search": "rag_search",
+    "vector_rag_search": "vector_rag",
+    "evaluate_rag_recall": "rag_recall_eval",
+    "generate_writing_prompt": "writing_prompt",
+    "get_grammar_guide": "grammar_guide",
+    "get_multi_agent_brief": "multi_agent_brief",
+    "plan_replanner": "plan_replan",
+}
+
+TOOL_AGENT_META: Dict[str, Dict[str, Any]] = {
+    "get_user_plan": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 8000},
+    "get_today_task": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 8000},
+    "get_due_reviews": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 8000},
+    "get_wrong_words": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 8000},
+    "search_words": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 8000},
+    "get_word_detail": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 8000},
+    "get_study_snapshot": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 12000},
+    "search_grammar_points": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 8000},
+    "get_sentence_detail": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 8000},
+    "rag_search": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 30000},
+    "vector_rag_search": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 45000},
+    "sync_rag_index": {"agent_enabled": True, "safe_for_agent": True, "mutation": True, "requires_approval": True, "tool_timeout_ms": 120000},
+    "evaluate_rag_recall": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 30000},
+    "generate_writing_prompt": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 30000},
+    "get_grammar_guide": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 15000},
+    "list_scenario_templates": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 8000},
+    "get_learning_reports": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 15000},
+    "get_multi_agent_brief": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 15000},
+    "plan_replanner": {"agent_enabled": True, "safe_for_agent": True, "mutation": True, "requires_approval": True, "tool_timeout_ms": 60000},
+    "get_ai_quality": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 8000},
+    "get_ai_observability": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 8000},
+    "get_profile_memory": {"agent_enabled": True, "safe_for_agent": True, "mutation": False, "requires_approval": False, "tool_timeout_ms": 8000},
+}
+
+TOOL_UI_META: Dict[str, Dict[str, Any]] = {
+    "get_user_plan": {
+        "skill_id": "study_plan.current",
+        "version": "1.0.0",
+        "permissions": ["user:plan:read"],
+        "display_name": "当前学习计划",
+        "category": "学习计划",
+        "summary": "读取你当前正在执行的学习计划。",
+        "details": "适合先确认当前词书、每日目标、计划状态和学习节奏是否符合预期。",
+        "example_args": {},
+        "result_preview_hint": "返回计划概览、词书和每日学习配置。",
+        "ui_order": 10,
+    },
+    "get_today_task": {
+        "skill_id": "study_plan.today_task",
+        "version": "1.0.0",
+        "permissions": ["user:plan:read"],
+        "display_name": "今日学习任务",
+        "category": "学习计划",
+        "summary": "查看今天应该学什么、复习什么。",
+        "details": "适合进入学习前先快速确认今日任务量、待学词和待复习词数量。",
+        "example_args": {},
+        "result_preview_hint": "返回今天的新词、复习任务和整体进度。",
+        "ui_order": 20,
+    },
+    "get_due_reviews": {
+        "skill_id": "study_plan.due_reviews",
+        "version": "1.0.0",
+        "permissions": ["user:review:read"],
+        "display_name": "到期复习词",
+        "category": "学习计划",
+        "summary": "列出当前已经到期、应该优先复习的单词。",
+        "details": "适合复习前先拉出一批即将遗忘或已经到期的单词，集中处理。",
+        "example_args": {"limit": 10},
+        "result_preview_hint": "返回一组待复习单词及其掌握度、错词次数和到期时间。",
+        "ui_order": 30,
+    },
+    "get_wrong_words": {
+        "skill_id": "study_plan.wrong_words",
+        "version": "1.0.0",
+        "permissions": ["user:review:read"],
+        "display_name": "错词本",
+        "category": "学习计划",
+        "summary": "查看你最近答错过的单词。",
+        "details": "适合做错题回看，或给后续 AI 讲解、专项复习提供输入。",
+        "example_args": {},
+        "result_preview_hint": "返回错词列表与最近错误记录。",
+        "ui_order": 40,
+    },
+    "get_study_snapshot": {
+        "skill_id": "study_plan.snapshot",
+        "version": "1.0.0",
+        "permissions": ["user:stats:read"],
+        "display_name": "学习快照",
+        "category": "学习计划",
+        "summary": "查看近几天学习概览、趋势和今日任务。",
+        "details": "适合做学习复盘或给 AI 生成学习建议前先拉取一个整体快照。",
+        "example_args": {"days": 7},
+        "result_preview_hint": "返回概览统计、趋势曲线数据和今日任务。",
+        "ui_order": 50,
+    },
+    "plan_replanner": {
+        "skill_id": "study_plan.replanner",
+        "version": "1.0.0",
+        "permissions": ["user:plan:read", "user:review:read", "ai:plan:write_suggestion"],
+        "display_name": "AI 重规划今日计划",
+        "category": "学习计划",
+        "summary": "让 AI 结合计划、趋势和错词本重排今天的学习节奏。",
+        "details": "适合觉得今日任务太重、太轻或需要按当前状态重新安排时使用。",
+        "example_args": {"trend_days": 7},
+        "result_preview_hint": "返回建议的日目标、执行顺序、时间块和理由。",
+        "ui_order": 60,
+    },
+    "search_words": {
+        "skill_id": "vocab.search",
+        "version": "1.0.0",
+        "permissions": ["catalog:words:read"],
+        "display_name": "搜索词汇",
+        "category": "词汇/语法",
+        "summary": "按关键词搜索词库。",
+        "details": "适合先定位单词，再继续查看单词详情、例句和词书归属。",
+        "example_args": {"keyword": "important", "limit": 8},
+        "result_preview_hint": "返回命中的单词列表。",
+        "ui_order": 110,
+    },
+    "get_word_detail": {
+        "skill_id": "vocab.detail",
+        "version": "1.0.0",
+        "permissions": ["catalog:words:read"],
+        "display_name": "单词详情",
+        "category": "词汇/语法",
+        "summary": "查看某个单词的详细信息。",
+        "details": "支持输入单词 ID 或关键词，适合查询词义、例句、学习状态和词书归属。",
+        "example_args": {"keyword": "important"},
+        "result_preview_hint": "返回单词讲解、例句和学习状态。",
+        "ui_order": 120,
+    },
+    "search_grammar_points": {
+        "skill_id": "grammar.search",
+        "version": "1.0.0",
+        "permissions": ["catalog:grammar:read"],
+        "display_name": "搜索语法点",
+        "category": "词汇/语法",
+        "summary": "按关键词搜索语法点。",
+        "details": "适合先定位到相关语法规则，再继续看例句或生成语法导学。",
+        "example_args": {"keyword": "定语从句", "limit": 8},
+        "result_preview_hint": "返回命中的语法点列表。",
+        "ui_order": 130,
+    },
+    "get_sentence_detail": {
+        "skill_id": "grammar.sentence_detail",
+        "version": "1.0.0",
+        "permissions": ["catalog:grammar:read"],
+        "display_name": "语法句子详情",
+        "category": "词汇/语法",
+        "summary": "查看某条语法例句的详细解释。",
+        "details": "适合围绕具体例句理解语法点、翻译和句子分析。",
+        "example_args": {"sentence_id": 1},
+        "result_preview_hint": "返回例句、翻译、分析和关联语法点。",
+        "ui_order": 140,
+    },
+    "get_grammar_guide": {
+        "skill_id": "grammar.guide",
+        "version": "1.0.0",
+        "permissions": ["catalog:grammar:read", "user:stats:read"],
+        "display_name": "语法导学建议",
+        "category": "词汇/语法",
+        "summary": "根据你的近期情况生成语法导学建议。",
+        "details": "适合想知道最近该优先补哪些语法薄弱点时使用。",
+        "example_args": {},
+        "result_preview_hint": "返回语法建议、重点和学习路径。",
+        "ui_order": 150,
+    },
+    "rag_search": {
+        "skill_id": "rag.structured",
+        "version": "1.0.0",
+        "permissions": ["rag:query"],
+        "display_name": "结构化资料问答",
+        "category": "RAG 问答",
+        "summary": "优先用词条、语法点和例句表回答你的问题。",
+        "details": "适合查词义区别、固定规则、例句和明确的语法知识点。",
+        "example_args": {"query": "important 和 significant 的区别是什么？", "limit": 6},
+        "result_preview_hint": "返回基于结构化知识的答案和依据点。",
+        "ui_order": 210,
+    },
+    "vector_rag_search": {
+        "skill_id": "rag.hybrid",
+        "version": "1.0.0",
+        "permissions": ["rag:query"],
+        "display_name": "智能资料问答",
+        "category": "RAG 问答",
+        "summary": "默认使用 hybrid 检索，直接给出更自然的资料型回答。",
+        "details": "适合学习问答主入口。系统会结合结构化命中、向量召回、个性化资料和重排结果回答。",
+        "example_args": {
+            "query": "important 和 significant 怎么区分？",
+            "limit": 6,
+            "retrieval_mode": "hybrid",
+        },
+        "result_preview_hint": "返回直接答案、要点、追问建议和参考来源。",
+        "ui_order": 220,
+    },
+    "sync_rag_index": {
+        "skill_id": "rag.sync",
+        "version": "1.0.0",
+        "permissions": ["rag:index:write"],
+        "display_name": "同步 RAG 索引",
+        "category": "RAG 问答",
+        "summary": "把新增或修改过的知识块增量写入索引。",
+        "details": "适合更新词库、语法或项目文档后进行增量同步，不做整库重建。",
+        "example_args": {"batch_size": 64, "delete_missing": False},
+        "result_preview_hint": "返回同步条数、跳过条数和当前索引统计。",
+        "ui_order": 230,
+    },
+    "evaluate_rag_recall": {
+        "skill_id": "rag.eval",
+        "version": "1.0.0",
+        "permissions": ["rag:query", "rag:eval"],
+        "display_name": "评测资料召回",
+        "category": "RAG 问答",
+        "summary": "比较结构化与向量检索对当前问题的覆盖效果。",
+        "details": "适合做技术调试或验证当前索引质量，不建议作为普通用户主入口。",
+        "example_args": {
+            "query": "important 和 significant 怎么区分？",
+            "expected_keywords": ["important", "significant", "example"],
+            "preferred_source_type": "word",
+            "limit": 6,
+        },
+        "result_preview_hint": "返回诊断结果、覆盖率和建议策略。",
+        "ui_order": 240,
+    },
+    "generate_writing_prompt": {
+        "skill_id": "writing.prompt",
+        "version": "1.0.0",
+        "permissions": ["ai:writing:generate"],
+        "display_name": "生成写作任务",
+        "category": "写作/场景",
+        "summary": "生成写作题目、提纲、范文和评分维度。",
+        "details": "适合需要作文练习主题、结构提示和写作方向时使用。",
+        "example_args": {"level": "cet4", "topic": "How to build a steady English learning routine", "genre": "essay"},
+        "result_preview_hint": "返回写作目标、提纲、范文和评分标准。",
+        "ui_order": 310,
+    },
+    "list_scenario_templates": {
+        "skill_id": "scenario.templates",
+        "version": "1.0.0",
+        "permissions": ["catalog:scenario:read"],
+        "display_name": "情景对话模板",
+        "category": "写作/场景",
+        "summary": "查看可直接使用的英语情景对话模板。",
+        "details": "适合先挑一个场景，再进入文本情景对话或口语陪练。",
+        "example_args": {},
+        "result_preview_hint": "返回场景列表、任务说明和起手句。",
+        "ui_order": 320,
+    },
+    "get_learning_reports": {
+        "skill_id": "ops.learning_reports",
+        "version": "1.0.0",
+        "permissions": ["user:reports:read"],
+        "display_name": "学习报告历史",
+        "category": "系统观测",
+        "summary": "查看 AI 学习报告和历史记录。",
+        "details": "适合回看阶段性学习总结，或比较不同时间段的变化。",
+        "example_args": {"limit": 5, "include_compare": True},
+        "result_preview_hint": "返回学习报告列表和对比信息。",
+        "ui_order": 410,
+    },
+    "get_multi_agent_brief": {
+        "skill_id": "ops.multi_agent_brief",
+        "version": "1.0.0",
+        "permissions": ["ai:demo:read"],
+        "display_name": "多老师协作简报",
+        "category": "系统观测",
+        "summary": "查看多 Agent 协作视角下的学习简报。",
+        "details": "适合做功能展示，查看多角色对你的学习状态给出的拆分建议。",
+        "example_args": {},
+        "result_preview_hint": "返回角色职责、协作流和简报结果。",
+        "ui_order": 420,
+    },
+    "get_ai_quality": {
+        "skill_id": "ops.ai_quality",
+        "version": "1.0.0",
+        "permissions": ["ai:ops:read"],
+        "display_name": "AI 质量摘要",
+        "category": "系统观测",
+        "summary": "查看近期 AI 请求与缓存质量摘要。",
+        "details": "适合观察系统是否稳定、缓存是否生效，以及近期整体使用情况。",
+        "example_args": {},
+        "result_preview_hint": "返回请求量、缓存命中和质量摘要。",
+        "ui_order": 430,
+    },
+    "get_ai_observability": {
+        "skill_id": "ops.ai_observability",
+        "version": "1.0.0",
+        "permissions": ["ai:ops:read"],
+        "display_name": "AI 运行观测",
+        "category": "系统观测",
+        "summary": "查看最近的 AI 运行日志、状态和运行路径。",
+        "details": "适合技术调试或复盘失败请求，普通用户通常不需要频繁使用。",
+        "example_args": {},
+        "result_preview_hint": "返回运行日志、状态统计和路径摘要。",
+        "ui_order": 440,
+    },
+    "get_profile_memory": {
+        "skill_id": "ops.profile_memory",
+        "version": "1.0.0",
+        "permissions": ["user:memory:read"],
+        "display_name": "AI 学习画像",
+        "category": "系统观测",
+        "summary": "读取 AI 长期记忆中的学习画像。",
+        "details": "适合查看 AI 当前记住了你的哪些偏好、近期重点词和学习模式。",
+        "example_args": {},
+        "result_preview_hint": "返回学习画像、偏好模式和近期重点词。",
+        "ui_order": 450,
+    },
+}
 
 
 def _serialize_grammar_point(point: GrammarPoint) -> Dict[str, Any]:
@@ -156,9 +470,48 @@ def _tool_search_words(user, args: Dict[str, Any]) -> Dict[str, Any]:
 
 def _tool_get_word_detail(user, args: Dict[str, Any]) -> Dict[str, Any]:
     word_id = int(args.get("word_id") or args.get("id") or 0)
-    if word_id <= 0:
-        raise ValueError("word_id is required")
-    return get_word_detail(user, word_id)
+    keyword = str((args or {}).get("keyword") or args.get("word") or "").strip()
+
+    resolved_word = None
+    resolution_message = ""
+
+    if word_id > 0:
+        resolved_word = Word.objects.filter(id=word_id).first()
+        if resolved_word is None:
+            resolution_message = f"word_id={word_id} 不存在，已自动回退到可用词条。"
+
+    if resolved_word is None and keyword:
+        resolved_word = (
+            Word.objects.filter(word__iexact=keyword).first()
+            or Word.objects.filter(word__icontains=keyword).order_by("id").first()
+        )
+        if resolved_word is not None and not resolution_message:
+            resolution_message = f"已根据关键词“{keyword}”匹配词条。"
+
+    if resolved_word is None:
+        current_plan = get_manageable_plan(user)
+        if current_plan and getattr(current_plan, "book_id", None):
+            resolved_word = Word.objects.filter(book_id=current_plan.book_id).order_by("order_in_book", "id").first()
+            if resolved_word is not None and not resolution_message:
+                resolution_message = "已回退到当前计划词书中的可用词条。"
+
+    if resolved_word is None:
+        resolved_word = Word.objects.order_by("id").first()
+        if resolved_word is not None and not resolution_message:
+            resolution_message = "已回退到词库中的可用词条。"
+
+    if resolved_word is None:
+        raise ValueError("word not found")
+
+    result = get_word_detail(user, resolved_word.id)
+    if resolution_message:
+        result["_mcp_resolution"] = {
+            "requested_word_id": word_id or None,
+            "requested_keyword": keyword or "",
+            "resolved_word_id": resolved_word.id,
+            "message": resolution_message,
+        }
+    return result
 
 
 def _tool_get_study_snapshot(user, args: Dict[str, Any]) -> Dict[str, Any]:
@@ -195,7 +548,7 @@ def _tool_vector_rag_search(user, args: Dict[str, Any]) -> Dict[str, Any]:
     return run_vector_rag_search(
         query,
         limit=min(max(int(args.get("limit") or 8), 1), 12),
-        retrieval_mode=str(args.get("retrieval_mode") or "auto"),
+        retrieval_mode=str(args.get("retrieval_mode") or "hybrid"),
         user=user,
     )
 
@@ -254,9 +607,9 @@ def _tool_get_multi_agent_brief(user, args: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _tool_plan_replanner(user, args: Dict[str, Any]) -> Dict[str, Any]:
-    from ..graphs.plan_replanner import build_plan_replan_detail
+    from ..graphs.plan_replanner import build_fast_plan_replan_detail
 
-    return build_plan_replan_detail(user, min(max(int(args.get("trend_days") or 7), 3), 14))
+    return build_fast_plan_replan_detail(user, min(max(int(args.get("trend_days") or 7), 3), 14))
 
 
 def _tool_get_ai_quality(user, args: Dict[str, Any]) -> Dict[str, Any]:
@@ -288,7 +641,13 @@ TOOL_DEFS: List[MCPToolDef] = [
     MCPToolDef(
         "get_word_detail",
         "读取单词详情。",
-        {"type": "object", "properties": {"word_id": {"type": "integer"}}, "required": ["word_id"]},
+        {
+            "type": "object",
+            "properties": {
+                "word_id": {"type": "integer"},
+                "keyword": {"type": "string"},
+            },
+        },
     ),
     MCPToolDef(
         "get_study_snapshot",
@@ -371,12 +730,12 @@ TOOL_DEFS: List[MCPToolDef] = [
     MCPToolDef("get_multi_agent_brief", "读取多老师协作简报。", {"type": "object", "properties": {}}),
     MCPToolDef(
         "plan_replanner",
-        "AI plan replanner agent for today's study plan.",
+        "AI 重规划今日学习计划。",
         {"type": "object", "properties": {"trend_days": {"type": "integer"}}},
     ),
     MCPToolDef("get_ai_quality", "读取 AI 质量摘要。", {"type": "object", "properties": {}}),
     MCPToolDef("get_ai_observability", "读取 AI 运行日志、缓存和限流摘要。", {"type": "object", "properties": {}}),
-    MCPToolDef("get_profile_memory", "Read AI long-term learner profile memory.", {"type": "object", "properties": {}}),
+    MCPToolDef("get_profile_memory", "读取 AI 长期记忆中的学习画像。", {"type": "object", "properties": {}}),
 ]
 
 RESOURCE_DEFS: List[MCPResourceDef] = [
@@ -427,7 +786,7 @@ RESOURCE_DEFS: List[MCPResourceDef] = [
     ),
     MCPResourceDef(
         "ai://profile-memory/{user_id}",
-        "AI Profile Memory",
+        "AI 学习画像",
         "application/json",
         description="读取 AI 长期记忆中的学习画像、偏好模式和近期重点词。",
         user_bound=True,
@@ -442,7 +801,7 @@ PROMPT_DEFS: List[MCPPromptDef] = [
     MCPPromptDef("wrong_word_review", "对错词本进行归因和复习建议。", [{"name": "limit", "required": False}]),
     MCPPromptDef("writing_prompt", "生成写作题、范文和评分维度。", [{"name": "level", "required": False}, {"name": "topic", "required": False}]),
     MCPPromptDef("scenario_dialogue", "文本情景对话陪练，不包含发音评分。", [{"name": "scenario", "required": False}, {"name": "user_message", "required": True}]),
-    MCPPromptDef("plan_replanner", "AI study plan replanner agent prompt.", [{"name": "trend_days", "required": False}]),
+    MCPPromptDef("plan_replanner", "AI 重规划今日学习计划的提示模板。", [{"name": "trend_days", "required": False}]),
 ]
 
 TOOL_EXECUTORS: Dict[str, Callable[[Any, Dict[str, Any]], Dict[str, Any]]] = {
@@ -577,7 +936,26 @@ RESOURCE_READERS: Dict[str, Callable[[Any, str], Dict[str, Any]]] = {
 
 def list_tool_defs() -> List[Dict[str, Any]]:
     return [
-        {"name": item.name, "description": item.description, "input_schema": item.input_schema}
+        {
+            "name": item.name,
+            "description": item.description,
+            "input_schema": item.input_schema,
+            "skill_id": (TOOL_UI_META.get(item.name) or {}).get("skill_id") or item.name,
+            "version": (TOOL_UI_META.get(item.name) or {}).get("version") or "1.0.0",
+            "display_name": (TOOL_UI_META.get(item.name) or {}).get("display_name") or item.description,
+            "category": (TOOL_UI_META.get(item.name) or {}).get("category") or "系统观测",
+            "summary": (TOOL_UI_META.get(item.name) or {}).get("summary") or item.description,
+            "details": (TOOL_UI_META.get(item.name) or {}).get("details") or item.description,
+            "example_args": (TOOL_UI_META.get(item.name) or {}).get("example_args") or {},
+            "result_preview_hint": (TOOL_UI_META.get(item.name) or {}).get("result_preview_hint") or "",
+            "ui_order": int((TOOL_UI_META.get(item.name) or {}).get("ui_order") or 999),
+            "permissions": (TOOL_UI_META.get(item.name) or {}).get("permissions") or [],
+            "agent_enabled": bool((TOOL_AGENT_META.get(item.name) or {}).get("agent_enabled", False)),
+            "safe_for_agent": bool((TOOL_AGENT_META.get(item.name) or {}).get("safe_for_agent", False)),
+            "mutation": bool((TOOL_AGENT_META.get(item.name) or {}).get("mutation", False)),
+            "requires_approval": bool((TOOL_AGENT_META.get(item.name) or {}).get("requires_approval", False)),
+            "tool_timeout_ms": int((TOOL_AGENT_META.get(item.name) or {}).get("tool_timeout_ms") or 15000),
+        }
         for item in TOOL_DEFS
     ]
 
@@ -604,7 +982,92 @@ def execute_tool(user, tool_name: str, args: Dict[str, Any] | None = None) -> Di
     executor = TOOL_EXECUTORS.get(tool_name)
     if not executor:
         raise ValueError(f"unsupported mcp tool: {tool_name}")
-    return executor(user, args or {})
+    result = executor(user, args or {})
+    feature_type = TOOL_FEATURE_TYPE_MAP.get(tool_name, "")
+    if feature_type and isinstance(result, dict):
+        attach_feature_evidence(feature_type, result)
+        normalize_feature_contract(feature_type, result)
+    return result
+
+
+def get_tool_agent_meta(tool_name: str) -> Dict[str, Any]:
+    return dict(TOOL_AGENT_META.get(tool_name) or {})
+
+
+def execute_agent_safe_tool(
+    user,
+    tool_name: str,
+    args: Dict[str, Any] | None = None,
+    *,
+    feature_type: str = "",
+    allowed_tools: List[str] | None = None,
+    run=None,
+    step=None,
+) -> Dict[str, Any]:
+    args = args or {}
+    meta = get_tool_agent_meta(tool_name)
+    if not meta:
+        raise ValueError(f"unsupported mcp tool: {tool_name}")
+    if allowed_tools is not None and tool_name not in allowed_tools:
+        raise ValueError(f"tool not allowed for feature: {tool_name}")
+    if not meta.get("agent_enabled") or not meta.get("safe_for_agent"):
+        raise ValueError(f"tool not safe for agent: {tool_name}")
+    if meta.get("mutation") and meta.get("requires_approval") and maybe_require_approval("settings_update"):
+        if not run:
+            raise ValueError(f"tool requires approval: {tool_name}")
+        approval = (
+            run.approvals.filter(action_type=f"mcp_tool:{tool_name}")
+            .order_by("-id")
+            .first()
+        )
+        if approval and approval.status == "approved":
+            approval = None
+        elif approval and approval.status == "rejected":
+            raise ValueError(f"tool approval rejected: {tool_name}")
+        elif approval and approval.status == "pending":
+            return {
+                "tool_name": tool_name,
+                "status": "pending_approval",
+                "approval": {
+                    "approval_key": approval.approval_key,
+                    "status": approval.status,
+                    "title": approval.title,
+                },
+                "summary": "该工具涉及写操作，已转为待审批。",
+            }
+        if approval is None:
+            approval = create_approval(
+                run,
+                feature_type=feature_type or tool_name,
+                action_type=f"mcp_tool:{tool_name}",
+                request_payload={"tool_name": tool_name, "args": args},
+                step=step,
+                title=f"MCP 工具待确认：{tool_name}",
+            )
+        return {
+            "tool_name": tool_name,
+            "status": "pending_approval",
+            "approval": {
+                "approval_key": approval.approval_key,
+                "status": approval.status,
+                "title": approval.title,
+            },
+            "summary": "该工具涉及写操作，已转为待审批。",
+        }
+    started = monotonic()
+    result = execute_tool(user, tool_name, args)
+    if isinstance(result, dict):
+        result.setdefault("agent_safe", {})
+        result["agent_safe"].update(
+            {
+                "tool_name": tool_name,
+                "latency_ms": int((monotonic() - started) * 1000),
+                "allowed_by_whitelist": True,
+                "mutation": bool(meta.get("mutation")),
+                "requires_approval": bool(meta.get("requires_approval")),
+            }
+        )
+    return result
 
 
 def read_resource(user, resource_uri: str) -> Dict[str, Any]:

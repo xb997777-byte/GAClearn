@@ -1,7 +1,9 @@
 @import "../../styles/theme.wxss";
 
 .wrong-ai-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 248, 255, 0.98) 100%);
+  background:
+    radial-gradient(circle at top right, var(--theme-page-glow-a), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, var(--theme-page-end) 100%);
 }
 
 .wrong-ai-head {
@@ -41,7 +43,7 @@
 .wrong-ai-highlight {
   padding: 24rpx;
   border-radius: 28rpx;
-  background: linear-gradient(135deg, rgba(44, 93, 255, 0.08) 0%, rgba(120, 156, 255, 0.12) 100%);
+  background: linear-gradient(135deg, rgba(44, 93, 255, 0.08) 0%, rgba(111, 168, 255, 0.12) 100%);
 }
 
 .wrong-ai-headline,

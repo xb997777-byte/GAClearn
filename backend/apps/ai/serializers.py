@@ -12,10 +12,13 @@ class AIWordExplainSerializer(serializers.Serializer):
 
 class AIStudyCoachSerializer(serializers.Serializer):
     trend_days = serializers.IntegerField(required=False, min_value=3, max_value=14, default=7)
+    force_refresh = serializers.BooleanField(required=False, default=False)
 
 
 class AIPlanReplanSerializer(serializers.Serializer):
     trend_days = serializers.IntegerField(required=False, min_value=3, max_value=14, default=7)
+    force_refresh = serializers.BooleanField(required=False, default=False)
+    prefer_fast = serializers.BooleanField(required=False, default=False)
 
 
 class AIRetrievalOrchestratorSerializer(serializers.Serializer):
@@ -51,6 +54,20 @@ class AIEvaluationRunSerializer(serializers.Serializer):
 
 class AIEvaluationReplaySerializer(serializers.Serializer):
     request_payload = serializers.JSONField(required=False, default=dict)
+
+
+class AIRunActionSerializer(serializers.Serializer):
+    note = serializers.CharField(required=False, allow_blank=True, default="", max_length=500)
+    request_payload = serializers.JSONField(required=False, default=dict)
+
+
+class AIRunApprovalSerializer(serializers.Serializer):
+    approved = serializers.BooleanField(required=False, default=False)
+    note = serializers.CharField(required=False, allow_blank=True, default="", max_length=500)
+
+
+class AIRunResumeSerializer(serializers.Serializer):
+    note = serializers.CharField(required=False, allow_blank=True, default="", max_length=500)
 
 
 class AIWrongWordsReviewSerializer(serializers.Serializer):
@@ -98,7 +115,7 @@ class AIVectorRAGSearchSerializer(serializers.Serializer):
     retrieval_mode = serializers.ChoiceField(
         choices=["auto", "vector_only", "structured_only", "hybrid"],
         required=False,
-        default="auto",
+        default="hybrid",
     )
 
 

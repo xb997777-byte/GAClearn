@@ -58,6 +58,8 @@ def _get_output_path(text, lang, speed):
     digest = hashlib.sha1(f"{lang}\n{speed:.2f}\n{text}".encode("utf-8")).hexdigest()
     output_dir = Path(settings.MEDIA_ROOT) / "tts"
     output_dir.mkdir(parents=True, exist_ok=True)
+    if os.name == "posix" and shutil.which("say"):
+        return output_dir / f"{digest}.m4a"
     return output_dir / f"{digest}.wav"
 
 
@@ -138,20 +140,104 @@ def _synthesize_with_windows_voice(text, lang, speed, output_path):
     temp_output_path.unlink(missing_ok=True)
 
 
+def _detect_macos_voice(lang):
+    lowered = str(lang or "").lower()
+    if lowered.startswith("zh"):
+        return "Tingting"
+    if lowered.startswith("en-gb"):
+        return "Daniel"
+    return "Samantha"
+
+
+def _synthesize_with_macos_voice(text, lang, speed, output_path):
+    say_bin = shutil.which("say")
+    if not say_bin:
+        raise SpeechSynthesisError("当前环境缺少 macOS say 命令，无法生成语音文件")
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    voice = _detect_macos_voice(lang)
+    temp_aiff = output_path.with_suffix(".aiff")
+    if temp_aiff.exists():
+        temp_aiff.unlink(missing_ok=True)
+    completed = subprocess.run(
+        [
+            say_bin,
+            "-v",
+            voice,
+            "-r",
+            str(max(int(round(float(speed or DEFAULT_SPEECH_SPEED) * 175)), 90)),
+            "-o",
+            str(temp_aiff),
+            str(text),
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="ignore",
+        timeout=45,
+    )
+    if completed.returncode != 0:
+        message = (completed.stderr or completed.stdout or "").strip() or "macOS 语音合成失败"
+        raise SpeechSynthesisError(message)
+
+    if not temp_aiff.exists() or temp_aiff.stat().st_size <= 0:
+        raise SpeechSynthesisError("语音文件生成失败")
+
+    afconvert_bin = shutil.which("afconvert")
+    if not afconvert_bin:
+        temp_aiff.unlink(missing_ok=True)
+        raise SpeechSynthesisError("当前环境缺少 afconvert，无法转换语音文件")
+
+    converted = subprocess.run(
+        [
+            afconvert_bin,
+            "-f",
+            "m4af",
+            "-d",
+            "aac",
+            str(temp_aiff),
+            str(output_path),
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="ignore",
+        timeout=45,
+    )
+    temp_aiff.unlink(missing_ok=True)
+    if converted.returncode != 0:
+        if output_path.exists():
+            output_path.unlink(missing_ok=True)
+        message = (converted.stderr or converted.stdout or "").strip() or "macOS 语音格式转换失败"
+        raise SpeechSynthesisError(message)
+
+    if not output_path.exists() or output_path.stat().st_size <= 0:
+        raise SpeechSynthesisError("语音文件生成失败")
+
+
 def _ensure_audio_file(text, lang, speed, output_path):
     if output_path.exists() and output_path.stat().st_size > 0:
         return output_path, True
 
-    if os.name != "nt":
-        raise SpeechSynthesisError("当前部署环境暂不支持离线语音合成")
+    if os.name == "nt":
+        try:
+            _synthesize_with_windows_voice(text, lang, speed, output_path)
+        except Exception:
+            if output_path.exists():
+                output_path.unlink(missing_ok=True)
+            raise
+        return output_path, False
 
-    try:
-        _synthesize_with_windows_voice(text, lang, speed, output_path)
-    except Exception:
-        if output_path.exists():
-            output_path.unlink(missing_ok=True)
-        raise
-    return output_path, False
+    if os.name == "posix" and shutil.which("say"):
+        try:
+            _synthesize_with_macos_voice(text, lang, speed, output_path)
+        except Exception:
+            if output_path.exists():
+                output_path.unlink(missing_ok=True)
+            raise
+        return output_path, False
+
+    raise SpeechSynthesisError("当前部署环境暂不支持离线语音合成")
 
 
 def build_speech_payload(request, text, lang=DEFAULT_SPEECH_LANG, speed=DEFAULT_SPEECH_SPEED):
@@ -166,6 +252,6 @@ def build_speech_payload(request, text, lang=DEFAULT_SPEECH_LANG, speed=DEFAULT_
         "content": content,
         "lang": normalized_lang,
         "speed": normalized_speed,
-        "provider": "windows_sapi",
+        "provider": "macos_say" if audio_file.suffix == ".m4a" else "windows_sapi",
         "cached": cached,
     }

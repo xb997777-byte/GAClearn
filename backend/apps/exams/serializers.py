@@ -14,6 +14,7 @@ class TestAnswerSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()
     selected_option = serializers.CharField(max_length=1, required=False, allow_blank=True, default="")
     submitted_text = serializers.CharField(max_length=255, required=False, allow_blank=True, default="")
+    answer = serializers.CharField(max_length=255, required=False, allow_blank=True, default="")
 
 
 class TestSubmitSerializer(serializers.Serializer):

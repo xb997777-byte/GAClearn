@@ -130,7 +130,7 @@ def _run_vector_rag_case(user, payload: Dict[str, Any], case: AIEvaluationCase) 
     result = run_vector_rag_search(
         payload.get("query", ""),
         payload.get("limit", 6),
-        retrieval_mode=payload.get("retrieval_mode", "auto"),
+        retrieval_mode=payload.get("retrieval_mode", "hybrid"),
         user=user,
     )
     result = _serialize_payload("vector_rag", result)

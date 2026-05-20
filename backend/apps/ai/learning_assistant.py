@@ -3,6 +3,7 @@ import os
 import re
 from collections import Counter
 from datetime import timedelta
+from typing import Dict
 
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -19,10 +20,47 @@ from .rag.retrieval_runtime import build_retrieval_strategy, load_vector_documen
 from .rag.retrievers import extract_query_keywords
 from .rag.vector_runtime import LocalHashVectorStore, get_vector_runtime
 from .tools.study_tools import build_study_coach_bundle
+from .observability import fit_model_char_value
 
 
 PROMPT_VERSION = "assistant_v1"
 SENTENCE_PATTERN = re.compile(r"[^.!?。！？]+[.!?。！？]?")
+TECH_QUERY_HINTS = {
+    "mac",
+    "windows",
+    "conda",
+    "mysql",
+    "django",
+    "python",
+    "chroma",
+    "rag",
+    "embedding",
+    "index",
+    "rebuild",
+    "api",
+    "mcp",
+    "server",
+    "接口",
+    "后端",
+    "前端",
+    "数据库",
+    "迁移",
+    "环境",
+    "索引",
+    "向量库",
+}
+PRODUCT_QUERY_HINTS = {
+    "ai 自适应计划",
+    "应用这份 ai 调整",
+    "今天的学习计划",
+    "学习计划页",
+    "计划页",
+    "manifest",
+    "tools/call",
+    "tool call",
+}
+PLAN_FLOW_HINTS = {"应用", "按钮", "页面", "入口", "刷新", "滚动", "跳转"}
+LEARNING_QUERY_HINTS = ["区别", "怎么区分", "例句", "语法", "近义", "意思", "用法", "单词", "句子", "表达"]
 SCENARIO_TEMPLATE_MAP = {
     "daily": {
         "label": "日常交流",
@@ -170,7 +208,17 @@ def _keyword_query(keywords, fields):
     return q
 
 
-def _serialize_word(item, reason=""):
+def _extract_exact_word_targets(text, limit=4):
+    targets = []
+    for token in re.findall(r"[A-Za-z][A-Za-z-']+", str(text or "")):
+        lowered = token.strip().lower()
+        if not lowered or len(lowered) <= 2 or lowered in targets:
+            continue
+        targets.append(lowered)
+    return targets[: max(int(limit or 4), 1)]
+
+
+def _serialize_word(item, reason="", match_quality="keyword"):
     return {
         "id": item.id,
         "word": item.word,
@@ -179,18 +227,39 @@ def _serialize_word(item, reason=""):
         "example_sentence": item.example_sentence,
         "example_translation": item.example_translation,
         "reason": reason,
+        "match_quality": match_quality,
     }
 
 
 def retrieve_learning_context(text, limit=6):
     keywords = extract_query_keywords(text)
+    exact_word_targets = _extract_exact_word_targets(text)
     words = []
     sentences = []
     points = []
+    exact_word_ids = set()
 
-    if keywords:
+    if exact_word_targets:
+        exact_q = Q()
+        for token in exact_word_targets[:6]:
+            exact_q |= Q(word__iexact=token)
+        exact_rows = list(Word.objects.filter(exact_q).select_related("book").order_by("book_id", "order_in_book", "id"))
+        exact_lookup = {item.word.lower(): item for item in exact_rows}
+        words.extend(exact_lookup[token] for token in exact_word_targets if token in exact_lookup)
+        exact_word_ids = {item.id for item in words}
+
+    if keywords and len(words) < limit:
         word_q = _keyword_query(keywords, ["word", "meaning_cn", "example_sentence", "synonyms"])
-        words = list(Word.objects.filter(word_q).select_related("book").order_by("book_id", "order_in_book", "id")[:limit])
+        additional_words = list(
+            Word.objects.filter(word_q)
+            .exclude(id__in=exact_word_ids)
+            .select_related("book")
+            .order_by("book_id", "order_in_book", "id")[: max(limit * 3, limit)]
+        )
+        for item in additional_words:
+            if len(words) >= limit:
+                break
+            words.append(item)
 
         sentence_q = _keyword_query(keywords, ["sentence", "translation_cn", "summary", "analysis", "point__title"])
         sentences = list(
@@ -204,18 +273,25 @@ def retrieve_learning_context(text, limit=6):
 
     if not words:
         words = list(Word.objects.select_related("book").order_by("book_id", "order_in_book", "id")[: min(limit, 4)])
-    if not sentences:
+    if not sentences and not exact_word_ids:
         sentences = list(
             GrammarSentence.objects.select_related("point")
             .filter(status="active", point__status="active")
             .order_by("difficulty", "point__sort_order", "id")[: min(limit, 4)]
         )
-    if not points:
+    if not points and not exact_word_ids:
         points = list(GrammarPoint.objects.filter(status="active").order_by("difficulty", "sort_order", "id")[: min(limit, 4)])
 
     return {
         "keywords": keywords,
-        "words": [_serialize_word(item, "命中输入中的关键词或作为基础参考词。") for item in words],
+        "words": [
+            _serialize_word(
+                item,
+                "直接命中待学习或待区分的单词。" if item.id in exact_word_ids else "命中输入中的关键词或作为基础参考词。",
+                "exact" if item.id in exact_word_ids else ("keyword" if keywords else "fallback"),
+            )
+            for item in words
+        ],
         "sentences": [
             {
                 "id": item.id,
@@ -238,6 +314,74 @@ def retrieve_learning_context(text, limit=6):
             }
             for item in points
         ],
+    }
+
+
+def classify_query_intent(query: str) -> Dict[str, object]:
+    text = str(query or "").strip()
+    lowered = text.lower()
+    tech_hits = []
+    for token in TECH_QUERY_HINTS:
+        if token.lower() in lowered:
+            tech_hits.append(token)
+    product_hits = [token for token in PRODUCT_QUERY_HINTS if token in lowered]
+    learning_hits = [item for item in LEARNING_QUERY_HINTS if item in text]
+    plan_flow_query = (
+        ("计划" in text and any(token in text for token in PLAN_FLOW_HINTS))
+        or "ai 自适应计划" in lowered
+        or "应用这份 ai 调整" in lowered
+    )
+    is_tech = (
+        len(tech_hits) >= 2
+        or ("怎么" in text and any(item in lowered for item in ["rebuild", "index", "conda", "mcp", "mysql", "manifest"]))
+        or bool(product_hits)
+        or plan_flow_query
+    )
+    if is_tech and len(learning_hits) <= 1:
+        reason_hits = tech_hits[:4] + product_hits[:3]
+        if plan_flow_query:
+            reason_hits.append("计划应用流程")
+        return {
+            "intent": "tech",
+            "label": "技术/产品问题",
+            "allowed_audiences": ["dev", "migration", "product"],
+            "reason": f"检测到技术/产品关键词：{' / '.join(list(dict.fromkeys(reason_hits))[:6])}" if reason_hits else "问题更偏项目功能、接口或页面流程。",
+        }
+    return {
+        "intent": "learning",
+        "label": "学习问题",
+        "allowed_audiences": ["learning"],
+        "reason": "默认优先从词库、语法库、例句库和学习资料中回答。",
+    }
+
+
+def normalize_learning_query(query: str) -> Dict[str, object]:
+    raw = str(query or "").strip()
+    compact = " ".join(raw.split())
+    expansions = []
+    lowered = compact.lower()
+    if "怎么区分" in compact or "区别" in compact:
+        expansions.extend(["difference", "usage", "example"])
+    if any(token in compact for token in ["近义", "同义", "相近"]):
+        expansions.extend(["synonym", "similar usage"])
+    if any(token in compact for token in ["例句", "造句"]):
+        expansions.append("example sentence")
+    if any(token in compact for token in ["语法", "句型"]):
+        expansions.extend(["grammar rule", "sentence pattern"])
+    english_words = re.findall(r"[A-Za-z][A-Za-z-']+", compact)
+    if len(english_words) == 2 and ("区别" in compact or "怎么区分" in compact):
+        compact = f"{english_words[0]} 和 {english_words[1]} 怎么区分？请给词义区别、常见搭配和例句。"
+    elif len(compact) <= 12 and english_words:
+        compact = f"{compact}。请结合词义、常见搭配和例句回答。"
+    deduped = []
+    for item in expansions:
+        token = str(item or "").strip()
+        if token and token not in deduped:
+            deduped.append(token)
+    return {
+        "raw_query": raw,
+        "normalized_query": compact or raw,
+        "query_expansions": deduped[:6],
     }
 
 
@@ -654,8 +798,14 @@ def run_scenario_dialogue(user, scenario, user_message, conversation_id=None):
         role="assistant",
         content=result.get("assistant_reply", ""),
         payload={"result": result, "retrieval": context},
-        prompt_version=PROMPT_VERSION,
-        model_name=_provider_meta().get("model_name", ""),
+        prompt_version=fit_model_char_value(
+            PROMPT_VERSION,
+            AIMessage._meta.get_field("prompt_version").max_length,
+        ),
+        model_name=fit_model_char_value(
+            _provider_meta().get("model_name", ""),
+            AIMessage._meta.get_field("model_name").max_length,
+        ),
     )
     return {
         "headline": result.get("scenario_label", "AI 情景对话"),
@@ -916,6 +1066,10 @@ def _document_match_reason(item, keywords):
         reason.append(str(metadata.get("point_title")))
     if metadata.get("book_name"):
         reason.append(str(metadata.get("book_name")))
+    if metadata.get("section_title") and metadata.get("source_group") == "project_doc":
+        reason.append(f"章节：{metadata.get('section_title')}")
+    if metadata.get("audience"):
+        reason.append(f"audience={metadata.get('audience')}")
     return "；".join(reason)
 
 
@@ -940,6 +1094,8 @@ def _enrich_documents_with_highlights(docs, keywords):
 def _to_structured_documents(context):
     docs = []
     for item in context.get("words") or []:
+        match_quality = str(item.get("match_quality") or "keyword")
+        score = 0.92 if match_quality == "exact" else (0.74 if match_quality == "keyword" else 0.6)
         docs.append(
             {
                 "source_type": "word",
@@ -960,8 +1116,13 @@ def _to_structured_documents(context):
                         item.get("example_sentence", ""),
                     ]
                 )[:240],
-                "score": 0.66,
-                "metadata": {"reason": item.get("reason", ""), "source": "structured"},
+                "score": score,
+                "metadata": {
+                    "reason": item.get("reason", ""),
+                    "source": "structured",
+                    "audience": "learning",
+                    "match_quality": match_quality,
+                },
             }
         )
     for item in context.get("grammar_points") or []:
@@ -985,7 +1146,11 @@ def _to_structured_documents(context):
                     ]
                 )[:240],
                 "score": 0.62,
-                "metadata": {"reason": item.get("learning_tip", ""), "source": "structured"},
+                "metadata": {
+                    "reason": item.get("learning_tip", ""),
+                    "source": "structured",
+                    "audience": "learning",
+                },
             }
         )
     for item in context.get("sentences") or []:
@@ -1009,7 +1174,11 @@ def _to_structured_documents(context):
                     ]
                 )[:240],
                 "score": 0.6,
-                "metadata": {"reason": item.get("point_title", ""), "source": "structured"},
+                "metadata": {
+                    "reason": item.get("point_title", ""),
+                    "source": "structured",
+                    "audience": "learning",
+                },
             }
         )
     return docs
@@ -1050,6 +1219,7 @@ def _merge_hybrid_documents(structured_docs, vector_docs, limit=8):
     rows = [merged[key] for key in ordered]
     rows.sort(
         key=lambda item: (
+            -int(str(((item.get("metadata") or {}).get("match_quality")) or "") == "exact"),
             -len(item.get("retrieval_sources", [])),
             -(float(item.get("score", 0) or 0)),
             str(item.get("title", "")),
@@ -1058,32 +1228,53 @@ def _merge_hybrid_documents(structured_docs, vector_docs, limit=8):
     return rows[: min(max(int(limit or 8), 1), 12)]
 
 
-def _rank_vector_documents(query, limit=8, retrieval_mode="auto", user=None):
-    mode = str(retrieval_mode or "auto").strip().lower() or "auto"
+def _rank_vector_documents(query, limit=8, retrieval_mode="hybrid", user=None):
+    mode = str(retrieval_mode or "hybrid").strip().lower() or "hybrid"
+    if mode == "auto":
+        mode = "hybrid"
+    query_bundle = normalize_learning_query(query)
+    normalized_query = str(query_bundle.get("normalized_query") or query or "").strip()
+    query_expansions = query_bundle.get("query_expansions") or []
     structured_context = None
     structured_docs = []
     vector_docs = []
     personalized_docs = []
     using_chroma = False
     personalized_enabled = False
+    query_intent = classify_query_intent(normalized_query)
+    structured_enabled = query_intent.get("intent") == "learning"
 
-    if mode in {"structured_only", "hybrid"}:
-        structured_context = retrieve_learning_context(query, limit=limit)
+    if mode in {"structured_only", "hybrid"} and structured_enabled:
+        structured_context = retrieve_learning_context(normalized_query, limit=limit)
         structured_docs = _to_structured_documents(structured_context)
 
-    if mode in {"auto", "vector_only", "hybrid"}:
-        vector_docs, using_chroma, personalized_docs = load_vector_documents(query, limit=limit, user=user)
+    if mode in {"vector_only", "hybrid"}:
+        vector_query = " ".join([normalized_query] + query_expansions[:4]).strip()
+        vector_docs, using_chroma, personalized_docs, backend_name = load_vector_documents(
+            vector_query,
+            limit=max(limit, 10),
+            user=user,
+            allowed_audiences=query_intent.get("allowed_audiences") or ["learning"],
+        )
         personalized_enabled = bool(personalized_docs)
+    else:
+        backend_name = ""
 
     if mode == "structured_only":
         return structured_docs, structured_context, False, {
             "type": "structured_rag_runtime",
             "version": "structured_rag_v1",
             "backend": "django_orm_keyword_search",
+            "active_retrieval_backend": "structured_fallback",
             "external_vector_db": False,
             "retrieval_mode": "structured_only",
             "personalized_enabled": personalized_enabled,
             "personalized_hits": 0,
+            "normalized_query": normalized_query,
+            "query_expansions": query_expansions,
+            "degraded": False,
+            "query_intent": query_intent,
+            "structured_enabled": structured_enabled,
         }
 
     if mode == "hybrid":
@@ -1094,117 +1285,61 @@ def _rank_vector_documents(query, limit=8, retrieval_mode="auto", user=None):
             structured_hits=len(structured_docs),
             vector_hits=len(vector_docs),
             personalized_hits=len(personalized_docs),
+            normalized_query=normalized_query,
+            query_expansions=query_expansions,
         )
+        retrieval_runtime["query_intent"] = query_intent
+        retrieval_runtime["structured_enabled"] = structured_enabled
+        if not using_chroma and structured_enabled and structured_docs:
+            retrieval_runtime["backend"] = "structured_fallback"
+            retrieval_runtime["active_retrieval_backend"] = "structured_fallback"
+            retrieval_runtime["degraded_reason"] = "标准 Chroma 向量运行时不可用，当前优先使用结构化学习资料并由本地轻量向量补位。"
         return docs, structured_context, using_chroma, retrieval_runtime
 
     retrieval_runtime = build_retrieval_strategy(
-        mode="vector_only" if mode == "vector_only" else "auto",
+        mode="vector_only",
         using_chroma=using_chroma,
         structured_hits=len(structured_docs),
         vector_hits=len(vector_docs),
         personalized_hits=len(personalized_docs),
+        normalized_query=normalized_query,
+        query_expansions=query_expansions,
     )
+    retrieval_runtime["query_intent"] = query_intent
+    retrieval_runtime["structured_enabled"] = structured_enabled
+    retrieval_runtime["backend"] = backend_name or retrieval_runtime.get("backend") or "in_process_counter_cosine"
+    retrieval_runtime["active_retrieval_backend"] = retrieval_runtime["backend"]
     return vector_docs, structured_context, using_chroma, retrieval_runtime
 
 
-def run_vector_rag_search(query, limit=8, retrieval_mode="auto"):
-    keywords = extract_query_keywords(query)
+def run_vector_rag_search(query, limit=8, retrieval_mode="hybrid", user=None):
+    query_bundle = normalize_learning_query(query)
+    normalized_query = str(query_bundle.get("normalized_query") or query or "").strip()
+    keywords = extract_query_keywords(normalized_query)
     docs, structured_context, using_chroma, retrieval_runtime = _rank_vector_documents(
-        query,
-        limit=limit,
-        retrieval_mode=retrieval_mode,
-    )
-    docs = _enrich_documents_with_highlights(docs, keywords)
-    source_catalog = retrieval_runtime.get("knowledge_source_catalog") or []
-    source_labels = "、".join(item.get("label", item.get("key", "")) for item in source_catalog[:4])
-    fallback_answer = {
-        "summary": (
-            f"已从项目知识库中检索到 {len(docs)} 条相关学习资料。知识来源包括：{source_labels}。"
-            if using_chroma
-            else (
-                f"已完成 hybrid 检索，综合结构化命中与向量召回，共找到 {len(docs)} 条资料。"
-                if retrieval_runtime.get("retrieval_mode") == "hybrid"
-                else f"已用本地轻量向量评分检索到 {len(docs)} 条相关学习资料。"
-            )
-        ),
-        "grounded_points": [
-            f"{item['source_type']}：{item['title']}（相似度 {item['score']}）"
-            for item in docs[:4]
-        ],
-        "next_questions": ["生成专项练习", "解释第一个结果", "换一个更简单的说法"],
-    }
-    answer = fallback_answer
-    if is_provider_ready():
-        payload = {
-            "query": query,
-            "local_vector_docs": docs,
-            "task": "Answer the learner's query using only the retrieved project knowledge chunks. Return strict JSON only.",
-            "output_schema": {
-                "summary": "string",
-                "grounded_points": ["string"],
-                "next_questions": ["string"],
-            },
-        }
-        try:
-            ai_result = chat_json(
-                [
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are a grounded English-learning RAG tutor. "
-                            "Use only the provided retrieved knowledge chunks and return strict JSON only."
-                        ),
-                    },
-                    {"role": "user", "content": json.dumps(payload, ensure_ascii=False, default=str)},
-                ],
-                temperature=0.2,
-            )
-            answer.update({key: ai_result.get(key) or answer[key] for key in answer})
-        except Exception as exc:
-            answer["provider_error"] = str(exc)
-    return {
-        "query": query,
-        "answer": answer,
-        "documents": docs,
-        "retrieval_explain": {
-            "mode": retrieval_runtime.get("retrieval_mode", retrieval_mode),
-            "keywords": keywords,
-            "using_chroma": using_chroma,
-            "using_hybrid": retrieval_runtime.get("retrieval_mode") == "hybrid",
-            "structured_context_available": bool(structured_context),
-            "why_this_result": [
-                "优先保留命中关键词更多的资料。",
-                "如果同一条资料同时被结构化检索和向量召回命中，会排得更靠前。",
-                "每条命中结果都附带 matched_keywords、highlights 和 match_reason，便于解释命中原因。",
-            ],
-        },
-        "structured_context": structured_context or {},
-        "retrieval_strategy": retrieval_runtime,
-        "ai_strategy": _provider_meta(),
-    }
-
-
-def run_vector_rag_search(query, limit=8, retrieval_mode="auto", user=None):
-    keywords = extract_query_keywords(query)
-    docs, structured_context, using_chroma, retrieval_runtime = _rank_vector_documents(
-        query,
+        normalized_query,
         limit=limit,
         retrieval_mode=retrieval_mode,
         user=user,
     )
-    docs = rerank_documents(query, _enrich_documents_with_highlights(docs, keywords), keywords, limit=limit)
+    docs = rerank_documents(normalized_query, _enrich_documents_with_highlights(docs, keywords), keywords, limit=limit)
     source_catalog = retrieval_runtime.get("knowledge_source_catalog") or []
     source_labels = " / ".join(item.get("label", item.get("key", "")) for item in source_catalog[:4])
     personalized_hits = int(retrieval_runtime.get("personalized_hits", 0) or 0)
     personalized_enabled = bool(retrieval_runtime.get("personalized_enabled"))
     personalized_note = f"，其中 {personalized_hits} 条来自你的个性知识库" if personalized_hits else ""
+    query_intent = retrieval_runtime.get("query_intent") or classify_query_intent(normalized_query)
+    is_learning_query = query_intent.get("intent") == "learning"
+    content_label = "学习资料" if is_learning_query else "项目资料"
 
     if using_chroma:
-        summary = f"已从项目知识库中检索到 {len(docs)} 条相关学习资料。知识来源包括：{source_labels}{personalized_note}。"
+        summary = f"已从项目知识库中检索到 {len(docs)} 条相关{content_label}。知识来源包括：{source_labels}{personalized_note}。"
+    elif retrieval_runtime.get("backend") == "structured_fallback":
+        summary = f"标准向量库暂不可用，已优先从结构化{content_label}里找到 {len(docs)} 条结果，并用本地轻量检索补位{personalized_note}。"
     elif retrieval_runtime.get("retrieval_mode") == "hybrid":
-        summary = f"已完成 hybrid 检索，共找到 {len(docs)} 条资料，其中 {personalized_hits} 条来自你的个性知识库。"
+        summary = f"已完成 hybrid 检索，共找到 {len(docs)} 条{content_label}，其中 {personalized_hits} 条来自你的个性知识库。"
     else:
-        summary = f"已用本地轻量向量检索到 {len(docs)} 条学习资料，其中 {personalized_hits} 条来自你的个性知识库。"
+        summary = f"已用本地轻量向量检索到 {len(docs)} 条{content_label}，其中 {personalized_hits} 条来自你的个性知识库。"
 
     answer = {
         "summary": summary,
@@ -1212,13 +1347,28 @@ def run_vector_rag_search(query, limit=8, retrieval_mode="auto", user=None):
             f"{item['source_type']}：{item['title']}（相似度 {item['score']}）"
             for item in docs[:4]
         ],
-        "next_questions": ["生成专项练习", "解释第一条结果", "换一种更简单的说法"],
+        "next_questions": (
+            ["生成专项练习", "解释第一条结果", "换一种更简单的说法"]
+            if is_learning_query
+            else ["给我对应接口", "告诉我相关页面入口", "整理成执行步骤"]
+        ),
     }
     if is_provider_ready():
+        system_prompt = (
+            "You are a grounded English-learning RAG tutor. "
+            "Use only the provided retrieved knowledge chunks and return strict JSON only."
+            if is_learning_query
+            else "You are a grounded assistant for the GAClearn project. "
+            "Use only the provided retrieved project knowledge chunks and return strict JSON only."
+        )
         payload = {
             "query": query,
             "local_vector_docs": docs,
-            "task": "Answer the learner's query using only the retrieved project knowledge chunks. Return strict JSON only.",
+            "task": (
+                "Answer the learner's English study question using only the retrieved project knowledge chunks. Return strict JSON only."
+                if is_learning_query
+                else "Answer the user's project/product question using only the retrieved project knowledge chunks. Return strict JSON only."
+            ),
             "output_schema": {
                 "summary": "string",
                 "grounded_points": ["string"],
@@ -1230,10 +1380,7 @@ def run_vector_rag_search(query, limit=8, retrieval_mode="auto", user=None):
                 [
                     {
                         "role": "system",
-                        "content": (
-                            "You are a grounded English-learning RAG tutor. "
-                            "Use only the provided retrieved knowledge chunks and return strict JSON only."
-                        ),
+                        "content": system_prompt,
                     },
                     {"role": "user", "content": json.dumps(payload, ensure_ascii=False, default=str)},
                 ],
@@ -1243,13 +1390,60 @@ def run_vector_rag_search(query, limit=8, retrieval_mode="auto", user=None):
         except Exception as exc:
             answer["provider_error"] = str(exc)
 
-    return {
+    answer_points = [item for item in (answer.get("grounded_points") or []) if item][:4]
+    source_pills = []
+    for item in docs[:6]:
+        label = item.get("title") or item.get("source_type") or ""
+        if label:
+            source_pills.append(
+                {
+                    "label": label[:28],
+                    "source_type": item.get("source_type", ""),
+                    "audience": str(((item.get("metadata") or {}).get("audience")) or ""),
+                }
+            )
+    seen_pills = []
+    deduped_pills = []
+    for item in source_pills:
+        key = f"{item.get('label')}:{item.get('source_type')}"
+        if key in seen_pills:
+            continue
+        seen_pills.append(key)
+        deduped_pills.append(item)
+    answer_brief = {
+        "summary": answer.get("summary", ""),
+        "points": answer_points[:4],
+        "next_questions": (answer.get("next_questions") or [])[:3],
+    }
+    advanced_debug = {
+        "query_intent": query_intent,
+        "retrieval_strategy": retrieval_runtime,
+        "documents_preview_count": len(docs),
+        "using_chroma": using_chroma,
+        "structured_context_available": bool(structured_context),
+    }
+
+    degraded_reason = str(retrieval_runtime.get("degraded_reason") or "").strip()
+    degraded_notice = None
+    if retrieval_runtime.get("degraded"):
+        degraded_notice = {
+            "enabled": True,
+            "reason": degraded_reason or "标准向量运行时不可用。",
+            "message": degraded_reason or "标准向量运行时不可用，当前结果已自动降级。",
+        }
+
+    payload = {
         "query": query,
         "answer": answer,
+        "answer_brief": answer_brief,
+        "source_pills": deduped_pills[:6],
+        "advanced_debug": advanced_debug,
         "documents": docs,
         "retrieval_explain": {
             "mode": retrieval_runtime.get("retrieval_mode", retrieval_mode),
             "keywords": keywords,
+            "normalized_query": normalized_query,
+            "query_expansions": query_bundle.get("query_expansions") or [],
             "using_chroma": using_chroma,
             "using_hybrid": retrieval_runtime.get("retrieval_mode") == "hybrid",
             "structured_context_available": bool(structured_context),
@@ -1257,6 +1451,7 @@ def run_vector_rag_search(query, limit=8, retrieval_mode="auto", user=None):
             "personalized_hits": personalized_hits,
             "rerank_enabled": True,
             "multi_route_enabled": True,
+            "query_intent": query_intent,
             "why_this_result": [
                 "优先保留命中更多关键词的资料。",
                 "如果同一条资料同时被结构化检索和向量召回命中，会排得更靠前。",
@@ -1268,6 +1463,9 @@ def run_vector_rag_search(query, limit=8, retrieval_mode="auto", user=None):
         "retrieval_strategy": retrieval_runtime,
         "ai_strategy": _provider_meta(),
     }
+    if degraded_notice:
+        payload["degraded_notice"] = degraded_notice
+    return payload
 
 
 def _build_rag_answer(query, context):

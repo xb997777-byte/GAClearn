@@ -1,0 +1,21 @@
+{
+  "state": "completed",
+  "started_at": "2026-05-15T19:48:59.342377",
+  "updated_at": "2026-05-15T19:58:38.118549",
+  "inserted_count": 26536,
+  "total_count": 26536,
+  "last_progress_line": "Rebuilt Chroma RAG index with 26536 chunks.",
+  "latest_line": "Rebuilt Chroma RAG index with 26536 chunks.",
+  "embedding_backend": "online",
+  "embedding_provider": "openai_compatible",
+  "embedding_model": "text-embedding-v4",
+  "batch_size": 256,
+  "limit": 0,
+  "stats": {
+    "word": 13487,
+    "word_example": 11114,
+    "grammar_point": 14,
+    "grammar_sentence": 1008,
+    "project_doc": 913
+  }
+}

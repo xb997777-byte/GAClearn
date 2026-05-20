@@ -303,7 +303,9 @@
 }
 
 .adaptive-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(244, 248, 255, 0.96) 100%);
+  background:
+    radial-gradient(circle at top right, var(--theme-page-glow-a), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, var(--theme-page-end) 100%);
 }
 
 .adaptive-header {
@@ -372,7 +374,9 @@
 }
 
 .coach-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 248, 255, 0.98) 100%);
+  background:
+    radial-gradient(circle at top right, var(--theme-page-glow-b), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, var(--theme-page-end) 100%);
 }
 
 .coach-head {

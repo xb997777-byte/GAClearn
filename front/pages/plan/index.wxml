@@ -1,6 +1,6 @@
 <view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
   <nav-bar title="学习计划" showBack="{{true}}" />
-  <scroll-view class="page-scroll" scroll-y>
+  <scroll-view class="page-scroll" scroll-y scroll-into-view="{{scrollIntoViewTarget}}" scroll-with-animation>
     <view class="section panel-card" wx:if="{{pageLoading}}">
       <view class="card-subtitle">正在加载学习计划...</view>
     </view>
@@ -19,7 +19,7 @@
         <view class="plan-status-head">
           <view>
             <view class="card-title">当前计划</view>
-            <view class="card-subtitle">{{ currentPlan.book.name }} · 每日 {{ currentPlan.daily_target }} 个 · 已学 {{ currentPlan.finished_word_count }} 个</view>
+            <view class="card-subtitle">{{ currentPlan.book.name }} · 每日目标 {{ currentPlan.daily_target }} 个 · 累计已学 {{ currentPlan.finished_word_count }} 个</view>
           </view>
           <view class="plan-status-pill {{currentPlan.status}}">{{ planStatusText }}</view>
         </view>
@@ -47,43 +47,206 @@
         </view>
       </view>
 
-      <view class="section panel-card">
-        <view class="card-title">每日目标</view>
-        <view class="card-subtitle">这里专门负责计划，不再混入词汇浏览内容。</view>
-        <view class="segmented" style="margin-top:24rpx;">
-          <view
-            wx:for="{{targetOptions}}"
-            wx:key="value"
-            class="{{item.className}}"
-            data-value="{{item.value}}"
-            bindtap="chooseTarget"
-          >
-            {{ item.value }} 个/天
+      <view class="section panel-card plan-daily-panel">
+        <view class="plan-daily-head">
+          <view>
+            <view class="card-title">每日目标</view>
+            <view class="card-subtitle">把今天的学习节奏一次配好：新词、复习和每轮题数都在这里。</view>
+          </view>
+          <view class="plan-daily-badge">统一配置</view>
+        </view>
+
+        <view class="plan-config-hero">
+          <view class="plan-config-hero-kicker">今日学习配置</view>
+          <view class="plan-config-hero-title">先看清今天的学习配额，再决定怎么调。</view>
+        </view>
+
+        <view class="plan-daily-overview">
+          <view class="plan-daily-metric">
+            <view class="plan-daily-metric-label">今天新词目标</view>
+            <view class="plan-daily-metric-value">{{ todayNewWordTarget || selectedTarget }}</view>
+            <view class="plan-daily-metric-desc">会跟随当前计划同步</view>
+          </view>
+          <view class="plan-daily-metric">
+            <view class="plan-daily-metric-label">今天复习目标</view>
+            <view class="plan-daily-metric-value">{{ todayReviewWordTarget || 0 }}</view>
+            <view class="plan-daily-metric-desc">系统按到期词自动安排</view>
+          </view>
+          <view class="plan-daily-metric">
+            <view class="plan-daily-metric-label">每轮复习题数</view>
+            <view class="plan-daily-metric-value">{{ reviewBatchSize }}</view>
+            <view class="plan-daily-metric-desc">进入复习页时直接生效</view>
           </view>
         </view>
-        <button
-          class="primary-btn full-btn"
-          style="margin-top:24rpx;"
-          loading="{{planActionLoading}}"
-          disabled="{{planActionLoading}}"
-          bindtap="handleSavePlan"
-        >
-          {{ saveButtonText }}
-        </button>
+        <view class="plan-daily-note">“今天复习目标”是系统按今日任务自动生成的总量；“每轮复习题数”由你手动控制每次刷多少题。</view>
+
+        <view class="plan-config-card">
+          <view class="plan-config-section">
+            <view class="plan-config-section-title">每天要学多少新单词</view>
+            <view class="plan-config-section-desc">保存后会同步到当前计划和今日新词目标。</view>
+          </view>
+          <view class="segmented plan-config-segmented">
+            <view
+              wx:for="{{targetOptions}}"
+              wx:key="value"
+              class="{{item.className}}"
+              data-value="{{item.value}}"
+              bindtap="chooseTarget"
+            >
+              {{ item.value }} 个/天
+            </view>
+          </view>
+          <view class="plan-target-input-wrap">
+            <view class="plan-target-input-head">
+              <view class="plan-target-input-label">自定义目标</view>
+              <view class="plan-target-input-hint">支持 {{minDailyTarget}}-{{maxDailyTarget}} 个/天</view>
+            </view>
+            <view class="plan-target-input-row {{targetInputError ? 'has-error' : ''}}">
+              <input
+                class="plan-target-input"
+                type="number"
+                maxlength="3"
+                placeholder="输入你每天想学的单词数"
+                value="{{targetInputValue}}"
+                bindinput="handleTargetInput"
+                bindblur="handleTargetBlur"
+              />
+              <view class="plan-target-input-unit">个/天</view>
+            </view>
+            <view wx:if="{{targetInputError}}" class="plan-target-input-error">{{targetInputError}}</view>
+          </view>
+        </view>
+
+        <view class="plan-config-card review">
+          <view class="plan-config-section review">
+            <view class="plan-config-section-title">每轮复习多少旧单词</view>
+            <view class="plan-config-section-desc">这里控制你每次进入复习页时，一轮默认刷多少题。</view>
+          </view>
+          <view class="segmented plan-config-segmented compact">
+            <view
+              wx:for="{{reviewBatchOptions}}"
+              wx:key="value"
+              class="{{item.className}}"
+              data-value="{{item.value}}"
+              bindtap="chooseReviewBatch"
+            >
+              {{ item.value }} 题
+            </view>
+          </view>
+          <view class="plan-target-input-wrap">
+            <view class="plan-target-input-head">
+              <view class="plan-target-input-label">自定义复习题数</view>
+              <view class="plan-target-input-hint">支持 1-50 题/轮</view>
+            </view>
+            <view class="plan-target-input-row {{reviewBatchInputError ? 'has-error' : ''}}">
+              <input
+                class="plan-target-input"
+                type="number"
+                maxlength="2"
+                placeholder="输入每轮复习题数"
+                value="{{reviewBatchInputValue}}"
+                bindinput="handleReviewBatchInput"
+                bindblur="handleReviewBatchBlur"
+              />
+              <view class="plan-target-input-unit">题/轮</view>
+            </view>
+            <view wx:if="{{reviewBatchInputError}}" class="plan-target-input-error">{{reviewBatchInputError}}</view>
+          </view>
+        </view>
+
+        <view class="plan-save-wrap">
+          <button
+            class="primary-btn full-btn"
+            loading="{{planActionLoading}}"
+            disabled="{{planActionLoading}}"
+            bindtap="handleSavePlan"
+          >
+            {{ saveButtonText }}
+          </button>
+          <view class="plan-save-tip">保存后，新词目标会同步到今日任务；复习题数会作用于你后续进入复习页时的每轮题量。</view>
+        </view>
       </view>
 
       <view class="section panel-card" wx:if="{{hasCurrentPlan}}">
         <view class="card-title">AI 重规划学习计划</view>
-        <view class="card-subtitle">直接生成用户可读的新计划、原因、收益和风险。</view>
+        <view class="card-subtitle">这里只保留真正的 AI 自适应生成计划。生成后会自动定位到应用按钮，方便你一键落地到当前计划。</view>
         <view class="button-row" style="margin-top:20rpx;">
-          <button class="secondary-btn" loading="{{aiPlanLoading}}" disabled="{{aiPlanLoading}}" bindtap="runAiReplan">生成 AI 计划</button>
-          <button class="ghost-btn" bindtap="goAiCenterPlan">去看 Agent 演示</button>
+          <button class="secondary-btn" loading="{{aiPlanLoading || aiPlanRefreshing}}" disabled="{{aiPlanLoading || aiPlanRefreshing}}" bindtap="runAiReplan">生成 AI 自适应计划</button>
+          <button wx:if="{{aiPlanResult}}" class="ghost-btn" bindtap="goAiCenterPlan">查看详细分析</button>
+        </view>
+        <view wx:if="{{aiPlanStatusText && (aiPlanLoading || aiPlanRefreshing)}}" class="card-subtitle" style="margin-top:16rpx;color:#2563eb;">
+          {{ aiPlanStatusText }}
         </view>
 
-        <view wx:if="{{aiPlanResult}}" class="plan-ai-card">
+        <view wx:if="{{aiPlanRunDetail}}" class="plan-runtime-card">
+          <view class="plan-runtime-head" bindtap="toggleAiPlanRuntime">
+            <view>
+              <view class="plan-runtime-title">智能体运行态</view>
+              <view class="plan-runtime-summary">{{(aiPlanRunDetail.runtime_summary && aiPlanRunDetail.runtime_summary.status_text) || aiPlanRunDetail.status_text || '进行中'}}</view>
+            </view>
+            <view class="plan-runtime-toggle">{{aiPlanRuntimeCollapsed ? '展开' : '收起'}}</view>
+          </view>
+
+          <view class="plan-runtime-grid">
+            <view class="plan-runtime-metric">
+              <view class="plan-runtime-label">当前智能体</view>
+              <view class="plan-runtime-value small">{{aiPlanRunDetail.current_agent || (aiPlanRunDetail.runtime_summary && aiPlanRunDetail.runtime_summary.active_agent) || '--'}}</view>
+            </view>
+            <view class="plan-runtime-metric">
+              <view class="plan-runtime-label">步骤数</view>
+              <view class="plan-runtime-value">{{(aiPlanRunDetail.runtime_summary && aiPlanRunDetail.runtime_summary.step_count) || aiPlanRunSteps.length || 0}}</view>
+            </view>
+            <view class="plan-runtime-metric">
+              <view class="plan-runtime-label">审批状态</view>
+              <view class="plan-runtime-value small">{{aiPlanRunDetail.approval_state || 'not_required'}}</view>
+            </view>
+            <view class="plan-runtime-metric">
+              <view class="plan-runtime-label">运行状态</view>
+              <view class="plan-runtime-value small">{{(aiPlanRunDetail.runtime_summary && aiPlanRunDetail.runtime_summary.status_text) || aiPlanRunDetail.status || '--'}}</view>
+            </view>
+          </view>
+
+          <view class="button-row plan-runtime-actions">
+            <button class="ghost-btn" size="mini" data-action="retry" bindtap="handleAiPlanRuntimeAction">重试</button>
+            <button class="ghost-btn" size="mini" data-action="resume" bindtap="handleAiPlanRuntimeAction">恢复</button>
+            <button class="ghost-btn" size="mini" data-action="cancel" bindtap="handleAiPlanRuntimeAction">取消</button>
+            <button wx:if="{{aiPlanRunDetail.approval_state === 'pending'}}" class="secondary-btn" size="mini" data-action="approve" bindtap="handleAiPlanRuntimeAction">批准执行</button>
+            <button wx:if="{{aiPlanRunDetail.approval_state === 'pending'}}" class="ghost-btn" size="mini" data-action="reject" bindtap="handleAiPlanRuntimeAction">拒绝</button>
+          </view>
+
+          <block wx:if="{{!aiPlanRuntimeCollapsed}}">
+            <view wx:if="{{aiPlanRunDetail.runtime_summary && aiPlanRunDetail.runtime_summary.summary}}" class="plan-runtime-note">
+              {{aiPlanRunDetail.runtime_summary.summary}}
+            </view>
+
+            <view wx:if="{{aiPlanRunSteps.length}}" class="plan-runtime-section">
+              <view class="plan-runtime-section-title">步骤时间线</view>
+              <view wx:for="{{aiPlanRunSteps}}" wx:key="id" class="plan-runtime-step">
+                <view class="plan-runtime-step-title">#{{item.step_index}} {{item.title || item.step_key}}</view>
+                <view class="plan-runtime-step-meta">{{item.agent_name || item.step_kind}} · {{item.status}} · {{item.latency_ms || 0}}ms</view>
+                <view wx:if="{{item.summary}}" class="plan-runtime-step-text">{{item.summary}}</view>
+              </view>
+            </view>
+
+            <view wx:if="{{aiPlanRunArtifacts.length}}" class="plan-runtime-section">
+              <view class="plan-runtime-section-title">运行产物</view>
+              <view wx:for="{{aiPlanRunArtifacts}}" wx:key="id" class="plan-runtime-step">
+                <view class="plan-runtime-step-title">{{item.title || item.artifact_key || item.artifact_type}}</view>
+                <view class="plan-runtime-step-meta">{{item.artifact_type}}</view>
+                <view wx:if="{{item.summary}}" class="plan-runtime-step-text">{{item.summary}}</view>
+              </view>
+            </view>
+          </block>
+        </view>
+
+        <view wx:if="{{aiPlanResult}}" class="plan-ai-card {{aiPlanResultHighlight ? 'highlight' : ''}}" id="plan-ai-result">
           <view class="plan-ai-kicker">AI 给你的新计划</view>
           <view class="plan-ai-title">{{ aiPlanResult.headline }}</view>
           <view class="plan-ai-summary">{{ aiPlanResult.summary }}</view>
+          <view class="plan-ai-mode-note">当前展示的是同一份 AI 自适应生成结果，只是这里更聚焦“生成 + 应用”。详细分析可在 AI 中心查看。</view>
+          <view wx:if="{{aiPlanResult.degraded_notice && aiPlanResult.degraded_notice.enabled}}" class="card-subtitle" style="margin-top:12rpx;color:#b45309;">
+            {{ aiPlanResult.degraded_notice.message }}
+          </view>
 
           <view wx:if="{{aiPlanResult.new_plan}}" class="ai-grid-two" style="margin-top:18rpx;">
             <view class="ai-metric-card">
@@ -118,8 +281,8 @@
             <view wx:for="{{aiPlanResult.decision.risks}}" wx:key="index" class="plan-ai-item">{{ item }}</view>
           </view>
 
-          <view class="button-row" style="margin-top:20rpx;" wx:if="{{aiPlanResult.plan_patch && aiPlanResult.plan_patch.daily_target}}">
-            <button class="primary-btn full-btn" loading="{{aiPlanApplying}}" disabled="{{aiPlanApplying}}" bindtap="applyAiPlanResult">应用这份 AI 调整</button>
+          <view class="plan-ai-actionbar" wx:if="{{aiPlanResult.plan_patch && aiPlanResult.plan_patch.daily_target}}">
+            <button class="primary-btn full-btn plan-ai-apply-btn" loading="{{aiPlanApplying}}" disabled="{{aiPlanApplying}}" bindtap="applyAiPlanResult">应用这份 AI 调整</button>
           </view>
         </view>
 

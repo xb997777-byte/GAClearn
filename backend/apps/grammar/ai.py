@@ -5,6 +5,7 @@ import requests
 
 
 DEFAULT_TIMEOUT = 25
+DEFAULT_THINKING_MODE = (os.getenv("AI_THINKING_MODE", "disabled") or "disabled").strip().lower()
 
 
 def is_ai_available():
@@ -13,10 +14,18 @@ def is_ai_available():
 
 def _chat(messages, temperature=0.2):
     api_key = os.getenv("AI_API_KEY", "").strip()
-    model = os.getenv("AI_MODEL", "").strip()
     base_url = os.getenv("AI_BASE_URL", "https://api.openai.com/v1").strip().rstrip("/")
+    model = os.getenv("AI_MODEL", "").strip()
     if not api_key or not model:
         raise RuntimeError("AI service is not configured")
+
+    payload = {
+        "model": model,
+        "temperature": temperature,
+        "messages": messages,
+    }
+    if DEFAULT_THINKING_MODE in {"disabled", "off", "false", "0"}:
+        payload["thinking"] = {"type": "disabled"}
 
     response = requests.post(
         f"{base_url}/chat/completions",
@@ -24,11 +33,7 @@ def _chat(messages, temperature=0.2):
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         },
-        json={
-            "model": model,
-            "temperature": temperature,
-            "messages": messages,
-        },
+        json=payload,
         timeout=DEFAULT_TIMEOUT,
     )
     response.raise_for_status()

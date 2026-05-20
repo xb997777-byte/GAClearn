@@ -176,6 +176,8 @@ def build_adaptive_profile(user, plan=None, recent_days=7):
     recent_metrics = _collect_recent_metrics(user, since_at)
 
     progress_qs = WordProgress.objects.filter(user=user)
+    if plan and getattr(plan, "book_id", None):
+        progress_qs = progress_qs.filter(book_id=plan.book_id)
     learned_progress_qs = progress_qs.filter(learn_count__gt=0)
 
     due_review_count = progress_qs.filter(review_due_at__isnull=False, review_due_at__lte=now).count()
@@ -183,7 +185,10 @@ def build_adaptive_profile(user, plan=None, recent_days=7):
         review_due_at__isnull=False,
         review_due_at__lte=now - timedelta(hours=24),
     ).count()
-    weak_word_count = WrongWord.objects.filter(user=user, is_active=True).count()
+    weak_word_qs = WrongWord.objects.filter(user=user, is_active=True)
+    if plan and getattr(plan, "book_id", None):
+        weak_word_qs = weak_word_qs.filter(word__book_id=plan.book_id)
+    weak_word_count = weak_word_qs.count()
     avg_mastery = learned_progress_qs.aggregate(value=Avg("mastery_level")).get("value") or 0
 
     weak_progresses = list(

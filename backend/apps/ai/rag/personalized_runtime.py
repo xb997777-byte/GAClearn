@@ -7,20 +7,30 @@ from django.utils import timezone
 
 from apps.users.models import UserSetting
 
-from .chroma_runtime import chroma_available, embed_texts, get_chroma_client
+from .chroma_runtime import (
+    chroma_available,
+    embed_texts,
+    get_chroma_client,
+    get_collection_fingerprint,
+    get_effective_embedding_dimension,
+)
 from .knowledge_base import CHROMA_COLLECTION
 from .personalized_knowledge import build_personalized_knowledge_chunks, split_personalized_payload
 
 
 def get_personalized_collection_name(user_id: int) -> str:
-    return f"{CHROMA_COLLECTION}_user_{int(user_id)}"
+    return f"{CHROMA_COLLECTION}_user_{int(user_id)}_{get_collection_fingerprint()}"
 
 
 def get_personalized_collection(user_id: int):
     client = get_chroma_client()
     return client.get_or_create_collection(
         name=get_personalized_collection_name(user_id),
-        metadata={"hnsw:space": "cosine"},
+        metadata={
+            "hnsw:space": "cosine",
+            "embedding_dimension": get_effective_embedding_dimension(),
+            "collection_fingerprint": get_collection_fingerprint(),
+        },
     )
 
 

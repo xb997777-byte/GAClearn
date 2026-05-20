@@ -1,6 +1,10 @@
 from django.contrib import admin
 
 from .models import (
+    AIAgentApproval,
+    AIAgentArtifact,
+    AIAgentStep,
+    AIAsyncRun,
     AIConversation,
     AIEvaluationCase,
     AIEvaluationRun,
@@ -16,7 +20,7 @@ from .models import (
 class AIMessageInline(admin.TabularInline):
     model = AIMessage
     extra = 0
-    fields = ("role", "content", "prompt_version", "model_name", "latency_ms", "created_at")
+    fields = ("role", "content", "runtime_run", "prompt_version", "model_name", "latency_ms", "created_at")
     readonly_fields = ("created_at",)
 
 
@@ -30,7 +34,7 @@ class AIConversationAdmin(admin.ModelAdmin):
 
 @admin.register(AIMessage)
 class AIMessageAdmin(admin.ModelAdmin):
-    list_display = ("id", "conversation", "role", "content_preview", "prompt_version", "model_name", "created_at")
+    list_display = ("id", "conversation", "role", "runtime_run", "content_preview", "prompt_version", "model_name", "created_at")
     list_filter = ("role", "prompt_version", "created_at")
     search_fields = ("content", "conversation__title", "conversation__user__nickname", "conversation__user__openid")
 
@@ -63,6 +67,50 @@ class AIRequestLogAdmin(admin.ModelAdmin):
     list_filter = ("feature_type", "status", "cache_hit", "created_at")
     search_fields = ("user__nickname", "user__openid", "endpoint", "cache_key", "error_message")
     readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(AIAsyncRun)
+class AIAsyncRunAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "public_id",
+        "user",
+        "feature_type",
+        "runtime_kind",
+        "current_agent",
+        "status",
+        "approval_state",
+        "degraded",
+        "latency_ms",
+        "created_at",
+    )
+    list_filter = ("feature_type", "runtime_kind", "status", "approval_state", "degraded", "created_at")
+    search_fields = ("public_id", "user__nickname", "user__openid", "request_hash", "current_agent", "error_message")
+    readonly_fields = ("created_at", "updated_at", "started_at", "finished_at")
+
+
+@admin.register(AIAgentStep)
+class AIAgentStepAdmin(admin.ModelAdmin):
+    list_display = ("id", "run", "step_index", "step_kind", "agent_name", "status", "latency_ms", "created_at")
+    list_filter = ("step_kind", "status", "agent_name", "created_at")
+    search_fields = ("run__public_id", "step_key", "agent_name", "title", "error_message")
+    readonly_fields = ("created_at", "updated_at", "started_at", "finished_at")
+
+
+@admin.register(AIAgentArtifact)
+class AIAgentArtifactAdmin(admin.ModelAdmin):
+    list_display = ("id", "run", "artifact_type", "artifact_key", "title", "created_at")
+    list_filter = ("artifact_type", "created_at")
+    search_fields = ("run__public_id", "artifact_key", "title", "summary")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(AIAgentApproval)
+class AIAgentApprovalAdmin(admin.ModelAdmin):
+    list_display = ("id", "approval_key", "feature_type", "action_type", "status", "approved_by", "approved_at", "created_at")
+    list_filter = ("feature_type", "action_type", "status", "created_at")
+    search_fields = ("approval_key", "title", "decision_note", "run__public_id")
+    readonly_fields = ("created_at", "updated_at", "approved_at")
 
 
 @admin.register(AIResponseCache)

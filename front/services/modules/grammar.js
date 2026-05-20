@@ -12,7 +12,7 @@ function listSentences(params = {}) {
   return request({
     url: '/grammar/sentences',
     method: 'GET',
-    data: params
+    params
   });
 }
 
@@ -45,7 +45,7 @@ function getRecommendations(params = {}) {
   return request({
     url: '/grammar/sentences/recommend',
     method: 'GET',
-    data: params
+    params
   });
 }
 

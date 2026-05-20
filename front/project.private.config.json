@@ -1,6 +1,6 @@
 {
-  "libVersion": "trial",
-  "projectname": "front",
+  "libVersion": "3.16.0",
+  "projectname": "GAC",
   "setting": {
     "urlCheck": false,
     "coverView": true,
@@ -9,7 +9,7 @@
     "preloadBackgroundData": false,
     "autoAudits": false,
     "showShadowRootInWxmlPanel": true,
-    "compileHotReLoad": false,
+    "compileHotReLoad": true,
     "useApiHook": true,
     "useStaticServer": false,
     "useLanDebug": false,

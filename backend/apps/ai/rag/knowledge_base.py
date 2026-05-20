@@ -2,17 +2,25 @@ import hashlib
 import json
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
 from apps.books.models import Word, WordExample
 from apps.grammar.models import GrammarPoint, GrammarSentence
 
+from .project_docs import (
+    build_project_document_catalog,
+    chunk_document_text,
+    get_project_document_identity,
+    read_project_documents,
+    split_document_sections,
+)
 from .vector_runtime import tokenize_for_vector
 
 
 CHROMA_DIR = os.getenv("AI_CHROMA_DIR", os.path.join("media", "ai_chroma"))
 CHROMA_COLLECTION = os.getenv("AI_CHROMA_COLLECTION", "english_learning_knowledge")
-CHUNK_VERSION = "rag_chunk_v1"
+CHUNK_VERSION = "rag_chunk_v2"
 KNOWLEDGE_SOURCE_DETAILS = [
     {
         "key": "words",
@@ -37,6 +45,12 @@ KNOWLEDGE_SOURCE_DETAILS = [
         "label": "语法句子表",
         "table": "grammar_sentences",
         "description": "和语法点绑定的示例句、翻译、摘要、解析与场景信息。",
+    },
+    {
+        "key": "project_docs",
+        "label": "项目文档知识库",
+        "table": "repo_docs",
+        "description": "项目内需求、架构、迁移与说明文档，带 audience 标签参与召回。",
     },
 ]
 
@@ -115,6 +129,11 @@ def build_word_chunks(limit: int | None = None) -> List[KnowledgeChunk]:
                 title=item.word,
                 content=head_content,
                 metadata={
+                    "source_group": "business_table",
+                    "source_kind": "word_entry",
+                    "audience": "learning",
+                    "source_path": "books.words",
+                    "section_title": item.word,
                     "book_id": item.book_id,
                     "book_name": item.book.name,
                     "chunk_kind": "word_core",
@@ -148,6 +167,11 @@ def build_word_chunks(limit: int | None = None) -> List[KnowledgeChunk]:
                 title=f"{item.word.word} 例句",
                 content=content,
                 metadata={
+                    "source_group": "business_table",
+                    "source_kind": "word_example",
+                    "audience": "learning",
+                    "source_path": "books.word_examples",
+                    "section_title": f"{item.word.word} 例句",
                     "word_id": item.word_id,
                     "word": item.word.word,
                     "book_id": item.word.book_id,
@@ -185,6 +209,11 @@ def build_grammar_chunks(limit: int | None = None) -> List[KnowledgeChunk]:
                 title=item.title,
                 content=content,
                 metadata={
+                    "source_group": "business_table",
+                    "source_kind": "grammar_point",
+                    "audience": "learning",
+                    "source_path": "grammar.grammar_points",
+                    "section_title": item.title,
                     "category": item.category,
                     "difficulty": item.difficulty,
                     "chunk_kind": "grammar_point",
@@ -218,6 +247,11 @@ def build_grammar_chunks(limit: int | None = None) -> List[KnowledgeChunk]:
                 title=item.sentence[:80],
                 content=content,
                 metadata={
+                    "source_group": "business_table",
+                    "source_kind": "grammar_sentence",
+                    "audience": "learning",
+                    "source_path": "grammar.grammar_sentences",
+                    "section_title": item.point.title,
                     "point_id": item.point_id,
                     "point_title": item.point.title,
                     "difficulty": item.difficulty,
@@ -231,10 +265,54 @@ def build_grammar_chunks(limit: int | None = None) -> List[KnowledgeChunk]:
     return chunks
 
 
+def build_project_document_chunks(limit: int | None = None) -> List[KnowledgeChunk]:
+    chunks: List[KnowledgeChunk] = []
+    documents = read_project_documents()
+    document_count = 0
+    for document in documents:
+        if limit and document_count >= limit:
+            break
+        document_count += 1
+        document_id = get_project_document_identity(document.relative_path)
+        for section_index, section in enumerate(split_document_sections(document)):
+            text_chunks = chunk_document_text(section.content)
+            for chunk_index, chunk_text in enumerate(text_chunks):
+                title = f"{Path(section.relative_path).name} · {section.section_title}"
+                suffix = f"section_{section_index}_chunk_{chunk_index}"
+                chunks.append(
+                    KnowledgeChunk(
+                        chunk_id=_make_chunk_id("project_doc", document_id, suffix),
+                        source_type="project_doc",
+                        source_id=document_id,
+                        title=title[:120],
+                        content=_clean_text(
+                            f"文档路径：{section.relative_path}",
+                            f"文档受众：{section.audience}",
+                            f"章节：{section.section_title}",
+                            chunk_text,
+                        ),
+                        metadata={
+                            "source_group": "project_doc",
+                            "source_kind": section.source_kind,
+                            "audience": section.audience,
+                            "source_path": section.relative_path,
+                            "section_title": section.section_title,
+                            "chunk_kind": "project_doc_section",
+                            "keyword_hints": _token_summary(chunk_text),
+                            "chunk_index": chunk_index,
+                            "document_id": document_id,
+                            "chunk_version": CHUNK_VERSION,
+                        },
+                    )
+                )
+    return chunks
+
+
 def build_all_knowledge_chunks(limit: int | None = None) -> List[KnowledgeChunk]:
     chunks: List[KnowledgeChunk] = []
     chunks.extend(build_word_chunks(limit=limit))
     chunks.extend(build_grammar_chunks(limit=limit))
+    chunks.extend(build_project_document_chunks(limit=limit))
     return chunks
 
 
@@ -252,8 +330,21 @@ def get_knowledge_source_catalog() -> List[Dict[str, object]]:
         "grammar_points": GrammarPoint.objects.filter(status="active").count(),
         "grammar_sentences": GrammarSentence.objects.filter(status="active", point__status="active").count(),
     }
+    project_doc_catalog = build_project_document_catalog()
     catalog: List[Dict[str, object]] = []
     for item in KNOWLEDGE_SOURCE_DETAILS:
+        if item["key"] == "project_docs":
+            matched = project_doc_catalog[0] if project_doc_catalog else {}
+            catalog.append(
+                {
+                    **item,
+                    "record_count": int(matched.get("record_count") or 0),
+                    "chunk_count": int(matched.get("chunk_count") or 0),
+                    "section_count": int(matched.get("section_count") or 0),
+                    "audience_breakdown": matched.get("audience_breakdown") or {},
+                }
+            )
+            continue
         catalog.append(
             {
                 **item,

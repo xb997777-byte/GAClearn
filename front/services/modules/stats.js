@@ -11,7 +11,7 @@ function getTrend(params = {}) {
   return request({
     url: '/stats/trend',
     method: 'GET',
-    data: params
+    params
   });
 }
 

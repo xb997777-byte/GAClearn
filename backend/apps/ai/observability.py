@@ -3,6 +3,7 @@ import json
 import os
 from datetime import timedelta
 from time import monotonic
+from uuid import uuid4
 
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -12,6 +13,10 @@ from .models import AIRequestLog, AIResponseCache
 
 DEFAULT_RATE_LIMIT = int(os.getenv("AI_RATE_LIMIT_PER_HOUR", "80") or 80)
 DEFAULT_CACHE_TTL_SECONDS = int(os.getenv("AI_CACHE_TTL_SECONDS", "1800") or 1800)
+
+
+def fit_model_char_value(value, max_length):
+    return str(value or "")[: max(int(max_length or 0), 0)]
 
 
 def normalize_payload(payload):
@@ -110,15 +115,21 @@ def log_ai_request(
     return AIRequestLog.objects.create(
         user=user,
         feature_type=feature_type,
-        endpoint=endpoint,
+        endpoint=fit_model_char_value(endpoint, AIRequestLog._meta.get_field("endpoint").max_length),
         request_payload=normalize_payload(request_payload),
         response_payload=normalize_payload(response_payload),
         status=status,
         cache_key=cache_key,
         cache_hit=cache_hit,
         latency_ms=max(int(latency_ms or 0), 0),
-        prompt_version=prompt_version,
-        model_name=model_name,
+        prompt_version=fit_model_char_value(
+            prompt_version,
+            AIRequestLog._meta.get_field("prompt_version").max_length,
+        ),
+        model_name=fit_model_char_value(
+            model_name,
+            AIRequestLog._meta.get_field("model_name").max_length,
+        ),
         error_message=str(error_message or "")[:2000],
     )
 
@@ -135,6 +146,7 @@ def run_observed_feature(
     rate_limit=None,
 ):
     started_at = monotonic()
+    run_id = uuid4().hex[:12]
     current_user_id = getattr(user, "id", None)
     cached, cache_key = (None, make_cache_key(feature_type, request_payload, user_id=current_user_id))
     rate_status = check_rate_limit(user, feature_type, limit=rate_limit)
@@ -142,6 +154,19 @@ def run_observed_feature(
         response = {
             "rate_limit": rate_status,
             "message": "AI 请求过于频繁，请稍后再试。",
+            "runtime_summary": {
+                "run_id": run_id,
+                "status": "rate_limited",
+                "status_text": "请求过于频繁",
+                "summary": "请求过于频繁，请稍后再试。",
+                "latency_ms": int((monotonic() - started_at) * 1000),
+                "cache_hit": False,
+                "degraded": False,
+                "degraded_reason": "",
+                "retryable": True,
+                "retry_after": 60,
+                "endpoint": endpoint,
+            },
         }
         log_ai_request(
             user=user,
@@ -162,6 +187,7 @@ def run_observed_feature(
             cached.setdefault("ai_observability", {})
             cached["ai_observability"].update(
                 {
+                    "run_id": run_id,
                     "latency_ms": latency_ms,
                     "endpoint": endpoint,
                     "status": "success",
@@ -187,6 +213,7 @@ def run_observed_feature(
         response.setdefault("ai_observability", {})
         response["ai_observability"].update(
             {
+                "run_id": run_id,
                 "cache_key": cache_key,
                 "cache_hit": False,
                 "rate_limit": rate_status,

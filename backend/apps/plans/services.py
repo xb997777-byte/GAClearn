@@ -16,7 +16,15 @@ from .models import DailyTask, PlanRevision, UserPlan
 
 def serialize_plan(plan):
     if plan is None:
-        return None
+        return {
+            "id": None,
+            "book": None,
+            "daily_target": 0,
+            "start_date": None,
+            "status": "empty",
+            "finished_word_count": 0,
+            "estimated_days": 0,
+        }
     estimated_days = math.ceil((plan.book.word_count or 0) / max(plan.daily_target, 1))
     return {
         "id": plan.id,
@@ -156,7 +164,7 @@ def create_plan(user, book_id, daily_target):
         status="active",
     )
     _sync_daily_target_setting(user, daily_target)
-    get_or_create_today_task(user, plan)
+    sync_today_task_target(user, plan)
     create_plan_revision(
         user=user,
         plan=plan,
@@ -183,7 +191,10 @@ def update_current_plan(user, payload, source="manual", summary="", metadata=Non
     if "daily_target" in payload:
         _sync_daily_target_setting(user, plan.daily_target)
     if plan.status == "active":
-        get_or_create_today_task(user, plan)
+        if "daily_target" in payload:
+            sync_today_task_target(user, plan)
+        else:
+            get_or_create_today_task(user, plan)
     create_plan_revision(
         user=user,
         plan=plan,
@@ -218,7 +229,7 @@ def switch_book(user, book_id, daily_target=None, keep_progress=False):
     return new_plan
 
 
-def get_or_create_today_task(user, plan):
+def _compute_today_task_targets(user, plan):
     adaptive_profile = build_adaptive_profile(user, plan)
     review_target = WordProgress.objects.filter(
         user=user,
@@ -227,6 +238,11 @@ def get_or_create_today_task(user, plan):
     ).count()
     next_new_target = max(int(getattr(plan, "daily_target", 0) or 0), 1)
     next_review_target = max(review_target, adaptive_profile["recommended_review_word_target"])
+    return adaptive_profile, next_new_target, next_review_target
+
+
+def sync_today_task_target(user, plan):
+    _, next_new_target, next_review_target = _compute_today_task_targets(user, plan)
     task, _ = DailyTask.objects.get_or_create(
         user=user,
         task_date=timezone.localdate(),
@@ -236,24 +252,74 @@ def get_or_create_today_task(user, plan):
             "review_word_target": next_review_target,
         },
     )
-    if not task.is_started and not task.is_finished:
-        dirty_fields = []
-        plan_changed = task.plan_id != plan.id
-        if task.plan_id != plan.id:
-            task.plan = plan
-            dirty_fields.append("plan")
-        if plan_changed and task.new_word_target != next_new_target:
-            task.new_word_target = next_new_target
-            dirty_fields.append("new_word_target")
-        elif int(task.new_word_target or 0) <= 0:
-            task.new_word_target = next_new_target
-            dirty_fields.append("new_word_target")
-        if task.review_word_target != next_review_target:
-            task.review_word_target = next_review_target
-            dirty_fields.append("review_word_target")
-        if dirty_fields:
-            dirty_fields.append("updated_at")
-            task.save(update_fields=dirty_fields)
+    dirty_fields = []
+    if task.plan_id != plan.id:
+        task.plan = plan
+        dirty_fields.append("plan")
+
+    desired_new_target = max(next_new_target, int(task.learned_count or 0), 1)
+    if int(task.new_word_target or 0) != desired_new_target:
+        task.new_word_target = desired_new_target
+        dirty_fields.append("new_word_target")
+
+    desired_review_target = max(next_review_target, int(task.reviewed_count or 0), 0)
+    if int(task.review_word_target or 0) != desired_review_target:
+        task.review_word_target = desired_review_target
+        dirty_fields.append("review_word_target")
+
+    if dirty_fields:
+        dirty_fields.append("updated_at")
+        task.save(update_fields=dirty_fields)
+    return task
+
+
+def get_or_create_today_task(user, plan):
+    _, next_new_target, next_review_target = _compute_today_task_targets(user, plan)
+    task, _ = DailyTask.objects.get_or_create(
+        user=user,
+        task_date=timezone.localdate(),
+        defaults={
+            "plan": plan,
+            "new_word_target": next_new_target,
+            "review_word_target": next_review_target,
+        },
+    )
+    dirty_fields = []
+    if task.plan_id != plan.id:
+        task.plan = plan
+        dirty_fields.append("plan")
+
+    # Preserve an existing task target if the user has not started the task yet.
+    # We only reconcile the task upward after learning has begun or when there
+    # was no task target to begin with.
+    current_target = int(task.new_word_target or 0)
+    learned_count = int(task.learned_count or 0)
+    if current_target <= 0:
+        task.new_word_target = next_new_target
+        dirty_fields.append("new_word_target")
+    elif (
+        not task.is_started
+        and learned_count <= 0
+        and getattr(plan, "updated_at", None)
+        and getattr(task, "updated_at", None)
+        and plan.updated_at > task.updated_at
+        and current_target != next_new_target
+    ):
+        # Auto-heal stale task targets created before the plan/task sync fix.
+        task.new_word_target = next_new_target
+        dirty_fields.append("new_word_target")
+    elif learned_count > 0 and current_target < learned_count:
+        task.new_word_target = learned_count
+        dirty_fields.append("new_word_target")
+
+    desired_review_target = max(next_review_target, int(task.reviewed_count or 0), 0)
+    if int(task.review_word_target or 0) != desired_review_target:
+        task.review_word_target = desired_review_target
+        dirty_fields.append("review_word_target")
+
+    if dirty_fields:
+        dirty_fields.append("updated_at")
+        task.save(update_fields=dirty_fields)
     return task
 
 

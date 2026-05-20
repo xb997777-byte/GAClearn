@@ -8,6 +8,7 @@ Component({
     tabActiveTextStyle: '',
     tabIconStyle: '',
     tabActiveIconStyle: '',
+    tabActiveSurfaceStyle: '',
     list: [
       { pagePath: '/pages/home/index', text: '首页', short: '首' },
       { pagePath: '/pages/books/index', text: '词书', short: '书' },

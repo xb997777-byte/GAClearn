@@ -26,7 +26,7 @@ class Command(BaseCommand):
         limit = int(options.get("limit") or 0) or None
         batch_size = max(int(options.get("batch_size") or 64), 1)
         started_at = datetime.now().isoformat()
-        runtime = get_chroma_runtime()
+        runtime = {}
         try:
             chunks = build_all_knowledge_chunks(limit=limit)
             if not chunks:
@@ -34,6 +34,7 @@ class Command(BaseCommand):
 
             ids, documents, metadatas = split_chroma_payload(chunks)
             total = len(ids)
+            runtime = get_chroma_runtime()
             write_rag_rebuild_status(
                 {
                     "state": "running",

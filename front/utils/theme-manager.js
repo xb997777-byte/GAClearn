@@ -5,6 +5,7 @@ const {
   HUE_PRESETS,
   buildCustomTheme,
   buildFontSizeTokens,
+  hexToRgba,
   normalizeCustomTheme
 } = require('./custom-theme');
 
@@ -808,6 +809,10 @@ function buildThemeStyleFromTheme(theme) {
     `--theme-hero-end:${theme.heroEnd}`,
     `--theme-card-shadow:${theme.cardShadow}`,
     `--theme-divider:${theme.cardBorder}`,
+    `--theme-page-glow-a:${hexToRgba(theme.primaryEnd, 0.18)}`,
+    `--theme-page-glow-b:${hexToRgba(theme.primaryStart, 0.12)}`,
+    `--theme-primary-shadow:${hexToRgba(theme.primaryStart, 0.22)}`,
+    `--theme-secondary-shadow:${hexToRgba(theme.primaryStart, 0.06)}`,
     `--theme-tab-bar-bg:${theme.tabBarBg}`,
     `--theme-tab-text:${theme.tabText}`,
     `--theme-tab-active-text:${theme.tabActiveText}`,
@@ -908,11 +913,13 @@ function getPageThemeData(themeId) {
 function getTabBarThemeData(themeId) {
   const theme = resolveTheme(themeId || getCurrentThemeId());
   return {
-    tabBarStyle: `background:${theme.tabBarBg};box-shadow:0 16rpx 44rpx ${theme.tabShadow};`,
+    tabBarStyle: `background:${theme.tabBarBg};border:2rpx solid ${hexToRgba(theme.cardBorder, 0.82)};box-shadow:0 16rpx 44rpx ${theme.tabShadow};`,
     tabTextStyle: `color:${theme.tabText};`,
     tabActiveTextStyle: `color:${theme.tabActiveText};`,
     tabIconStyle: `background:${theme.tabIconBg};color:${theme.tabText};`,
     tabActiveIconStyle: `background:${theme.tabActiveBg};color:${theme.tabActiveText};`
+    ,
+    tabActiveSurfaceStyle: `background:linear-gradient(180deg, ${hexToRgba(theme.secondaryBg, 0.92)} 0%, ${hexToRgba(theme.cardBg, 0.82)} 100%);box-shadow:0 12rpx 28rpx ${theme.tabShadow}, inset 0 1rpx 0 rgba(255, 255, 255, 0.84);`
   };
 }
 

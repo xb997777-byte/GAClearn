@@ -4,7 +4,7 @@ function listBooks(params = {}) {
   return request({
     url: '/books',
     method: 'GET',
-    data: params,
+    params,
     withAuth: false
   });
 }
@@ -21,7 +21,7 @@ function getBookWords(bookId, params = {}) {
   return request({
     url: `/books/${bookId}/words`,
     method: 'GET',
-    data: params,
+    params,
     withAuth: false
   });
 }

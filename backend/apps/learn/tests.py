@@ -50,7 +50,7 @@ class LearnServiceTests(TestCase):
             start_date=self.today,
             status="active",
         )
-        DailyTask.objects.create(
+        task = DailyTask.objects.create(
             user=self.user,
             plan=plan,
             task_date=self.today,
@@ -65,6 +65,9 @@ class LearnServiceTests(TestCase):
         self.assertEqual(payload["target_count"], 10)
         self.assertEqual(payload["task_new_word_target"], 10)
 
+        task.refresh_from_db()
+        self.assertEqual(task.new_word_target, 10)
+
     def test_get_today_words_clamps_requested_limit(self):
         UserSetting.objects.create(user=self.user, daily_target=20)
         UserPlan.objects.create(
@@ -78,3 +81,18 @@ class LearnServiceTests(TestCase):
         payload = get_today_words(self.user, limit=9999)
 
         self.assertEqual(payload["target_count"], 200)
+
+    def test_get_today_words_uses_plan_target_when_no_task_exists(self):
+        UserSetting.objects.create(user=self.user, daily_target=30)
+        UserPlan.objects.create(
+            user=self.user,
+            book=self.book,
+            daily_target=20,
+            start_date=self.today,
+            status="active",
+        )
+
+        payload = get_today_words(self.user)
+
+        self.assertEqual(payload["target_count"], 20)
+        self.assertEqual(payload["task_new_word_target"], 20)

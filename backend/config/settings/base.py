@@ -240,3 +240,37 @@ LOGGING = {
         "level": "INFO",
     },
 }
+
+AI_AGENT_RUNTIME_MODE = os.getenv("AI_AGENT_RUNTIME_MODE", "celery").strip().lower() or "celery"
+AI_AGENT_INLINE_RECORDING = os.getenv("AI_AGENT_INLINE_RECORDING", "true").lower() == "true"
+AI_AGENT_REQUIRE_APPROVAL_FOR_MUTATIONS = os.getenv("AI_AGENT_REQUIRE_APPROVAL_FOR_MUTATIONS", "true").lower() == "true"
+AI_AGENT_QUEUE_SHORT = os.getenv("AI_AGENT_QUEUE_SHORT", "ai_short").strip() or "ai_short"
+AI_AGENT_QUEUE_LONG = os.getenv("AI_AGENT_QUEUE_LONG", "ai_long").strip() or "ai_long"
+AI_AGENT_QUEUE_TOOLS = os.getenv("AI_AGENT_QUEUE_TOOLS", "ai_tools").strip() or "ai_tools"
+AI_AGENT_STALE_QUEUE_SECONDS = int(os.getenv("AI_AGENT_STALE_QUEUE_SECONDS", "30") or 30)
+AI_AGENT_STALE_RUNNING_SECONDS = int(os.getenv("AI_AGENT_STALE_RUNNING_SECONDS", "180") or 180)
+AI_AGENT_AUTO_RECOVER_ENABLED = os.getenv("AI_AGENT_AUTO_RECOVER_ENABLED", "true").lower() == "true"
+AI_AGENT_AUTO_RECOVER_LIMIT = int(os.getenv("AI_AGENT_AUTO_RECOVER_LIMIT", "20") or 20)
+AI_AGENT_AUTO_RECOVER_EVERY_SECONDS = int(os.getenv("AI_AGENT_AUTO_RECOVER_EVERY_SECONDS", "60") or 60)
+
+REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0").strip() or "redis://127.0.0.1:6379/0"
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL)
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", REDIS_URL)
+CELERY_TASK_DEFAULT_QUEUE = AI_AGENT_QUEUE_SHORT
+CELERY_TASK_ROUTES = {
+    "apps.ai.tasks.execute_agent_run_task": {"queue": AI_AGENT_QUEUE_LONG},
+    "apps.ai.tasks.recover_stale_agent_runs_task": {"queue": AI_AGENT_QUEUE_TOOLS},
+}
+CELERY_TASK_ALWAYS_EAGER = os.getenv("CELERY_TASK_ALWAYS_EAGER", "false").lower() == "true"
+CELERY_TASK_EAGER_PROPAGATES = os.getenv("CELERY_TASK_EAGER_PROPAGATES", "true").lower() == "true"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULE = {
+    "ai-agent-recover-stale-runs": {
+        "task": "apps.ai.tasks.recover_stale_agent_runs_task",
+        "schedule": AI_AGENT_AUTO_RECOVER_EVERY_SECONDS,
+        "args": (AI_AGENT_AUTO_RECOVER_LIMIT,),
+    }
+} if AI_AGENT_AUTO_RECOVER_ENABLED else {}

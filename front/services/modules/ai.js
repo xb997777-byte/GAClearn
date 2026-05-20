@@ -3,7 +3,7 @@ const { request } = require('../request');
 const WORD_AI_TIMEOUT = 45000;
 const STUDY_AI_TIMEOUT = 45000;
 const WRONG_WORD_AI_TIMEOUT = 45000;
-const LONG_AI_TIMEOUT = 60000;
+const LONG_AI_TIMEOUT = 120000;
 
 function getCapabilities() {
   return request({
@@ -67,6 +67,74 @@ function getStudyCoach(data = {}) {
 function replanStudyPlan(data = {}) {
   return request({
     url: '/ai/plans/replan',
+    method: 'POST',
+    data,
+    timeout: LONG_AI_TIMEOUT
+  });
+}
+
+function getPlanReplanRun(runId) {
+  return request({
+    url: `/ai/plans/replan/runs/${encodeURIComponent(runId)}`,
+    method: 'GET',
+    timeout: STUDY_AI_TIMEOUT
+  });
+}
+
+function getAiRun(runId) {
+  return request({
+    url: `/ai/runs/${encodeURIComponent(runId)}`,
+    method: 'GET',
+    timeout: STUDY_AI_TIMEOUT
+  });
+}
+
+function getAiRunSteps(runId) {
+  return request({
+    url: `/ai/runs/${encodeURIComponent(runId)}/steps`,
+    method: 'GET',
+    timeout: STUDY_AI_TIMEOUT
+  });
+}
+
+function getAiRunArtifacts(runId) {
+  return request({
+    url: `/ai/runs/${encodeURIComponent(runId)}/artifacts`,
+    method: 'GET',
+    timeout: STUDY_AI_TIMEOUT
+  });
+}
+
+function retryAiRun(runId, data = {}) {
+  return request({
+    url: `/ai/runs/${encodeURIComponent(runId)}/retry`,
+    method: 'POST',
+    data,
+    timeout: LONG_AI_TIMEOUT
+  });
+}
+
+function resumeAiRun(runId, data = {}) {
+  return request({
+    url: `/ai/runs/${encodeURIComponent(runId)}/resume`,
+    method: 'POST',
+    data,
+    timeout: LONG_AI_TIMEOUT
+  });
+}
+
+function cancelAiRun(runId, data = {}) {
+  return request({
+    url: `/ai/runs/${encodeURIComponent(runId)}/cancel`,
+    method: 'POST',
+    data,
+    timeout: LONG_AI_TIMEOUT
+  });
+}
+
+function approveAiRun(runId, data = {}) {
+  return request({
+    url: `/ai/runs/${encodeURIComponent(runId)}/approve`,
     method: 'POST',
     data,
     timeout: LONG_AI_TIMEOUT
@@ -340,6 +408,14 @@ module.exports = {
   explainWord,
   getStudyCoach,
   replanStudyPlan,
+  getPlanReplanRun,
+  getAiRun,
+  getAiRunSteps,
+  getAiRunArtifacts,
+  retryAiRun,
+  resumeAiRun,
+  cancelAiRun,
+  approveAiRun,
   runRetrievalOrchestrator,
   getWrongWordsReview,
   correctWriting,

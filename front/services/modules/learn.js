@@ -4,7 +4,7 @@ function getLearnWords(params = {}) {
   return request({
     url: '/learn/words',
     method: 'GET',
-    data: params
+    params
   });
 }
 

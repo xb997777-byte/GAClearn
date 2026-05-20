@@ -12,3 +12,13 @@ def home_view(request):
             "health_url": "/api/v1/system/ping",
         },
     )
+
+
+def web_app_view(request, _path=None):
+    return render(
+        request,
+        "web_index.html",
+        {
+            "title": "GAClearn Web",
+        },
+    )

@@ -6,3 +6,7 @@ class AIConfig(AppConfig):
     name = "apps.ai"
     verbose_name = "AI能力"
 
+    def ready(self):
+        from .runtime_registry import bootstrap_runtime_registry
+
+        bootstrap_runtime_registry()

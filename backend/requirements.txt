@@ -5,6 +5,8 @@ PyMySQL==1.1.1
 requests==2.32.4
 
 # Optional AI orchestration stack for phase 1 and future upgrades.
+celery
+redis
 langchain
 langgraph
 langchain-openai

@@ -1,8 +1,10 @@
 from django.test import TestCase
 
 from apps.books.models import Book
-from apps.plans.models import PlanRevision, UserPlan
-from apps.plans.services import create_plan, switch_book
+from django.utils import timezone
+
+from apps.plans.models import DailyTask, PlanRevision, UserPlan
+from apps.plans.services import create_plan, get_or_create_today_task, switch_book, update_current_plan
 from apps.users.models import WxUser
 
 
@@ -54,3 +56,33 @@ class PlanServiceTests(TestCase):
                 metadata__previous_plan_id=original_plan.id,
             ).exists()
         )
+
+    def test_update_plan_syncs_today_task_new_word_target(self):
+        plan = create_plan(self.user, self.book_a.id, 6)
+        task = get_or_create_today_task(self.user, plan)
+        self.assertEqual(task.new_word_target, 6)
+
+        update_current_plan(self.user, {"daily_target": 55})
+
+        task.refresh_from_db()
+        self.assertEqual(task.new_word_target, 55)
+
+    def test_update_plan_does_not_shrink_below_today_learned_count(self):
+        plan = create_plan(self.user, self.book_a.id, 20)
+        task = DailyTask.objects.get(user=self.user, task_date=timezone.localdate())
+        task.learned_count = 12
+        task.new_word_target = 20
+        task.save(update_fields=["learned_count", "new_word_target", "updated_at"])
+
+        update_current_plan(self.user, {"daily_target": 6})
+
+        task.refresh_from_db()
+        self.assertEqual(task.new_word_target, 12)
+
+    def test_serialize_plan_returns_structured_empty_state_for_none(self):
+        from apps.plans.services import serialize_plan
+
+        payload = serialize_plan(None)
+        self.assertEqual(payload["status"], "empty")
+        self.assertIsNone(payload["book"])
+        self.assertEqual(payload["daily_target"], 0)

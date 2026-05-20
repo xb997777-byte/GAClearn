@@ -39,7 +39,7 @@ Page(withThemePage({
     this.loadPage();
   },
 
-  async loadPage() {
+  async loadPage(options = {}) {
     try {
       const [user, todayTask, overview] = await Promise.all([
         authApi.getMe(),
@@ -72,7 +72,7 @@ Page(withThemePage({
         planRemainingCountText: totalWordCount ? `${remainingWordCount}` : '--'
       });
       if (shouldReloadCoach) {
-        this.loadStudyCoach(true);
+        this.loadStudyCoach(true, !!options.forceCoachRefresh);
       } else {
         this.setData({
           studyCoach: null,
@@ -87,7 +87,7 @@ Page(withThemePage({
     }
   },
 
-  async loadStudyCoach(silent = false) {
+  async loadStudyCoach(silent = false, forceRefresh = false) {
     if (this.studyCoachDisabledUntil && Date.now() < this.studyCoachDisabledUntil) {
       this.setData({
         studyCoach: null,
@@ -106,7 +106,10 @@ Page(withThemePage({
     });
 
     try {
-      const data = await aiApi.getStudyCoach({ trend_days: 7 });
+      const data = await aiApi.getStudyCoach({
+        trend_days: 7,
+        force_refresh: !!forceRefresh
+      });
       if (!data || !data.ai_strategy || !data.ai_strategy.ai_enabled) {
         this.setData({
           studyCoach: null,
@@ -168,7 +171,7 @@ Page(withThemePage({
       return;
     }
     this.studyCoachDisabledUntil = 0;
-    this.loadStudyCoach();
+    this.loadPage({ forceCoachRefresh: true });
   },
 
   async handleStartTask() {

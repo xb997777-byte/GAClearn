@@ -55,7 +55,9 @@
   margin-top: 22rpx;
   border-radius: 28rpx;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.56);
+  background:
+    radial-gradient(circle at top right, rgba(255, 216, 77, 0.14), transparent 24%),
+    rgba(255, 255, 255, 0.56);
   border: 2rpx solid var(--theme-card-border);
 }
 
@@ -216,7 +218,7 @@
   padding: 24rpx;
   border-radius: 28rpx;
   background:
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 28%),
+    radial-gradient(circle at top right, rgba(255, 216, 77, 0.22) 0%, rgba(255, 255, 255, 0) 28%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.76) 100%);
   border: 2rpx solid var(--theme-card-border);
 }

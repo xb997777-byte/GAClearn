@@ -1,11 +1,12 @@
 import os
+from typing import Callable
 from functools import lru_cache
 from typing import Any, Dict, List, TypedDict
 
 from pydantic import BaseModel, Field
 
 from ..compat import END, START, LANGGRAPH_AVAILABLE, StateGraph, build_runtime_capabilities
-from ..langchain_runtime import run_json_chain, run_tool_calling_chain
+from ..langchain_runtime import run_json_chain
 from ..mcp.server_http import call_mcp_tool
 from ..profile_memory import get_or_refresh_profile_memory, serialize_profile_memory
 from ..providers.deepseek import is_provider_ready
@@ -78,6 +79,29 @@ def _summarize_tool_result(item: Dict[str, Any]) -> str:
         answer = result.get("answer") or {}
         return f"向量 RAG：{answer.get('summary', '')}"
     return item.get("summary", tool_name)
+
+
+def _safe_tool_invoke(
+    user,
+    tool_name: str,
+    args: Dict[str, Any] | None = None,
+    summary: str = "",
+    fallback_builder: Callable[[], Dict[str, Any]] | None = None,
+) -> Dict[str, Any]:
+    try:
+        item = _invoke_tool(user, tool_name, args, summary)
+        item["status"] = "success"
+        return item
+    except Exception as exc:
+        fallback_result = fallback_builder() if fallback_builder else {}
+        return {
+            "tool_name": tool_name,
+            "args": args or {},
+            "summary": summary or f"调用 {tool_name}",
+            "result": fallback_result,
+            "status": "fallback",
+            "error": str(exc),
+        }
 
 
 def _build_rag_query(context_bundle: Dict[str, Any]) -> str:
@@ -160,6 +184,174 @@ def _build_fallback_replan(state: PlanReplanState) -> Dict[str, Any]:
     }
 
 
+def _build_emergency_replan(trend_days: int = 7) -> Dict[str, Any]:
+    trend_days = min(max(int(trend_days or 7), 3), 14)
+    return {
+        "headline": "AI 已返回保底自适应计划",
+        "summary": "完整 AI 生成暂时不可用，系统已返回保底自适应计划，避免请求失败。",
+        "new_plan": {
+            "book_name": "",
+            "current_daily_target": 20,
+            "suggested_daily_target": 20,
+            "review_target": 10,
+            "focus_mode": "balanced",
+            "focus_mode_label": "先稳定执行今天任务",
+            "study_order": [
+                "先完成今日到期复习",
+                "再推进今日新词",
+                "最后做一轮错词回看",
+            ],
+            "focus_words": [],
+            "time_blocks": [
+                {"label": "复习回收", "minutes": 15, "focus": "先把今天已到期的复习做完"},
+                {"label": "新词推进", "minutes": 20, "focus": "按当前节奏推进新词"},
+                {"label": "错词巩固", "minutes": 10, "focus": "回看最近易错词，防止重复出错"},
+            ],
+        },
+        "plan_patch": {},
+        "decision": {
+            "reasons": [
+                f"本次深度刷新未成功完成，已切到稳定回退模式",
+                f"先保证你今天能继续学习，不让请求失败打断流程",
+                f"趋势窗口仍按最近 {trend_days} 天理解",
+            ],
+            "risks": [
+                "本次没有用到完整检索与模型分析，建议以稳定执行为主。",
+            ],
+            "expected_benefit": "即使 AI 深度分析暂时不可用，也能立刻继续学习，不需要反复重试。",
+        },
+    }
+
+
+build_emergency_replan = _build_emergency_replan
+
+
+def build_fast_plan_replan_detail(user, trend_days: int = 7) -> Dict[str, Any]:
+    trend_days = min(max(int(trend_days or 7), 3), 14)
+    state: PlanReplanState = {"user": user, "trend_days": trend_days}
+    try:
+        state.update(_node_collect_context(state))
+        fallback = _build_fallback_replan(state)
+    except Exception as exc:
+        emergency = _build_emergency_replan(trend_days)
+        return {
+            "headline": emergency.get("headline", ""),
+            "summary": emergency.get("summary", ""),
+            "new_plan": emergency.get("new_plan", {}),
+            "plan_patch": emergency.get("plan_patch", {}),
+            "decision": emergency.get("decision", {}),
+            "knowledge": {},
+            "tool_trace": [],
+            "agent_flow": {
+                "title": "AI 重规划学习计划 Fast Fallback",
+                "inputs": [],
+                "steps": [{"name": "fallback", "detail": "快速模式上下文读取失败，已回退到保底可用建议。"}],
+                "decision_highlights": ["本次未读取完整上下文，已优先保证计划结果可立即使用。"],
+            },
+            "context_bundle": {},
+            "profile_memory": {},
+            "multi_agent": {
+                "roles": [
+                    {
+                        "name": "planner",
+                        "title": "快速规划器",
+                        "responsibility": "在上下文不完整时仍先产出可执行的保底学习建议。",
+                        "output": emergency.get("summary", ""),
+                    }
+                ],
+                "handoffs": [],
+                "selected_tools": [],
+            },
+            "langchain_trace": [],
+            "runtime_stack": {
+                "stack_name": "plan_replanner_fast_fallback",
+                "langchain": False,
+                "tool_calling": False,
+                "output_parser": False,
+                "fallback": True,
+            },
+            "ai_strategy": {
+                "engine": "fast_fallback",
+                "rag_enabled": False,
+                "ai_enabled": False,
+                "prompt_version": PROMPT_VERSION,
+                "model_name": "",
+            },
+            "runtime": build_runtime_capabilities(),
+            "degraded_notice": {
+                "enabled": True,
+                "reason": str(exc),
+                "message": "快速模式上下文读取失败，已返回保底可用计划。",
+            },
+        }
+    context_bundle = state.get("context_bundle") or {}
+    plan = (context_bundle.get("plan_ctx") or {}).get("plan") or {}
+    plan_patch = fallback.get("plan_patch", {}) or {}
+    if not plan:
+        plan_patch = {}
+    return {
+        "headline": fallback.get("headline", ""),
+        "summary": fallback.get("summary", ""),
+        "new_plan": fallback.get("new_plan", {}),
+        "plan_patch": plan_patch,
+        "decision": fallback.get("decision", {}),
+        "knowledge": {},
+        "tool_trace": [
+            {
+                "tool_name": item.get("tool_name", ""),
+                "args": item.get("args", {}),
+                "summary": item.get("summary", ""),
+            }
+            for item in (state.get("tool_trace") or [])
+        ],
+        "agent_flow": {
+            "title": "AI 重规划学习计划 Fast Fallback",
+            "inputs": [
+                f"当前词书：{((plan.get('book') or {}).get('name') or '未设置')}",
+                f"当前日目标：{plan.get('daily_target', 0)}",
+                f"复习剩余：{((context_bundle.get('today_task') or {}).get('summary') or {}).get('review_words_remaining', 0)}",
+            ],
+            "steps": [
+                {
+                    "name": "planner",
+                    "detail": "快速模式仅读取当前计划、今日任务、错词和趋势，立即返回可执行建议。",
+                }
+            ],
+            "decision_highlights": [
+                f"建议模式：{((context_bundle.get('today_task') or {}).get('adaptive') or {}).get('mode_label', '')}",
+            ],
+        },
+        "context_bundle": context_bundle,
+        "profile_memory": {},
+        "multi_agent": {
+            "roles": [
+                {
+                    "name": "planner",
+                    "title": "快速规划器",
+                    "responsibility": "不等待外部模型，直接用当前学习数据生成即时建议。",
+                    "output": fallback.get("summary", ""),
+                }
+            ],
+            "handoffs": [],
+            "selected_tools": ["get_user_plan", "get_today_task", "get_due_reviews", "get_wrong_words", "get_study_snapshot"],
+        },
+        "langchain_trace": [],
+        "runtime_stack": {
+            "stack_name": "plan_replanner_fast_fallback",
+            "langchain": False,
+            "tool_calling": False,
+            "output_parser": False,
+        },
+        "ai_strategy": {
+            "engine": "fast_fallback",
+            "rag_enabled": False,
+            "ai_enabled": False,
+            "prompt_version": PROMPT_VERSION,
+            "model_name": "",
+        },
+        "runtime": build_runtime_capabilities(),
+    }
+
 def _build_multi_agent_story(context_bundle: Dict[str, Any], knowledge: Dict[str, Any], fallback: Dict[str, Any]) -> Dict[str, Any]:
     structured = (knowledge.get("structured_rag") or {}).get("answer") or {}
     vector = (knowledge.get("vector_rag") or {}).get("answer") or {}
@@ -212,19 +404,22 @@ def _generate_replan_with_langchain(state: PlanReplanState) -> Dict[str, Any]:
         "multi_agent": state.get("multi_agent") or {},
         "task": "Replan today's English learning schedule for the user and return strict JSON.",
     }
-    result = run_tool_calling_chain(
-        stack_name="plan_replanner_chain",
-        system_prompt="You are a multi-agent English learning planning system for Chinese learners. Use the provided study context only, call the most relevant tools if needed, then provide a concise final response.",
-        payload=payload,
-        user=state["user"],
-        tool_names=["get_user_plan", "get_today_task", "get_due_reviews", "get_wrong_words", "get_study_snapshot", "rag_search", "vector_rag_search"],
-    )
-    json_result = run_json_chain(
-        stack_name="plan_replanner_json",
-        system_prompt="You are a multi-agent English learning planning system for Chinese learners. Use the provided study context only and output strict JSON.",
-        payload=payload,
-        schema_model=PlanReplanSchema,
-    )
+    try:
+        json_result = run_json_chain(
+            stack_name="plan_replanner_json",
+            system_prompt=(
+                "You are a multi-agent English learning planning system for Chinese learners. "
+                "Use the provided study context only and output strict JSON."
+            ),
+            payload=payload,
+            schema_model=PlanReplanSchema,
+        )
+    except Exception:
+        return {
+            "result": fallback,
+            "langchain_trace": [],
+            "runtime_stack": {"stack_name": "plan_replanner_json", "fallback": True},
+        }
     final = dict(fallback)
     chain_result = json_result.get("result") or {}
     if json_result.get("enabled"):
@@ -239,11 +434,8 @@ def _generate_replan_with_langchain(state: PlanReplanState) -> Dict[str, Any]:
         )
     return {
         "result": final,
-        "langchain_trace": (result.get("trace") or []) + (json_result.get("trace") or []),
-        "runtime_stack": {
-            **(result.get("runtime_stack") or {}),
-            **(json_result.get("runtime_stack") or {}),
-        },
+        "langchain_trace": json_result.get("trace") or [],
+        "runtime_stack": json_result.get("runtime_stack") or {},
     }
 
 
@@ -252,14 +444,35 @@ def _node_collect_context(state: PlanReplanState) -> Dict[str, Any]:
     trend_days = min(max(int(state.get("trend_days", 7) or 7), 3), 14)
     memory = get_or_refresh_profile_memory(user, source="plan_replan")
     trace = [
-        _invoke_tool(user, "get_user_plan", {}, "读取当前学习计划"),
-        _invoke_tool(user, "get_today_task", {}, "读取今日任务与 adaptive 建议"),
-        _invoke_tool(user, "get_due_reviews", {"limit": 8}, "读取到期复习词"),
-        _invoke_tool(user, "get_wrong_words", {}, "读取当前错词本"),
-        _invoke_tool(user, "get_study_snapshot", {"days": trend_days}, "读取最近学习趋势"),
+        _safe_tool_invoke(user, "get_user_plan", {}, "读取当前学习计划", fallback_builder=lambda: {"plan": None}),
+        _safe_tool_invoke(
+            user,
+            "get_today_task",
+            {},
+            "读取今日任务与 adaptive 建议",
+            fallback_builder=lambda: {
+                "plan": None,
+                "task": None,
+                "summary": {"new_words_remaining": 0, "review_words_remaining": 0, "wrong_words": 0},
+                "adaptive": {},
+            },
+        ),
+        _safe_tool_invoke(user, "get_due_reviews", {"limit": 8}, "读取到期复习词", fallback_builder=lambda: {"list": []}),
+        _safe_tool_invoke(user, "get_wrong_words", {}, "读取当前错词本", fallback_builder=lambda: {"list": []}),
+        _safe_tool_invoke(
+            user,
+            "get_study_snapshot",
+            {"days": trend_days},
+            "读取最近学习趋势",
+            fallback_builder=lambda: {"overview": {"learned_word_count": 0, "wrong_word_count": 0}},
+        ),
     ]
     for item in trace:
-        item["summary"] = _summarize_tool_result(item)
+        base_summary = _summarize_tool_result(item)
+        if item.get("status") == "fallback":
+            item["summary"] = f"{base_summary}（已回退）"
+        else:
+            item["summary"] = base_summary
     return {
         "context_bundle": {
             "plan_ctx": trace[0]["result"],
@@ -276,10 +489,29 @@ def _node_collect_context(state: PlanReplanState) -> Dict[str, Any]:
 def _node_retrieve_knowledge(state: PlanReplanState) -> Dict[str, Any]:
     user = state["user"]
     rag_query = _build_rag_query(state.get("context_bundle") or {})
-    structured = _invoke_tool(user, "rag_search", {"query": rag_query, "limit": 4}, "调用结构化 RAG 检索与当前问题更相关的词库、语法点和句库资料")
-    vector = _invoke_tool(user, "vector_rag_search", {"query": rag_query, "limit": 4}, "调用本地轻量向量 RAG 召回更相近的学习资料")
-    structured["summary"] = _summarize_tool_result(structured)
-    vector["summary"] = _summarize_tool_result(vector)
+    structured = _safe_tool_invoke(
+        user,
+        "rag_search",
+        {"query": rag_query, "limit": 4},
+        "调用结构化 RAG 检索与当前问题更相关的词库、语法点和句库资料",
+        fallback_builder=lambda: {"answer": {"summary": "结构化 RAG 当前不可用，本次已跳过该证据。"}},
+    )
+    vector = _safe_tool_invoke(
+        user,
+        "vector_rag_search",
+        {"query": rag_query, "limit": 4, "retrieval_mode": "hybrid"},
+        "调用本地轻量向量 RAG 召回更相近的学习资料",
+        fallback_builder=lambda: {
+            "answer": {"summary": "向量 RAG 当前不可用，本次已改用现有学习数据生成建议。"},
+            "answer_brief": {"summary": "向量 RAG 当前不可用，本次已改用现有学习数据生成建议。"},
+            "documents": [],
+            "retrieval_strategy": {"degraded": True, "backend": "fallback"},
+        },
+    )
+    structured_summary = _summarize_tool_result(structured)
+    vector_summary = _summarize_tool_result(vector)
+    structured["summary"] = f"{structured_summary}（已回退）" if structured.get("status") == "fallback" else structured_summary
+    vector["summary"] = f"{vector_summary}（已回退）" if vector.get("status") == "fallback" else vector_summary
     return {
         "rag_query": rag_query,
         "knowledge": {
@@ -366,7 +598,27 @@ def _run_graph(initial_state: PlanReplanState) -> PlanReplanState:
 
 
 def build_plan_replan_detail(user, trend_days: int = 7) -> Dict[str, Any]:
-    state = _run_graph({"user": user, "trend_days": trend_days})
+    try:
+        state = _run_graph({"user": user, "trend_days": trend_days})
+        degraded = any(item.get("status") == "fallback" for item in (state.get("tool_trace") or []))
+    except Exception as exc:
+        fallback = build_fast_plan_replan_detail(user, trend_days)
+        fallback["headline"] = fallback.get("headline") or "AI 已回退到保底自适应计划"
+        fallback["summary"] = fallback.get("summary") or "完整 AI 生成暂时不可用，已返回保底自适应计划。"
+        fallback["ai_strategy"] = {
+            **(fallback.get("ai_strategy") or {}),
+            "engine": "deep_replan_fallback",
+        }
+        fallback["runtime_stack"] = {
+            **(fallback.get("runtime_stack") or {}),
+            "fallback": True,
+        }
+        fallback["degraded_notice"] = {
+            "enabled": True,
+            "reason": str(exc),
+            "message": "完整 AI 生成暂时失败，已自动回退到保底自适应计划。",
+        }
+        return fallback
     context_bundle = state.get("context_bundle") or {}
     plan = (context_bundle.get("plan_ctx") or {}).get("plan") or {}
     plan_patch = state.get("replan", {}).get("plan_patch", {}) or {}
@@ -386,6 +638,11 @@ def build_plan_replan_detail(user, trend_days: int = 7) -> Dict[str, Any]:
         "multi_agent": state.get("multi_agent", {}),
         "langchain_trace": state.get("langchain_trace", []),
         "runtime_stack": state.get("runtime_stack", {}),
+        "degraded_notice": {
+            "enabled": degraded,
+            "reason": "partial_tool_fallback" if degraded else "",
+            "message": "部分检索或工具步骤已回退，当前结果仍可直接使用。" if degraded else "",
+        },
         "ai_strategy": {
             "engine": "langgraph" if LANGGRAPH_AVAILABLE else "pipeline",
             "rag_enabled": True,

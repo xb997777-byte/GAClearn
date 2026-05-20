@@ -4,20 +4,22 @@
     <view class="section hero-card">
       <view class="ai-collapsible-head" bindtap="toggleCapabilityIntro">
         <view>
-          <view class="card-title" style="color:#fff;">AI / Agent 能力展示</view>
-          <view class="card-subtitle light-text">默认收起，不挡住你直接体验 AI 工作台。</view>
+          <view class="card-title" style="color:#fff;">AI 工作台说明</view>
+          <view class="card-subtitle light-text">默认收起，避免技术说明挡住直接使用入口。</view>
         </view>
         <view class="ai-collapse-indicator light">{{capabilityIntroCollapsed ? '展开' : '收起'}}</view>
       </view>
       <block wx:if="{{!capabilityIntroCollapsed}}">
         <view class="card-subtitle light-text">
-          把这个英语学习项目从“有 AI 按钮”升级成“看得见 Agent、RAG、MCP、可观测性”的可展示作品。
+          这里保留了项目的 AI 能力说明，但默认体验优先面向学习者：先提问、先拿结果，技术细节按需展开。
         </view>
         <view class="tag-row ai-runtime-row" wx:if="{{capabilities}}">
           <view class="chip">运行时 {{capabilities.preferred_runtime}}</view>
           <view class="chip">模型 {{capabilities.model_name || '未配置'}}</view>
           <view class="chip">{{capabilities.mcp_available ? 'MCP 已就绪' : 'MCP 已降级'}}</view>
           <view class="chip">{{capabilities.mcp_stdio_available ? 'STDIO 已就绪' : '仅 HTTP'}}</view>
+          <view class="chip">{{capabilities.worker_healthy ? 'Worker 健康' : 'Worker 异常'}}</view>
+          <view class="chip">{{capabilities.auto_recover_enabled ? '自动恢复已开启' : '自动恢复未开启'}}</view>
         </view>
         <view class="ai-tech-grid" wx:if="{{stackShowcase.length}}">
           <view wx:for="{{stackShowcase}}" wx:key="title" class="ai-tech-card">
@@ -51,25 +53,76 @@
       </view>
     </view>
 
+    <view wx:if="{{capabilities}}" class="section panel-card">
+      <view class="ai-collapsible-head" bindtap="toggleCapabilityIntro">
+        <view>
+          <view class="card-title">Runtime 健康详情</view>
+          <view class="card-subtitle">Redis、Worker、队列与失活任务恢复状态。</view>
+        </view>
+        <view class="ai-collapse-indicator">{{capabilityIntroCollapsed ? '展开' : '收起'}}</view>
+      </view>
+      <block wx:if="{{!capabilityIntroCollapsed}}">
+        <view class="ai-grid-two">
+          <view class="ai-metric-card">
+            <view class="ai-metric-label">Worker 状态</view>
+            <view class="ai-metric-value small">{{capabilities.worker_healthy ? '健康' : '异常'}}</view>
+          </view>
+          <view class="ai-metric-card">
+            <view class="ai-metric-label">Redis</view>
+            <view class="ai-metric-value small">{{capabilities.redis_reachable ? '可达' : '不可达'}}</view>
+          </view>
+          <view class="ai-metric-card">
+            <view class="ai-metric-label">自动恢复</view>
+            <view class="ai-metric-value small">{{capabilities.auto_recover_enabled ? '已开启' : '未开启'}}</view>
+          </view>
+          <view class="ai-metric-card">
+            <view class="ai-metric-label">Stale Run</view>
+            <view class="ai-metric-value">{{capabilities.stale_run_count || 0}}</view>
+          </view>
+        </view>
+        <view class="ai-card-row">
+          <view class="ai-card-title">在线 Worker</view>
+          <view class="ai-card-text">{{capabilities.workers && capabilities.workers.length ? capabilities.workers.join('，') : '当前未探测到在线 worker'}}</view>
+        </view>
+        <view class="ai-card-row">
+          <view class="ai-card-title">观测到的队列</view>
+          <view class="ai-card-text">{{capabilities.observed_queues && capabilities.observed_queues.length ? capabilities.observed_queues.join('，') : '尚未探测到队列'}}</view>
+        </view>
+        <view class="ai-card-row">
+          <view class="ai-card-title">自动恢复策略</view>
+          <view class="ai-card-text">每 {{capabilities.auto_recover_every_seconds || 0}} 秒最多恢复 {{capabilities.auto_recover_limit || 0}} 个失活任务</view>
+          <view wx:if="{{capabilities.degraded_reason}}" class="ai-card-tip">{{capabilities.degraded_reason}}</view>
+        </view>
+        <view wx:if="{{capabilities.stale_runs_preview && capabilities.stale_runs_preview.length}}" class="ai-card-row">
+          <view class="ai-card-title">待恢复任务预览</view>
+          <view wx:for="{{capabilities.stale_runs_preview}}" wx:key="run_id" class="ai-bullet">{{item.feature_type}} · {{item.run_id}} · {{item.status}} · {{item.queue_name}}</view>
+        </view>
+      </block>
+    </view>
+
     <view class="section panel-card">
       <view class="ai-tab-row">
         <view class="ai-tab {{activeTab === 'apps' ? 'active' : ''}}" data-tab="apps" bindtap="switchTab">应用</view>
-        <view class="ai-tab {{activeTab === 'agent' ? 'active' : ''}}" data-tab="agent" bindtap="switchTab">Agent</view>
-        <view class="ai-tab {{activeTab === 'rag' ? 'active' : ''}}" data-tab="rag" bindtap="switchTab">RAG</view>
-        <view class="ai-tab {{activeTab === 'mcp' ? 'active' : ''}}" data-tab="mcp" bindtap="switchTab">MCP</view>
+        <view class="ai-tab {{activeTab === 'agent' ? 'active' : ''}}" data-tab="agent" bindtap="switchTab">改计划</view>
+        <view class="ai-tab {{activeTab === 'rag' ? 'active' : ''}}" data-tab="rag" bindtap="switchTab">问资料</view>
+        <view class="ai-tab {{activeTab === 'mcp' ? 'active' : ''}}" data-tab="mcp" bindtap="switchTab">技能</view>
         <view class="ai-tab {{activeTab === 'ops' ? 'active' : ''}}" data-tab="ops" bindtap="switchTab">观测</view>
       </view>
     </view>
 
       <view wx:if="{{activeTab === 'agent'}}" class="section panel-card">
-      <view class="card-title">AI 重规划学习计划 Agent</view>
+      <view class="card-title">AI 帮你重排今天学习</view>
       <view class="card-subtitle">
-        这个 Agent 会读取当前计划、今日任务、错词本、到期复习词和趋势数据，再结合结构化 RAG 与向量 RAG，输出新的学习节奏建议。
+        系统会结合当前计划、今日任务、错词本、到期复习词和近期趋势，给你一份更适合今天状态的学习安排。
       </view>
-      <button class="primary-btn full-btn ai-action" loading="{{agentLoading}}" disabled="{{agentLoading}}" bindtap="loadPlanReplanner">运行 Agent</button>
-      <view wx:if="{{agentLoading}}" class="ai-loading-tip">Agent 正在分析你的学习数据，请稍候...</view>
+      <button class="primary-btn full-btn ai-action" loading="{{agentLoading}}" disabled="{{agentLoading}}" bindtap="loadPlanReplanner">生成今天安排</button>
+      <view wx:if="{{agentLoading}}" class="ai-loading-tip">{{agentStatusText || 'AI 正在结合你的学习数据整理建议，请稍候...'}}</view>
 
         <view wx:if="{{planReplanResult}}" class="ai-result-block">
+        <view wx:if="{{planReplanResult.runtime_summary && planReplanResult.runtime_summary.summary}}" class="ai-status-banner {{planReplanResult.runtime_summary.degraded ? 'warning' : 'success'}}">
+          <view class="ai-status-title">{{planReplanResult.runtime_summary.status_text || '已完成'}}</view>
+          <view class="ai-status-text">{{planReplanResult.runtime_summary.summary}}</view>
+        </view>
         <view class="ai-agent-plan-card">
           <view class="ai-agent-plan-kicker">AI 给你的今日计划</view>
           <view class="ai-agent-plan-title">{{planReplanResult.planCardTitle}}</view>
@@ -134,26 +187,38 @@
             <view wx:for="{{planReplanResult.decisionRisks}}" wx:key="index" class="ai-bullet">{{item}}</view>
           </view>
 
-          <view wx:if="{{planReplanResult.multi_agent.roles && planReplanResult.multi_agent.roles.length}}" class="ai-card-row">
-            <view class="ai-card-title">多 Agent 角色</view>
-            <view wx:for="{{planReplanResult.multi_agent.roles}}" wx:key="name" class="ai-card-row inner-role">
-              <view class="ai-card-title">{{item.title}}</view>
-              <view class="ai-card-text">{{item.responsibility}}</view>
-              <view class="ai-card-tip">输出：{{item.output}}</view>
+          <view class="ai-result-block ai-collapsible-card">
+            <view class="ai-collapsible-head" bindtap="toggleAgentProcess">
+              <view>
+                <view class="ai-result-title">查看 AI 安排依据</view>
+                <view class="ai-card-tip">角色分工、运行轨迹和证据链都收纳在这里。</view>
+              </view>
+              <view class="ai-collapse-indicator">{{agentProcessCollapsed ? '展开' : '收起'}}</view>
             </view>
-          </view>
 
-          <view wx:if="{{planReplanResult.multi_agent.handoffs && planReplanResult.multi_agent.handoffs.length}}" class="ai-card-row">
-            <view class="ai-card-title">角色交接流程</view>
-            <view wx:for="{{planReplanResult.multi_agent.handoffs}}" wx:key="index" class="ai-bullet">{{item.from}} → {{item.to}}：{{item.reason}}</view>
-          </view>
+            <block wx:if="{{!agentProcessCollapsed}}">
+              <view wx:if="{{planReplanResult.multi_agent.roles && planReplanResult.multi_agent.roles.length}}" class="ai-card-row">
+                <view class="ai-card-title">多 Agent 角色</view>
+                <view wx:for="{{planReplanResult.multi_agent.roles}}" wx:key="name" class="ai-card-row inner-role">
+                  <view class="ai-card-title">{{item.title}}</view>
+                  <view class="ai-card-text">{{item.responsibility}}</view>
+                  <view class="ai-card-tip">输出：{{item.output}}</view>
+                </view>
+              </view>
 
-          <view wx:if="{{planReplanResult.langchain_trace && planReplanResult.langchain_trace.length}}" class="ai-card-row">
-            <view class="ai-card-title">LangChain 轨迹</view>
-            <view wx:for="{{planReplanResult.langchain_trace}}" wx:key="index" class="ai-log-line">{{item.line}}</view>
-          </view>
+              <view wx:if="{{planReplanResult.multi_agent.handoffs && planReplanResult.multi_agent.handoffs.length}}" class="ai-card-row">
+                <view class="ai-card-title">角色交接流程</view>
+                <view wx:for="{{planReplanResult.multi_agent.handoffs}}" wx:key="index" class="ai-bullet">{{item.from}} → {{item.to}}：{{item.reason}}</view>
+              </view>
 
-          <ai-evidence evidence="{{planReplanResult.evidence}}" title="Agent 证据链" />
+              <view wx:if="{{planReplanResult.langchain_trace && planReplanResult.langchain_trace.length}}" class="ai-card-row">
+                <view class="ai-card-title">LangChain 轨迹</view>
+                <view wx:for="{{planReplanResult.langchain_trace}}" wx:key="index" class="ai-log-line">{{item.line}}</view>
+              </view>
+
+              <ai-evidence evidence="{{planReplanResult.evidence}}" title="Agent 证据链" />
+            </block>
+          </view>
         </view>
 
       <view wx:if="{{profileMemory}}" class="ai-result-block">
@@ -169,480 +234,616 @@
         <button class="secondary-btn full-btn ai-inline-btn" loading="{{profileRefreshing}}" disabled="{{profileRefreshing}}" bindtap="refreshProfileMemory">刷新画像</button>
       </view>
 
-      <view class="ai-result-block">
-        <view class="ai-result-title">高级演示：LangGraph 检索编排</view>
-        <view class="ai-result-text">
-          这个演示不是给普通用户日常学习用的，它的作用是展示这个项目里 Agent、MCP、LangGraph 和多路检索编排是怎么串起来工作的。
-        </view>
-        <input class="ai-input" value="{{retrievalOrchestratorQuery}}" bindinput="handleRetrievalOrchestratorQuery" />
-        <button class="primary-btn full-btn ai-action" loading="{{retrievalOrchestratorLoading}}" disabled="{{retrievalOrchestratorLoading}}" bindtap="runRetrievalOrchestrator">运行检索编排演示</button>
-
-        <view wx:if="{{retrievalOrchestratorError}}" class="ai-error-panel">
-          <view class="ai-error-title">{{retrievalOrchestratorError.title}}</view>
-          <view class="ai-error-message">{{retrievalOrchestratorError.message}}</view>
-          <view wx:if="{{retrievalOrchestratorError.code}}" class="ai-error-meta">状态 / 代码：{{retrievalOrchestratorError.code}}</view>
-          <view class="ai-error-block">
-            <view class="ai-error-label">请求参数</view>
-            <view class="ai-error-code">{{retrievalOrchestratorError.requestText}}</view>
-          </view>
-          <view wx:if="{{retrievalOrchestratorError.fieldErrorsText}}" class="ai-error-block">
-            <view class="ai-error-label">字段错误</view>
-            <view class="ai-error-code">{{retrievalOrchestratorError.fieldErrorsText}}</view>
-          </view>
-          <view wx:if="{{retrievalOrchestratorError.responseText}}" class="ai-error-block">
-            <view class="ai-error-label">后端返回</view>
-            <view class="ai-error-code">{{retrievalOrchestratorError.responseText}}</view>
-          </view>
-        </view>
-
-        <view wx:if="{{retrievalOrchestratorResult}}" class="ai-result-block inner">
-          <view class="ai-result-title">{{retrievalOrchestratorResult.headline}}</view>
-          <view class="ai-result-text">{{retrievalOrchestratorResult.summary}}</view>
-
-          <view wx:if="{{retrievalOrchestratorResult.query_analysis}}" class="ai-card-row">
-            <view class="ai-card-title">问题分析</view>
-            <view class="ai-card-text">聚焦点：{{retrievalOrchestratorResult.query_analysis.focus_label}}</view>
-            <view class="ai-card-tip">偏好模式：{{retrievalOrchestratorResult.query_analysis.preferred_mode}}</view>
-            <view wx:if="{{retrievalOrchestratorResult.query_analysis.keywords && retrievalOrchestratorResult.query_analysis.keywords.length}}" class="ai-card-tip">
-              关键词：{{retrievalOrchestratorResult.query_analysis.keywords_text}}
-            </view>
-          </view>
-
-        <view wx:if="{{retrievalOrchestratorResult.selection}}" class="ai-card-row">
-            <view class="ai-card-title">最终选择</view>
-            <view class="ai-card-text">{{retrievalOrchestratorResult.selection.selected_label}}</view>
-            <view wx:for="{{retrievalOrchestratorResult.selection.reasons}}" wx:key="index" class="ai-bullet">{{item}}</view>
-            <view class="ai-card-tip">
-              结构化命中 {{retrievalOrchestratorResult.selection.comparison.structured_hits || 0}}
-              · 混合命中 {{retrievalOrchestratorResult.selection.comparison.hybrid_hits || 0}}
-              · 双源命中 {{retrievalOrchestratorResult.selection.comparison.dual_source_hits || 0}}
-            </view>
-          </view>
-
-          <view wx:if="{{retrievalOrchestratorResult.agent_flow && retrievalOrchestratorResult.agent_flow.graph_nodes && retrievalOrchestratorResult.agent_flow.graph_nodes.length}}">
-            <view class="ai-section-title">图节点</view>
-            <view class="ai-chip-row wrap">
-              <view wx:for="{{retrievalOrchestratorResult.agent_flow.graph_nodes}}" wx:key="index" class="ai-choice active">{{item}}</view>
-            </view>
-        </view>
-
-        <view wx:if="{{retrievalOrchestratorResult.multi_agent.roles && retrievalOrchestratorResult.multi_agent.roles.length}}" class="ai-card-row">
-          <view class="ai-card-title">多 Agent 角色</view>
-          <view wx:for="{{retrievalOrchestratorResult.multi_agent.roles}}" wx:key="name" class="ai-card-row inner-role">
-            <view class="ai-card-title">{{item.title}}</view>
-            <view class="ai-card-text">{{item.responsibility}}</view>
-            <view class="ai-card-tip">输出：{{item.output}}</view>
-          </view>
-        </view>
-
-        <view wx:if="{{retrievalOrchestratorResult.multi_agent.handoffs && retrievalOrchestratorResult.multi_agent.handoffs.length}}" class="ai-card-row">
-          <view class="ai-card-title">角色交接流程</view>
-          <view wx:for="{{retrievalOrchestratorResult.multi_agent.handoffs}}" wx:key="index" class="ai-bullet">{{item.from}} → {{item.to}}：{{item.reason}}</view>
-        </view>
-
-        <view wx:if="{{retrievalOrchestratorResult.langchain_trace && retrievalOrchestratorResult.langchain_trace.length}}" class="ai-card-row">
-          <view class="ai-card-title">LangChain 轨迹</view>
-          <view wx:for="{{retrievalOrchestratorResult.langchain_trace}}" wx:key="index" class="ai-log-line">{{item.line}}</view>
-        </view>
-
-        <view wx:if="{{retrievalOrchestratorResult.tool_trace && retrievalOrchestratorResult.tool_trace.length}}">
-          <view class="ai-section-title">本次工具调用</view>
-          <view wx:for="{{retrievalOrchestratorResult.tool_trace}}" wx:key="index" class="ai-card-row">
-              <view class="ai-card-title">{{item.tool_name}}</view>
-              <view class="ai-card-text">{{item.summary}}</view>
-            </view>
-          </view>
-
-          <view wx:if="{{retrievalOrchestratorResult.structuredSummary}}" class="ai-card-row">
-            <view class="ai-card-title">结构化 RAG 摘要</view>
-            <view class="ai-card-text">{{retrievalOrchestratorResult.structuredSummary}}</view>
-          </view>
-
-          <view wx:if="{{retrievalOrchestratorResult.hybridSummary}}" class="ai-card-row">
-            <view class="ai-card-title">混合 RAG 摘要</view>
-            <view class="ai-card-text">{{retrievalOrchestratorResult.hybridSummary}}</view>
-          </view>
-
-          <view wx:if="{{retrievalOrchestratorResult.hybridDocs.length}}">
-            <view class="ai-section-title">混合召回预览</view>
-            <view wx:for="{{retrievalOrchestratorResult.hybridDocs}}" wx:key="index" class="ai-card-row">
-              <view class="ai-card-title">{{item.title}}</view>
-              <view class="ai-card-tip">{{item.source_type}} · 相关度 {{item.score}}</view>
-              <view wx:if="{{item.retrieval_sources.length}}" class="ai-card-tip">来源链路：{{item.retrieval_sources_text}}</view>
-              <view wx:if="{{item.match_reason}}" class="ai-card-text">{{item.match_reason}}</view>
-            </view>
-          </view>
-
-          <ai-evidence evidence="{{retrievalOrchestratorResult.evidence}}" title="检索编排证据链" />
-        </view>
+      <view wx:if="{{planReplanResult}}" class="ai-result-block">
+        <view class="ai-result-title">今日计划详细分析</view>
+        <view class="ai-result-text">这份结果和“本日计划”页生成的是同一份 AI 计划，只是这里展示更完整的分析、证据和执行建议。</view>
+        <view wx:if="{{currentPlan && planReplanResult.plan_patch && planReplanResult.plan_patch.daily_target}}" class="ai-card-tip">如果你已经看懂原因，可以回到计划页直接应用。</view>
       </view>
     </view>
 
     <view wx:if="{{activeTab === 'rag'}}" class="section panel-card">
-      <view class="card-title">AI 查资料回答</view>
-      <view class="card-subtitle">这块的本质是：先查你项目自己的词库、语法库和例句库，再根据查到的资料回答问题。</view>
-      <view class="ai-chip-row wrap">
-        <view class="ai-choice {{ragViewMode === 'learning' ? 'active' : ''}}" data-mode="learning" bindtap="switchRagViewMode">学习模式</view>
-        <view class="ai-choice {{ragViewMode === 'tech' ? 'active' : ''}}" data-mode="tech" bindtap="switchRagViewMode">技术模式</view>
-      </view>
-      <view class="ai-rag-helper">
-        <view class="ai-rag-helper-title">{{ragViewMode === 'learning' ? '你现在看到的是什么' : '当前项目里的真实实现'}}</view>
-        <view wx:for="{{ragModeCards}}" wx:key="title" class="ai-rag-helper-card">
-          <view class="ai-card-title">{{item.title}}</view>
-          <view class="ai-card-text">{{item.detail}}</view>
-        </view>
-      </view>
+      <view class="card-title">AI 资料问答</view>
+      <view class="card-subtitle">像聊天一样直接提问。系统默认用 hybrid RAG 回答，来源与技术细节按需展开，不打断主体验。</view>
 
-      <view wx:if="{{ragRuntime}}" class="ai-result-block">
-        <view class="ai-result-title">标准 RAG 运行状态</view>
-        <view class="ai-grid-two">
-          <view class="ai-metric-card">
-            <view class="ai-metric-label">向量引擎</view>
-            <view class="ai-metric-value small">{{ragRuntime.backend || '未启用'}}</view>
+      <view class="ai-result-block ai-rag-chat-card">
+        <view class="ai-rag-chat-shell">
+          <view wx:if="{{!ragChatHistory.length}}" class="ai-rag-empty">
+            <view class="ai-rag-empty-title">直接输入问题就可以开始</view>
+            <view class="ai-rag-empty-text">例如：important 和 significant 怎么区分？</view>
           </view>
-          <view class="ai-metric-card">
-            <view class="ai-metric-label">索引状态</view>
-            <view class="ai-metric-value">{{ragRuntime.indexed ? '已构建' : '未构建'}}</view>
-          </view>
-          <view class="ai-metric-card">
-            <view class="ai-metric-label">知识块数量</view>
-            <view class="ai-metric-value">{{ragRuntime.chunk_count}}</view>
-          </view>
-          <view class="ai-metric-card">
-            <view class="ai-metric-label">回退方案</view>
-            <view class="ai-metric-value small">{{ragRuntime.fallback_runtime || '无'}}</view>
-          </view>
-        </view>
-        <view class="ai-card-row">
-          <view class="ai-card-title">知识库来自哪里</view>
-          <view class="ai-card-text">这套标准 RAG 不抓外部网页，优先使用你项目自己的教学业务表来构建知识库。</view>
-        </view>
-        <view wx:if="{{ragRuntime.knowledge_source_catalog && ragRuntime.knowledge_source_catalog.length}}">
-          <view class="ai-section-title">当前知识源目录</view>
-          <view wx:for="{{ragRuntime.knowledge_source_catalog}}" wx:key="key" class="ai-card-row">
-            <view class="ai-card-title">{{item.label}}（{{item.table}}）</view>
-            <view class="ai-card-text">{{item.description}}</view>
-            <view class="ai-card-tip">当前记录数：{{item.record_count}}</view>
-          </view>
-        </view>
-        <view wx:if="{{ragRuntime.embedding_model}}" class="ai-card-row">
-          <view class="ai-card-title">Embedding 模型</view>
-          <view class="ai-card-text">{{ragRuntime.embedding_model}}</view>
-          <view class="ai-card-tip">后端：{{ragRuntime.embedding_backend || 'unknown'}}{{ragRuntime.embedding_provider ? ' / 提供方：' + ragRuntime.embedding_provider : ''}} · 重建命令：{{ragRuntime.rebuild_command}}</view>
-        </view>
-        <view wx:if="{{ragRuntime.notes && ragRuntime.notes.length}}">
-          <view wx:for="{{ragRuntime.notes}}" wx:key="index" class="ai-bullet">{{item}}</view>
-        </view>
-      </view>
 
-      <view wx:if="{{ragIndexStatus}}" class="ai-result-block">
-        <view class="ai-result-title">RAG 索引构建进度</view>
-        <view class="ai-grid-two">
-          <view class="ai-metric-card">
-            <view class="ai-metric-label">当前状态</view>
-            <view class="ai-metric-value">{{ragIndexStatus.stateLabel}}</view>
+          <block wx:for="{{ragChatHistory}}" wx:key="index">
+            <view class="ai-chat-bubble {{item.role === 'user' ? 'user' : 'assistant'}}">
+              <view class="ai-chat-role">{{item.role === 'user' ? '你' : 'AI'}}</view>
+              <view class="ai-chat-content">{{item.content}}</view>
+            </view>
+          </block>
+        </view>
+
+        <input class="ai-input" value="{{vectorRagQuery}}" bindinput="handleVectorRagQuery" placeholder="比如：important 和 significant 怎么区分？" />
+        <button class="primary-btn full-btn ai-action" loading="{{vectorRagLoading}}" disabled="{{vectorRagLoading}}" bindtap="searchVectorRag">发送问题</button>
+
+        <view wx:if="{{vectorRagResult}}" class="ai-result-block inner">
+          <view wx:if="{{vectorRagResult.runtime_summary && vectorRagResult.runtime_summary.summary}}" class="ai-status-banner {{vectorRagResult.runtime_summary.degraded ? 'warning' : 'success'}}">
+            <view class="ai-status-title">{{vectorRagResult.runtime_summary.status_text || '已完成'}}</view>
+            <view class="ai-status-text">{{vectorRagResult.runtime_summary.summary}}</view>
           </view>
-          <view class="ai-metric-card">
-            <view class="ai-metric-label">进度</view>
-            <view class="ai-metric-value">{{ragIndexStatus.progress_percent}}%</view>
+          <view class="ai-result-title">{{vectorRagResult.answer_brief.summary}}</view>
+          <view wx:for="{{vectorRagResult.answer_brief.points}}" wx:key="index" class="ai-bullet">{{item}}</view>
+
+          <view wx:if="{{ragSourcePills.length}}" class="ai-section-title">本次参考来源</view>
+          <view wx:if="{{ragSourcePills.length}}" class="ai-chip-row wrap">
+            <view wx:for="{{ragSourcePills}}" wx:key="index" class="ai-choice active">{{item.label}}</view>
           </view>
-          <view class="ai-metric-card">
-            <view class="ai-metric-label">已写入</view>
-            <view class="ai-metric-value">{{ragIndexStatus.inserted_count}}</view>
-          </view>
-          <view class="ai-metric-card">
-            <view class="ai-metric-label">预计总量</view>
-            <view class="ai-metric-value">{{ragIndexStatus.total_count || ragIndexStatus.expected_chunk_count}}</view>
+
+          <view wx:if="{{vectorRagResult.answer_brief.next_questions.length}}" class="ai-card-row">
+            <view class="ai-card-title">你还可以继续问</view>
+            <view wx:for="{{vectorRagResult.answer_brief.next_questions}}" wx:key="index" class="ai-bullet">{{item}}</view>
           </view>
         </view>
 
-        <view class="ai-progress-track" wx:if="{{ragIndexStatus.hasProgress}}">
-          <view class="ai-progress-fill" style="{{ragIndexStatus.progressWidth}}"></view>
-        </view>
-        <view class="ai-card-tip">{{ragIndexStatus.progressText}}</view>
-        <view class="ai-card-text">{{ragIndexStatus.actionHint}}</view>
-
-        <view class="ai-chip-row wrap">
-          <view class="ai-choice active" wx:if="{{ragIndexStatus.running}}">后台构建中</view>
-          <view class="ai-choice" wx:if="{{ragIndexStatus.pid_list.length}}">PID: {{ragIndexStatus.pid_text}}</view>
-        </view>
-
-        <view class="button-row">
-          <button class="secondary-btn full-btn ai-inline-btn" loading="{{ragIndexLoading}}" disabled="{{ragIndexLoading}}" bindtap="refreshRagIndexStatus">刷新索引状态</button>
-        </view>
-        <view class="ai-card-tip">{{ragIndexStatus.refreshHint}}</view>
-        <view class="button-row">
-          <button class="secondary-btn full-btn ai-inline-btn" loading="{{ragSyncLoading}}" disabled="{{ragSyncLoading}}" bindtap="syncRagIndexIncrementally">增量同步索引</button>
-        </view>
-        <view class="ai-card-tip">{{ragIndexStatus.syncHint}}</view>
-
-        <view wx:if="{{ragIndexStatus.last_progress_line}}" class="ai-card-row">
-          <view class="ai-card-title">最新进度</view>
-          <view class="ai-card-text">{{ragIndexStatus.last_progress_line}}</view>
-        </view>
-
-        <view wx:if="{{ragIndexStatus.latest_line}}" class="ai-card-row">
-          <view class="ai-card-title">最新日志</view>
-          <view class="ai-card-text">{{ragIndexStatus.latest_line}}</view>
-        </view>
-
-        <view wx:if="{{ragIndexStatus.embedding_model}}" class="ai-card-row">
-          <view class="ai-card-title">当前构建 embedding</view>
-          <view class="ai-card-text">{{ragIndexStatus.embedding_model}}</view>
-          <view class="ai-card-tip">后端：{{ragIndexStatus.embedding_backend || 'unknown'}}{{ragIndexStatus.embedding_provider ? ' / 提供方：' + ragIndexStatus.embedding_provider : ''}}</view>
-        </view>
-
-        <view wx:if="{{ragIndexStatus.log_tail && ragIndexStatus.log_tail.length}}">
-          <view class="ai-section-title">最近构建日志</view>
-          <view wx:for="{{ragIndexStatus.log_tail}}" wx:key="index" class="ai-log-line">{{item}}</view>
-        </view>
-
-        <view wx:if="{{ragIndexStatus.last_error_line}}" class="ai-card-row">
-          <view class="ai-card-title">最近错误</view>
-          <view class="ai-card-text">{{ragIndexStatus.last_error_line}}</view>
+        <view wx:if="{{activeRunDetail && vectorRagResult && activeRunDetail.run_id === vectorRagResult.run_id}}" class="ai-result-block inner ai-runtime-row">
+          <view class="ai-collapsible-head" bindtap="toggleAiRuntimeCollapsed">
+            <view>
+              <view class="ai-result-title">运行态</view>
+              <view class="ai-card-tip">{{activeRunDetail.runtime_summary.status_text || activeRunDetail.status_text || '进行中'}}</view>
+            </view>
+            <view class="ai-collapse-indicator">{{aiRuntimeCollapsed ? '展开' : '收起'}}</view>
+          </view>
+          <view class="ai-grid-two">
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">当前智能体</view>
+              <view class="ai-metric-value small">{{activeRunDetail.current_agent || activeRunDetail.runtime_summary.active_agent || '--'}}</view>
+            </view>
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">步骤数</view>
+              <view class="ai-metric-value">{{activeRunDetail.runtime_summary.step_count || activeRunSteps.length || 0}}</view>
+            </view>
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">审批状态</view>
+              <view class="ai-metric-value small">{{activeRunDetail.approval_state || 'not_required'}}</view>
+            </view>
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">运行状态</view>
+              <view class="ai-metric-value small">{{activeRunDetail.runtime_summary.status_text || activeRunDetail.status || '--'}}</view>
+            </view>
+          </view>
+          <view class="button-row">
+            <button class="ghost-btn" size="mini" data-action="refresh" bindtap="handleAiRuntimeAction">刷新</button>
+            <button class="ghost-btn" size="mini" data-action="retry" bindtap="handleAiRuntimeAction">重试</button>
+            <button class="ghost-btn" size="mini" data-action="resume" bindtap="handleAiRuntimeAction">恢复</button>
+            <button class="ghost-btn" size="mini" data-action="cancel" bindtap="handleAiRuntimeAction">取消</button>
+            <button wx:if="{{activeRunDetail.approval_state === 'pending'}}" class="secondary-btn" size="mini" data-action="approve" bindtap="handleAiRuntimeAction">批准</button>
+            <button wx:if="{{activeRunDetail.approval_state === 'pending'}}" class="ghost-btn" size="mini" data-action="reject" bindtap="handleAiRuntimeAction">拒绝</button>
+          </view>
+          <block wx:if="{{!aiRuntimeCollapsed}}">
+            <view wx:if="{{activeRunDetail.runtime_summary.summary}}" class="ai-card-row">
+              <view class="ai-card-title">运行摘要</view>
+              <view class="ai-card-text">{{activeRunDetail.runtime_summary.summary}}</view>
+            </view>
+            <view wx:if="{{activeRunSteps.length}}" class="ai-card-row">
+              <view class="ai-card-title">步骤时间线</view>
+              <view wx:for="{{activeRunSteps}}" wx:key="id" class="ai-card-row app-inner-card">
+                <view class="ai-card-tip">#{{item.step_index}} {{item.title}}</view>
+                <view class="ai-card-tip">{{item.agent_name || item.step_kind}} · {{item.status}} · {{item.latency_ms || 0}}ms</view>
+                <view wx:if="{{item.summary}}" class="ai-card-text">{{item.summary}}</view>
+              </view>
+            </view>
+            <view wx:if="{{activeRunArtifacts.length}}" class="ai-card-row">
+              <view class="ai-card-title">运行产物</view>
+              <view wx:for="{{activeRunArtifacts}}" wx:key="id" class="ai-card-row app-inner-card">
+                <view class="ai-card-tip">{{item.title}}</view>
+                <view class="ai-card-tip">{{item.artifact_type}}</view>
+                <view wx:if="{{item.summary}}" class="ai-card-text">{{item.summary}}</view>
+              </view>
+            </view>
+          </block>
         </view>
       </view>
 
-      <view class="card-title compact-title">结构化 RAG</view>
-      <view class="card-subtitle">{{ragViewMode === 'learning' ? '像查词典目录，优先从词条、语法点、例句里找明确答案。' : '当前实现是关键词抽取 + 数据库字段检索，不依赖向量数据库。'}}</view>
-      <input class="ai-input" value="{{ragQuery}}" bindinput="handleRagQuery" />
-      <button class="secondary-btn full-btn ai-action" loading="{{ragSearchLoading}}" disabled="{{ragSearchLoading}}" bindtap="searchRag">{{ragViewMode === 'learning' ? '查资料回答' : '运行结构化 RAG'}}</button>
-      <view wx:if="{{ragResult}}" class="ai-result-block">
-        <view class="ai-result-title">{{ragResult.answer.summary}}</view>
-        <view wx:for="{{ragResult.answer.grounded_points}}" wx:key="index" class="ai-bullet">{{item}}</view>
-        <view wx:if="{{ragViewMode === 'learning'}}" class="ai-card-row">
-          <view class="ai-card-title">这一块到底做了什么</view>
-          <view class="ai-card-text">系统先从词条、语法点和例句中检索相关内容，再把命中的资料整理成当前回答。</view>
-        </view>
-        <ai-evidence evidence="{{ragResult.evidence}}" title="结构化 RAG 证据区" />
-      </view>
-
-      <view class="ai-divider"></view>
-      <view class="card-title compact-title">向量 RAG</view>
-      <view class="card-subtitle">{{ragViewMode === 'learning' ? '像按意思相近去找资料，适合问法不那么标准的情况。' : '优先使用 Chroma 标准 RAG；如果依赖或索引不可用，再回退到本地轻量 token 向量检索。'}}</view>
-      <view class="ai-chip-row wrap">
-        <view class="ai-choice {{vectorRagMode === 'auto' ? 'active' : ''}}" data-mode="auto" bindtap="handleVectorRagMode">自动</view>
-        <view class="ai-choice {{vectorRagMode === 'hybrid' ? 'active' : ''}}" data-mode="hybrid" bindtap="handleVectorRagMode">混合</view>
-        <view class="ai-choice {{vectorRagMode === 'vector_only' ? 'active' : ''}}" data-mode="vector_only" bindtap="handleVectorRagMode">仅向量</view>
-        <view class="ai-choice {{vectorRagMode === 'structured_only' ? 'active' : ''}}" data-mode="structured_only" bindtap="handleVectorRagMode">仅结构化</view>
-      </view>
-      <input class="ai-input" value="{{vectorRagQuery}}" bindinput="handleVectorRagQuery" />
-      <button class="secondary-btn full-btn ai-action" loading="{{vectorRagLoading}}" disabled="{{vectorRagLoading}}" bindtap="searchVectorRag">{{ragViewMode === 'learning' ? '按相近意思查' : '运行向量 RAG'}}</button>
-      <view wx:if="{{vectorRagResult}}" class="ai-result-block">
-        <view class="ai-result-title">{{vectorRagResult.answer.summary}}</view>
-        <view wx:for="{{vectorRagResult.answer.grounded_points}}" wx:key="index" class="ai-bullet">{{item}}</view>
-        <view class="ai-card-row">
-          <view class="ai-card-title">{{ragViewMode === 'learning' ? '当前向量能力状态' : '向量运行时说明'}}</view>
-          <view class="ai-card-text">{{ragViewMode === 'learning' ? (vectorRagResult.retrieval_strategy.external_vector_db ? '当前优先走 Chroma 标准 RAG，从项目知识库里按语义相似度召回知识块。' : '当前由于依赖或索引未就绪，临时回退到了项目内的本地轻量相似度检索。') : (vectorRagResult.retrieval_strategy.external_vector_db ? '当前已接入 Chroma，external_vector_db 为 true。' : '当前未走 Chroma 主路径，正在使用本地轻量回退链路。')}}</view>
-        </view>
-        <view wx:if="{{vectorRagResult.retrieval_strategy}}" class="ai-card-row">
-          <view class="ai-card-title">向量运行时</view>
-          <view class="ai-card-text">{{vectorRagResult.retrieval_strategy.type}} / {{vectorRagResult.retrieval_strategy.version}}</view>
-          <view class="ai-card-tip">{{vectorRagResult.retrieval_strategy.backend}} · 模式：{{vectorRagResult.retrieval_strategy.retrieval_mode || vectorRagMode}}</view>
-        </view>
-        <view wx:if="{{vectorRagResult.retrieval_explain}}" class="ai-card-row">
-          <view class="ai-card-title">为什么会命中这些结果</view>
-          <view wx:for="{{vectorRagResult.retrieval_explain.why_this_result}}" wx:key="index" class="ai-bullet">{{item}}</view>
-        </view>
-        <view wx:if="{{vectorRagResult.retrieval_explain && vectorRagResult.retrieval_explain.personalized_enabled}}" class="ai-card-row">
-          <view class="ai-card-title">个性知识库命中</view>
-          <view class="ai-card-text">{{vectorRagResult.retrieval_explain.personalized_hits || 0}} 条</view>
-          <view class="ai-card-tip">这些命中来自你的学习计划、错词本、最近行为和语法薄弱点摘要</view>
-        </view>
-        <view wx:if="{{vectorDocPreview.length}}">
-          <view class="ai-section-title">命中详情预览</view>
-          <view wx:for="{{vectorDocPreview}}" wx:key="index" class="ai-card-row">
-            <view class="ai-card-title">{{item.title}}</view>
-            <view class="ai-card-tip">{{item.source_type}} · 相关度 {{item.score}}</view>
-            <view wx:if="{{item.source_scope === 'personalized'}}" class="ai-card-tip">来源：你的个性知识库</view>
-            <view wx:if="{{item.retrieval_sources.length}}" class="ai-card-tip">来源链路：{{item.retrieval_sources_text}}</view>
-            <view wx:if="{{item.match_reason}}" class="ai-card-text">{{item.match_reason}}</view>
-            <view wx:if="{{item.matched_keywords.length}}" class="ai-card-tip">命中关键词：{{item.matched_keywords_text}}</view>
-            <view wx:for="{{item.highlights}}" wx:key="subIndex" class="ai-log-line">{{item}}</view>
+      <view wx:if="{{vectorRagResult}}" class="ai-result-block ai-collapsible-card">
+        <view class="ai-collapsible-head" bindtap="toggleRagProcess">
+          <view>
+            <view class="ai-result-title">查看依据</view>
+            <view class="ai-card-tip">来源片段、命中原因、证据链、运行时与索引状态都在这里。</view>
           </view>
+          <view class="ai-collapse-indicator">{{ragProcessCollapsed ? '展开' : '收起'}}</view>
         </view>
-        <ai-evidence evidence="{{vectorRagResult.evidence}}" title="向量 RAG 证据区" />
+
+        <block wx:if="{{!ragProcessCollapsed}}">
+          <view wx:if="{{vectorRagResult.retrieval_explain}}" class="ai-card-row">
+            <view class="ai-card-title">本次检索路径</view>
+            <view class="ai-card-text">{{vectorRagResult.retrieval_explain.query_intent.label || '学习问题'}} · {{vectorRagResult.retrieval_strategy.backend}} · 模式：{{vectorRagResult.retrieval_strategy.retrieval_mode || 'hybrid'}}</view>
+            <view class="ai-card-tip">{{vectorRagResult.retrieval_explain.query_intent.reason || ''}}</view>
+          </view>
+
+          <view wx:if="{{vectorRagResult.retrieval_explain && vectorRagResult.retrieval_explain.personalized_enabled}}" class="ai-card-row">
+            <view class="ai-card-title">个性知识库命中</view>
+            <view class="ai-card-text">{{vectorRagResult.retrieval_explain.personalized_hits || 0}} 条</view>
+            <view class="ai-card-tip">这些命中来自你的学习计划、错词本、最近行为和语法薄弱点摘要。</view>
+          </view>
+
+          <view wx:if="{{vectorDocPreview.length}}">
+            <view class="ai-section-title">命中详情预览</view>
+            <view wx:for="{{vectorDocPreview}}" wx:key="index" class="ai-card-row">
+              <view class="ai-card-title">{{item.title}}</view>
+              <view class="ai-card-tip">{{item.source_type}} · 相关度 {{item.score}}{{item.rerank_score ? ' · 重排 ' + item.rerank_score : ''}}</view>
+              <view wx:if="{{item.source_scope === 'personalized'}}" class="ai-card-tip">来源：你的个性知识库</view>
+              <view wx:if="{{item.retrieval_sources.length}}" class="ai-card-tip">来源链路：{{item.retrieval_sources_text}}</view>
+              <view wx:if="{{item.match_reason}}" class="ai-card-text">{{item.match_reason}}</view>
+              <view wx:if="{{item.matched_keywords.length}}" class="ai-card-tip">命中关键词：{{item.matched_keywords_text}}</view>
+              <view wx:for="{{item.highlights}}" wx:key="subIndex" class="ai-log-line">{{item}}</view>
+            </view>
+          </view>
+
+          <ai-evidence evidence="{{vectorRagResult.evidence}}" title="RAG 证据链" />
+
+          <view wx:if="{{ragRuntime}}" class="ai-card-row">
+            <view class="ai-card-title">运行时摘要</view>
+            <view class="ai-card-text">{{ragRuntime.backend || '未启用'}} · {{ragRuntime.collection_health || 'unknown'}} · 当前 {{ragRuntime.chunk_count}} / 预计 {{ragRuntime.expected_chunk_count}}</view>
+            <view class="ai-card-tip">collection：{{ragRuntime.collection_fingerprint || '--'}} · 维度：{{ragRuntime.embedding_dimension || 0}}</view>
+          </view>
+
+          <view wx:if="{{ragIndexStatus}}" class="ai-card-row">
+            <view class="ai-card-title">索引状态</view>
+            <view class="ai-card-text">{{ragIndexStatus.stateLabel}} · {{ragIndexStatus.progressText}}</view>
+            <view class="ai-card-tip">健康度：{{ragIndexStatus.collection_health || 'unknown'}}{{ragIndexStatus.stale_collections.length ? ' · 旧 collection ' + ragIndexStatus.stale_collections.length + ' 个' : ''}}</view>
+          </view>
+        </block>
       </view>
 
-      <view class="ai-divider"></view>
-      <view class="card-title compact-title">RAG 召回评测</view>
-      <view class="card-subtitle">{{ragViewMode === 'learning' ? '这不是学习题，而是在比较“哪一种查资料方式更容易查到你真正想找的内容”。' : '用于对比 structured recall 和 local vector recall 的覆盖效果。'}}</view>
-      <textarea class="ai-textarea compact" value="{{ragRecallKeywords}}" bindinput="handleRagRecallKeywords" maxlength="200" />
-      <view class="ai-chip-row wrap">
-        <view class="ai-choice {{ragRecallPreferredSourceType === 'word' ? 'active' : ''}}" data-source-type="word" bindtap="handleRagRecallSourceType">词汇</view>
-        <view class="ai-choice {{ragRecallPreferredSourceType === 'grammar_point' ? 'active' : ''}}" data-source-type="grammar_point" bindtap="handleRagRecallSourceType">语法点</view>
-        <view class="ai-choice {{ragRecallPreferredSourceType === 'grammar_sentence' ? 'active' : ''}}" data-source-type="grammar_sentence" bindtap="handleRagRecallSourceType">句子</view>
-      </view>
-      <button class="secondary-btn full-btn ai-action" loading="{{ragRecallLoading}}" disabled="{{ragRecallLoading}}" bindtap="evaluateRagRecall">{{ragViewMode === 'learning' ? '比较两种查找方式' : '评测召回'}}</button>
-      <view wx:if="{{ragRecallResult}}" class="ai-result-block">
-        <view class="ai-result-title">{{ragRecallResult.diagnosis}}</view>
-        <view wx:if="{{ragViewMode === 'learning'}}" class="ai-card-row">
-          <view class="ai-card-title">这个结果怎么理解</view>
-          <view class="ai-card-text">覆盖率越高，说明这类检索方式越容易把你真正想找的资料找出来。</view>
+      <view class="ai-result-block ai-collapsible-card">
+        <view class="ai-collapsible-head" bindtap="toggleRagAdvanced">
+          <view>
+            <view class="ai-result-title">高级模式</view>
+            <view class="ai-card-tip">保留结构化 RAG、索引状态和召回评测，方便你继续查看详细过程。</view>
+          </view>
+          <view class="ai-collapse-indicator">{{ragAdvancedCollapsed ? '展开' : '收起'}}</view>
         </view>
-        <view class="ai-card-row">
-          <view class="ai-card-title">建议策略</view>
-          <view class="ai-card-text">{{ragRecallResult.better_strategy}}</view>
-        </view>
-        <view class="ai-card-row">
-          <view class="ai-card-title">结构化覆盖</view>
-          <view class="ai-card-text">{{ragRecallResult.structured_recall.coverage_rate}}%</view>
-        </view>
-        <view class="ai-card-row">
-          <view class="ai-card-title">向量覆盖</view>
-          <view class="ai-card-text">{{ragRecallResult.vector_recall.coverage_rate}}%</view>
-        </view>
-        <ai-evidence evidence="{{ragRecallResult.evidence}}" title="RAG 评测证据区" />
+
+        <block wx:if="{{!ragAdvancedCollapsed}}">
+          <view wx:if="{{ragRuntime}}" class="ai-result-block inner">
+            <view class="ai-result-title">标准 RAG 运行状态</view>
+            <view class="ai-grid-two">
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">向量引擎</view>
+                <view class="ai-metric-value small">{{ragRuntime.backend || '未启用'}}</view>
+              </view>
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">索引状态</view>
+                <view class="ai-metric-value">{{ragRuntime.indexed ? '已构建' : '未构建'}}</view>
+              </view>
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">知识块数量</view>
+                <view class="ai-metric-value">{{ragRuntime.chunk_count}}</view>
+              </view>
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">预期总块数</view>
+                <view class="ai-metric-value">{{ragRuntime.expected_chunk_count}}</view>
+              </view>
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">Collection 指纹</view>
+                <view class="ai-metric-value small">{{ragRuntime.collection_fingerprint || '--'}}</view>
+              </view>
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">Embedding 维度</view>
+                <view class="ai-metric-value">{{ragRuntime.embedding_dimension || 0}}</view>
+              </view>
+            </view>
+            <view wx:if="{{ragRuntime.source_breakdown.length}}">
+              <view class="ai-section-title">知识源分布</view>
+              <view wx:for="{{ragRuntime.source_breakdown}}" wx:key="key" class="ai-card-row">
+                <view class="ai-card-title">{{item.label}}</view>
+                <view class="ai-card-text">记录数 {{item.record_count}} · 预计块数 {{item.chunk_count}}</view>
+              </view>
+            </view>
+            <view wx:if="{{ragRuntime.knowledge_source_catalog && ragRuntime.knowledge_source_catalog.length}}">
+              <view class="ai-section-title">当前知识源目录</view>
+              <view wx:for="{{ragRuntime.knowledge_source_catalog}}" wx:key="key" class="ai-card-row">
+                <view class="ai-card-title">{{item.label}}（{{item.table}}）</view>
+                <view class="ai-card-text">{{item.description}}</view>
+                <view class="ai-card-tip">当前记录数：{{item.record_count}}{{item.chunk_count ? ' · 预计块数：' + item.chunk_count : ''}}</view>
+              </view>
+            </view>
+            <view wx:if="{{ragRuntime.embedding_model}}" class="ai-card-row">
+              <view class="ai-card-title">Embedding 模型</view>
+              <view class="ai-card-text">{{ragRuntime.embedding_model}}</view>
+              <view class="ai-card-tip">后端：{{ragRuntime.embedding_backend || 'unknown'}}{{ragRuntime.embedding_provider ? ' / 提供方：' + ragRuntime.embedding_provider : ''}} · 重建命令：{{ragRuntime.rebuild_command}}</view>
+            </view>
+          </view>
+
+          <view wx:if="{{ragIndexStatus}}" class="ai-result-block inner">
+            <view class="ai-result-title">RAG 索引构建进度</view>
+            <view class="ai-grid-two">
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">当前状态</view>
+                <view class="ai-metric-value">{{ragIndexStatus.stateLabel}}</view>
+              </view>
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">进度</view>
+                <view class="ai-metric-value">{{ragIndexStatus.progress_percent}}%</view>
+              </view>
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">已写入</view>
+                <view class="ai-metric-value">{{ragIndexStatus.inserted_count}}</view>
+              </view>
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">预计总量</view>
+                <view class="ai-metric-value">{{ragIndexStatus.total_count || ragIndexStatus.expected_chunk_count}}</view>
+              </view>
+            </view>
+            <view class="ai-progress-track" wx:if="{{ragIndexStatus.hasProgress}}">
+              <view class="ai-progress-fill" style="{{ragIndexStatus.progressWidth}}"></view>
+            </view>
+            <view class="ai-card-tip">{{ragIndexStatus.progressText}}</view>
+            <view class="ai-card-text">{{ragIndexStatus.actionHint}}</view>
+            <view class="button-row">
+              <button class="secondary-btn full-btn ai-inline-btn" loading="{{ragIndexLoading}}" disabled="{{ragIndexLoading}}" bindtap="refreshRagIndexStatus">刷新索引状态</button>
+            </view>
+            <view class="button-row">
+              <button class="secondary-btn full-btn ai-inline-btn" loading="{{ragSyncLoading}}" disabled="{{ragSyncLoading}}" bindtap="syncRagIndexIncrementally">增量同步索引</button>
+            </view>
+            <view wx:if="{{ragIndexStatus.latest_line}}" class="ai-card-row">
+              <view class="ai-card-title">最新日志</view>
+              <view class="ai-card-text">{{ragIndexStatus.latest_line}}</view>
+            </view>
+            <view wx:if="{{ragIndexStatus.last_error_line}}" class="ai-card-row">
+              <view class="ai-card-title">最近错误</view>
+              <view class="ai-card-text">{{ragIndexStatus.last_error_line}}</view>
+            </view>
+          </view>
+
+          <view class="ai-divider"></view>
+          <view class="card-title compact-title">结构化 RAG 调试</view>
+          <view class="card-subtitle">保留给你做技术对比和内部调试，不作为默认用户入口。</view>
+          <input class="ai-input" value="{{ragQuery}}" bindinput="handleRagQuery" />
+          <button class="secondary-btn full-btn ai-action" loading="{{ragSearchLoading}}" disabled="{{ragSearchLoading}}" bindtap="searchRag">运行结构化 RAG</button>
+          <view wx:if="{{ragResult}}" class="ai-result-block inner">
+            <view class="ai-result-title">{{ragResult.answer.summary}}</view>
+            <view wx:for="{{ragResult.answer.grounded_points}}" wx:key="index" class="ai-bullet">{{item}}</view>
+            <ai-evidence evidence="{{ragResult.evidence}}" title="结构化 RAG 证据区" />
+          </view>
+
+          <view class="ai-divider"></view>
+          <view class="card-title compact-title">RAG 召回评测</view>
+          <view class="card-subtitle">用于比较 structured / vector / hybrid 的覆盖情况。</view>
+          <textarea class="ai-textarea compact" value="{{ragRecallKeywords}}" bindinput="handleRagRecallKeywords" maxlength="200" />
+          <view class="ai-chip-row wrap">
+            <view class="ai-choice {{ragRecallPreferredSourceType === 'word' ? 'active' : ''}}" data-source-type="word" bindtap="handleRagRecallSourceType">词汇</view>
+            <view class="ai-choice {{ragRecallPreferredSourceType === 'grammar_point' ? 'active' : ''}}" data-source-type="grammar_point" bindtap="handleRagRecallSourceType">语法点</view>
+            <view class="ai-choice {{ragRecallPreferredSourceType === 'grammar_sentence' ? 'active' : ''}}" data-source-type="grammar_sentence" bindtap="handleRagRecallSourceType">句子</view>
+          </view>
+          <button class="secondary-btn full-btn ai-action" loading="{{ragRecallLoading}}" disabled="{{ragRecallLoading}}" bindtap="evaluateRagRecall">评测召回</button>
+          <view wx:if="{{ragRecallResult}}" class="ai-result-block inner">
+            <view class="ai-result-title">{{ragRecallResult.diagnosis}}</view>
+            <view class="ai-card-row">
+              <view class="ai-card-title">建议策略</view>
+              <view class="ai-card-text">{{ragRecallResult.better_strategy}}</view>
+            </view>
+            <view class="ai-card-row">
+              <view class="ai-card-title">结构化覆盖</view>
+              <view class="ai-card-text">{{ragRecallResult.structured_recall.coverage_rate}}%</view>
+            </view>
+            <view class="ai-card-row">
+              <view class="ai-card-title">向量覆盖</view>
+              <view class="ai-card-text">{{ragRecallResult.vector_recall.coverage_rate}}%</view>
+            </view>
+            <ai-evidence evidence="{{ragRecallResult.evidence}}" title="RAG 评测证据区" />
+          </view>
+        </block>
       </view>
     </view>
 
     <view wx:if="{{activeTab === 'mcp'}}" class="section panel-card">
-      <view class="card-title">MCP 能力展示</view>
-      <view class="card-subtitle">把项目内部学习数据和 AI 能力抽象成 MCP 风格的工具、资源和提示词，方便展示可扩展工具层。</view>
+      <view class="card-title">MCP 技能中心</view>
+      <view class="card-subtitle">这里默认按技能卡片来用，不需要自己拼 JSON。每个技能都有一句话用途、参数表单和折叠说明。</view>
 
       <view wx:if="{{mcpManifest}}" class="ai-result-block">
-        <view class="ai-grid-two">
-          <view class="ai-metric-card">
-            <view class="ai-metric-label">服务名</view>
-            <view class="ai-metric-value small">{{mcpManifest.name}}</view>
-          </view>
-          <view class="ai-metric-card">
-            <view class="ai-metric-label">版本</view>
-            <view class="ai-metric-value">{{mcpManifest.version}}</view>
-          </view>
-          <view class="ai-metric-card">
-            <view class="ai-metric-label">传输方式</view>
-            <view class="ai-metric-value small">{{mcpManifest.transport_modes_text}}</view>
-          </view>
-          <view class="ai-metric-card">
-            <view class="ai-metric-label">STDIO</view>
-            <view class="ai-metric-value small">{{mcpManifest.mcp_stdio_available ? '可用' : '未启用'}}</view>
+        <view wx:for="{{mcpSkillGroups}}" wx:key="key" wx:for-item="group" class="ai-result-block inner">
+          <view class="ai-section-title">{{group.title}}</view>
+
+          <view wx:for="{{group.tools}}" wx:key="name" wx:for-item="tool" class="mcp-skill-card">
+            <view class="mcp-skill-head">
+              <view class="mcp-skill-main">
+                <view class="mcp-skill-title">{{tool.display_name}}</view>
+                <view class="mcp-skill-summary">{{tool.summary}}</view>
+              </view>
+              <view class="mcp-skill-status tone-{{tool.statusTone}}">{{tool.statusText}}</view>
+            </view>
+
+            <view class="mcp-skill-actions">
+              <button class="secondary-btn mcp-skill-btn" data-tool="{{tool.name}}" loading="{{mcpLoading && mcpActiveSkill === tool.name}}" disabled="{{mcpLoading || tool.disabled}}" bindtap="runMcpSkill">立即使用</button>
+              <button class="ghost-btn mcp-skill-btn ghost" data-tool="{{tool.name}}" bindtap="toggleMcpSkillCard">{{tool.expanded ? '收起参数' : '填写参数'}}</button>
+              <button class="ghost-btn mcp-skill-btn ghost" data-tool="{{tool.name}}" bindtap="toggleMcpSkillDescription">{{tool.collapsedDescription ? '展开说明' : '收起说明'}}</button>
+            </view>
+
+            <view wx:if="{{!tool.collapsedDescription}}" class="mcp-skill-detail">
+              <view class="ai-card-text">{{tool.details}}</view>
+              <view wx:if="{{tool.result_preview_hint}}" class="ai-card-tip">结果预期：{{tool.result_preview_hint}}</view>
+              <view wx:if="{{tool.permissions && tool.permissions.length}}" class="ai-card-tip">所需能力：{{tool.permissions_text}}</view>
+            </view>
+
+            <view wx:if="{{tool.expanded}}" class="mcp-skill-form">
+              <view wx:if="{{!tool.formFields.length}}" class="ai-card-tip">这个技能不需要额外参数，可以直接运行。</view>
+
+              <view wx:for="{{tool.formFields}}" wx:key="name" wx:for-item="field" class="mcp-field-row">
+                <view class="mcp-field-label">{{field.label}}{{field.required ? ' *' : ''}}</view>
+
+                <block wx:if="{{field.enumOptions && field.enumOptions.length}}">
+                  <view class="ai-chip-row wrap">
+                    <view
+                      wx:for="{{field.enumOptions}}"
+                      wx:key="*this"
+                      wx:for-item="option"
+                      class="ai-choice {{option === field.value ? 'active' : ''}}"
+                      data-tool="{{tool.name}}"
+                      data-field="{{field.name}}"
+                      data-value="{{option}}"
+                      bindtap="handleMcpEnumSelect"
+                    >{{option}}</view>
+                  </view>
+                </block>
+
+                <switch
+                  wx:if="{{field.type === 'boolean'}}"
+                  checked="{{field.value}}"
+                  data-tool="{{tool.name}}"
+                  data-field="{{field.name}}"
+                  bindchange="handleMcpFieldSwitch"
+                />
+
+                <textarea
+                  wx:if="{{field.type === 'array'}}"
+                  class="ai-textarea compact"
+                  value="{{field.value}}"
+                  placeholder="{{field.placeholder}}"
+                  data-tool="{{tool.name}}"
+                  data-field="{{field.name}}"
+                  bindinput="handleMcpFieldInput"
+                />
+
+                <input
+                  wx:if="{{field.type !== 'boolean' && field.type !== 'array' && !(field.enumOptions && field.enumOptions.length)}}"
+                  class="ai-input"
+                  value="{{field.value}}"
+                  placeholder="{{field.placeholder}}"
+                  data-tool="{{tool.name}}"
+                  data-field="{{field.name}}"
+                  bindinput="handleMcpFieldInput"
+                />
+
+                <view wx:if="{{field.error}}" class="mcp-field-error">{{field.error}}</view>
+              </view>
+            </view>
           </view>
         </view>
 
-        <view wx:if="{{mcpManifest.stdio_command}}" class="ai-card-row">
-          <view class="ai-card-title">STDIO 启动命令</view>
-          <view class="ai-card-text">{{mcpManifest.stdio_command}}</view>
-          <view class="ai-card-tip">HTTP 继续给小程序使用，STDIO 用于 MCP 客户端 / IDE。</view>
-        </view>
-
-        <view class="ai-section-title">工具列表</view>
-        <view wx:for="{{mcpManifest.tools}}" wx:key="name" class="ai-card-row">
-          <view class="ai-card-title">{{item.name}}</view>
-          <view class="ai-card-text">{{item.description}}</view>
-        </view>
-
-        <view class="ai-section-title">资源列表</view>
-        <view wx:for="{{mcpManifest.resources}}" wx:key="uri" class="ai-card-row">
-          <view class="ai-card-title">{{item.uri}}</view>
-          <view class="ai-card-text">{{item.name}}</view>
-        </view>
-
-        <view class="ai-section-title">提示词列表</view>
-        <view wx:for="{{mcpManifest.prompts}}" wx:key="name" class="ai-card-row">
-          <view class="ai-card-title">{{item.name}}</view>
-          <view class="ai-card-text">{{item.description}}</view>
-        </view>
-
-        <view class="ai-section-title">MCP 工具演示</view>
-        <view class="ai-card-row">
-          <view class="ai-card-title">{{mcpDemoTool}}</view>
-          <view class="ai-card-text">建议先从轻量的 MCP 工具演示开始，再切到更重的 Agent 或 RAG 工具做深入体验。</view>
-          <view wx:if="{{mcpDemoToolSchema}}" class="ai-card-tip">当前工具 schema：{{mcpDemoToolSchemaHint}}</view>
-          <view wx:if="{{mcpDemoToolSchemaFields.length}}" class="ai-chip-row wrap">
-            <view wx:for="{{mcpDemoToolSchemaFields}}" wx:key="name" class="ai-choice active">{{item.name}} · {{item.type}}{{item.required ? ' · 必填' : ''}}</view>
+        <view wx:if="{{mcpResultCard}}" class="ai-result-block inner">
+          <view wx:if="{{mcpResultCard.runtime_summary && mcpResultCard.runtime_summary.summary}}" class="ai-status-banner {{mcpResultCard.runtime_summary.degraded ? 'warning' : 'success'}}">
+            <view class="ai-status-title">{{mcpResultCard.runtime_summary.status_text || '已完成'}}</view>
+            <view class="ai-status-text">{{mcpResultCard.runtime_summary.summary}}</view>
           </view>
-          <view class="ai-chip-row wrap" wx:if="{{mcpDemoToolOptions.length}}">
-            <view
-              wx:for="{{mcpDemoToolOptions}}"
-              wx:key="name"
-              class="{{item.className}}"
-              data-tool="{{item.name}}"
-              bindtap="handleMcpDemoToolSelect"
-            >{{item.name}}</view>
+          <view class="ai-result-title">{{mcpResultCard.title}}</view>
+          <view class="ai-result-text">{{mcpResultCard.summary}}</view>
+          <view class="ai-result-block ai-collapsible-card">
+            <view class="ai-collapsible-head" bindtap="toggleMcpResultDetails">
+              <view>
+                <view class="ai-result-title">查看技能依据</view>
+                <view class="ai-card-tip">运行轨迹和证据链默认收起，不影响直接使用。</view>
+              </view>
+              <view class="ai-collapse-indicator">{{mcpResultDetailsCollapsed ? '展开' : '收起'}}</view>
+            </view>
+
+            <block wx:if="{{!mcpResultDetailsCollapsed}}">
+              <view wx:if="{{mcpResultCard.langchain_trace && mcpResultCard.langchain_trace.length}}" class="ai-card-row">
+                <view class="ai-card-title">运行轨迹</view>
+                <view wx:for="{{mcpResultCard.langchain_trace}}" wx:key="index" class="ai-log-line">{{item.line}}</view>
+              </view>
+              <ai-evidence evidence="{{mcpResultCard.evidence}}" title="技能证据区" />
+            </block>
           </view>
-          <view class="ai-error-block">
-            <view class="ai-error-label">当前发送参数</view>
-            <textarea class="ai-textarea compact ai-code-input" value="{{mcpDemoToolArgsText}}" bindinput="handleMcpToolArgsInput" />
+        </view>
+
+        <view wx:if="{{activeRunDetail && mcpDemoResult && activeRunDetail.run_id === mcpDemoResult.run_id}}" class="ai-result-block inner ai-runtime-row">
+          <view class="ai-collapsible-head" bindtap="toggleAiRuntimeCollapsed">
+            <view>
+              <view class="ai-result-title">运行态</view>
+              <view class="ai-card-tip">{{activeRunDetail.runtime_summary.status_text || activeRunDetail.status_text || '进行中'}}</view>
+            </view>
+            <view class="ai-collapse-indicator">{{aiRuntimeCollapsed ? '展开' : '收起'}}</view>
           </view>
-          <button class="secondary-btn full-btn ai-inline-btn" loading="{{mcpLoading}}" disabled="{{mcpLoading}}" bindtap="runMcpDemoTool">运行 MCP 工具演示</button>
+          <view class="ai-grid-two">
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">当前智能体</view>
+              <view class="ai-metric-value small">{{activeRunDetail.current_agent || activeRunDetail.runtime_summary.active_agent || '--'}}</view>
+            </view>
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">步骤数</view>
+              <view class="ai-metric-value">{{activeRunDetail.runtime_summary.step_count || activeRunSteps.length || 0}}</view>
+            </view>
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">审批状态</view>
+              <view class="ai-metric-value small">{{activeRunDetail.approval_state || 'not_required'}}</view>
+            </view>
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">运行状态</view>
+              <view class="ai-metric-value small">{{activeRunDetail.runtime_summary.status_text || activeRunDetail.status || '--'}}</view>
+            </view>
+          </view>
+          <view class="button-row">
+            <button class="ghost-btn" size="mini" data-action="refresh" bindtap="handleAiRuntimeAction">刷新</button>
+            <button class="ghost-btn" size="mini" data-action="retry" bindtap="handleAiRuntimeAction">重试</button>
+            <button class="ghost-btn" size="mini" data-action="resume" bindtap="handleAiRuntimeAction">恢复</button>
+            <button class="ghost-btn" size="mini" data-action="cancel" bindtap="handleAiRuntimeAction">取消</button>
+            <button wx:if="{{activeRunDetail.approval_state === 'pending'}}" class="secondary-btn" size="mini" data-action="approve" bindtap="handleAiRuntimeAction">批准</button>
+            <button wx:if="{{activeRunDetail.approval_state === 'pending'}}" class="ghost-btn" size="mini" data-action="reject" bindtap="handleAiRuntimeAction">拒绝</button>
+          </view>
+          <block wx:if="{{!aiRuntimeCollapsed}}">
+            <view wx:if="{{activeRunDetail.runtime_summary.summary}}" class="ai-card-row">
+              <view class="ai-card-title">运行摘要</view>
+              <view class="ai-card-text">{{activeRunDetail.runtime_summary.summary}}</view>
+            </view>
+            <view wx:if="{{activeRunSteps.length}}" class="ai-card-row">
+              <view class="ai-card-title">步骤时间线</view>
+              <view wx:for="{{activeRunSteps}}" wx:key="id" class="ai-card-row app-inner-card">
+                <view class="ai-card-tip">#{{item.step_index}} {{item.title}}</view>
+                <view class="ai-card-tip">{{item.agent_name || item.step_kind}} · {{item.status}} · {{item.latency_ms || 0}}ms</view>
+                <view wx:if="{{item.summary}}" class="ai-card-text">{{item.summary}}</view>
+              </view>
+            </view>
+            <view wx:if="{{activeRunArtifacts.length}}" class="ai-card-row">
+              <view class="ai-card-title">运行产物</view>
+              <view wx:for="{{activeRunArtifacts}}" wx:key="id" class="ai-card-row app-inner-card">
+                <view class="ai-card-tip">{{item.title}}</view>
+                <view class="ai-card-tip">{{item.artifact_type}}</view>
+                <view wx:if="{{item.summary}}" class="ai-card-text">{{item.summary}}</view>
+              </view>
+            </view>
+          </block>
         </view>
 
         <view wx:if="{{mcpDemoError}}" class="ai-error-panel">
           <view class="ai-error-title">{{mcpDemoError.title}}</view>
           <view class="ai-error-message">{{mcpDemoError.message}}</view>
-          <view wx:if="{{mcpDemoError.code}}" class="ai-error-meta">状态 / 代码：{{mcpDemoError.code}}</view>
-          <view class="ai-error-block">
-            <view class="ai-error-label">请求参数</view>
-            <view class="ai-error-code">{{mcpDemoError.requestText}}</view>
-          </view>
-          <view wx:if="{{mcpDemoError.fieldErrorsText}}" class="ai-error-block">
-            <view class="ai-error-label">字段错误</view>
-            <view class="ai-error-code">{{mcpDemoError.fieldErrorsText}}</view>
-          </view>
-          <view wx:if="{{mcpDemoError.responseText}}" class="ai-error-block">
-            <view class="ai-error-label">后端返回</view>
-            <view class="ai-error-code">{{mcpDemoError.responseText}}</view>
-          </view>
+          <view class="ai-card-tip">详细报错已收纳在下方高级调试区。</view>
         </view>
 
-        <view class="ai-section-title">MCP 资源读取</view>
-        <view class="ai-card-row">
-          <view class="ai-card-text">直接通过资源 URI 读取真实数据，而不只是看资源列表。</view>
-          <view class="ai-chip-row wrap" wx:if="{{mcpResourceExamples.length}}">
-            <view
-              wx:for="{{mcpResourceExamples}}"
-              wx:key="uri"
-              class="{{item.className}}"
-              data-uri="{{item.uri}}"
-              bindtap="handleMcpResourceExampleSelect"
-            >{{item.label}}</view>
+        <view class="ai-result-block ai-collapsible-card" wx:if="{{mcpManifest.advanced_available}}">
+          <view class="ai-collapsible-head" bindtap="toggleMcpAdvanced">
+            <view>
+              <view class="ai-result-title">高级调试</view>
+              <view class="ai-card-tip">协议元信息、资源读取、提示词和原始 JSON 调试都保留在这里。</view>
+            </view>
+            <view class="ai-collapse-indicator">{{mcpAdvancedCollapsed ? '展开' : '收起'}}</view>
           </view>
-          <input class="ai-input" value="{{mcpResourceUri}}" bindinput="handleMcpResourceUri" />
-          <button class="secondary-btn full-btn ai-inline-btn" loading="{{mcpResourceLoading}}" disabled="{{mcpResourceLoading}}" bindtap="runMcpResourceDemo">读取 MCP 资源</button>
-        </view>
 
-        <view wx:if="{{mcpResourceError}}" class="ai-error-panel">
-          <view class="ai-error-title">{{mcpResourceError.title}}</view>
-          <view class="ai-error-message">{{mcpResourceError.message}}</view>
-          <view wx:if="{{mcpResourceError.code}}" class="ai-error-meta">状态 / 代码：{{mcpResourceError.code}}</view>
-          <view class="ai-error-block">
-            <view class="ai-error-label">请求参数</view>
-            <view class="ai-error-code">{{mcpResourceError.requestText}}</view>
-          </view>
-          <view wx:if="{{mcpResourceError.fieldErrorsText}}" class="ai-error-block">
-            <view class="ai-error-label">字段错误</view>
-            <view class="ai-error-code">{{mcpResourceError.fieldErrorsText}}</view>
-          </view>
-          <view wx:if="{{mcpResourceError.responseText}}" class="ai-error-block">
-            <view class="ai-error-label">后端返回</view>
-            <view class="ai-error-code">{{mcpResourceError.responseText}}</view>
-          </view>
-        </view>
+          <block wx:if="{{!mcpAdvancedCollapsed}}">
+            <view class="ai-grid-two">
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">服务名</view>
+                <view class="ai-metric-value small">{{mcpManifest.name}}</view>
+              </view>
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">版本</view>
+                <view class="ai-metric-value">{{mcpManifest.version}}</view>
+              </view>
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">传输方式</view>
+                <view class="ai-metric-value small">{{mcpManifest.transport_modes_text}}</view>
+              </view>
+              <view class="ai-metric-card">
+                <view class="ai-metric-label">STDIO</view>
+                <view class="ai-metric-value small">{{mcpManifest.mcp_stdio_available ? '可用' : '未启用'}}</view>
+              </view>
+            </view>
 
-        <view wx:if="{{mcpDemoResult}}" class="ai-result-block inner">
-          <view class="ai-result-title">{{mcpDemoResult.tool_name}}</view>
-          <view class="ai-result-text">{{mcpDemoResult.result.headline || mcpDemoResult.result.summary || '调用成功'}}</view>
-          <view wx:if="{{mcpDemoResult.result.summary}}" class="ai-bullet">{{mcpDemoResult.result.summary}}</view>
-          <view wx:if="{{mcpDemoResult.result.langchain_trace && mcpDemoResult.result.langchain_trace.length}}" class="ai-card-row">
-            <view class="ai-card-title">LangChain 轨迹</view>
-            <view wx:for="{{mcpDemoResult.result.langchain_trace}}" wx:key="index" class="ai-log-line">{{item.line}}</view>
-          </view>
-          <ai-evidence evidence="{{mcpDemoResult.result.evidence}}" title="MCP 工具证据区" />
-        </view>
+            <view wx:if="{{mcpManifest.stdio_command}}" class="ai-card-row">
+              <view class="ai-card-title">STDIO 启动命令</view>
+              <view class="ai-card-text">{{mcpManifest.stdio_command}}</view>
+              <view class="ai-card-tip">HTTP 继续给小程序使用，STDIO 用于 MCP 客户端 / IDE。</view>
+            </view>
 
-        <view wx:if="{{mcpResourceResult}}" class="ai-result-block inner">
-          <view class="ai-result-title">{{mcpResourceResult.name}}</view>
-          <view class="ai-card-text">{{mcpResourceResult.uri}}</view>
-          <view wx:if="{{mcpResourceResult.description}}" class="ai-card-tip">{{mcpResourceResult.description}}</view>
-          <view class="ai-card-row">
-            <view class="ai-card-title">资源类型</view>
-            <view class="ai-card-text">{{mcpResourceResult.resource_type}}</view>
-          </view>
-          <view class="ai-card-row">
-            <view class="ai-card-title">读取结果预览</view>
-            <view class="ai-card-text">{{mcpResourceResult.item.nickname || mcpResourceResult.item.profile_summary || mcpResourceResult.item.title || '已成功读取资源数据'}}</view>
-          </view>
+            <view class="ai-section-title">原始工具调试</view>
+            <view class="ai-card-row">
+              <view class="ai-card-title">{{mcpDemoTool}}</view>
+              <view class="ai-card-text">保留原始 JSON 调试入口，方便你继续做协议级测试。</view>
+              <view wx:if="{{mcpDemoToolSchema}}" class="ai-card-tip">当前工具 schema：{{mcpDemoToolSchemaHint}}</view>
+              <view wx:if="{{mcpDemoToolSchemaFields.length}}" class="ai-chip-row wrap">
+                <view wx:for="{{mcpDemoToolSchemaFields}}" wx:key="name" class="ai-choice active">{{item.name}} · {{item.type}}{{item.required ? ' · 必填' : ''}}</view>
+              </view>
+              <view class="ai-chip-row wrap" wx:if="{{mcpDemoToolOptions.length}}">
+                <view
+                  wx:for="{{mcpDemoToolOptions}}"
+                  wx:key="name"
+                  class="{{item.className}}"
+                  data-tool="{{item.name}}"
+                  bindtap="handleMcpDemoToolSelect"
+                >{{item.name}}</view>
+              </view>
+              <view class="ai-error-block">
+                <view class="ai-error-label">当前发送参数</view>
+                <textarea class="ai-textarea compact ai-code-input" value="{{mcpDemoToolArgsText}}" bindinput="handleMcpToolArgsInput" />
+              </view>
+              <button class="secondary-btn full-btn ai-inline-btn" loading="{{mcpLoading}}" disabled="{{mcpLoading}}" bindtap="runMcpDemoTool">运行原始 MCP 调试</button>
+            </view>
+
+            <view class="ai-section-title">MCP 资源读取</view>
+            <view class="ai-card-row">
+              <view class="ai-card-text">直接通过资源 URI 读取真实数据，而不只是看资源列表。</view>
+              <view class="ai-chip-row wrap" wx:if="{{mcpResourceExamples.length}}">
+                <view
+                  wx:for="{{mcpResourceExamples}}"
+                  wx:key="uri"
+                  class="{{item.className}}"
+                  data-uri="{{item.uri}}"
+                  bindtap="handleMcpResourceExampleSelect"
+                >{{item.label}}</view>
+              </view>
+              <input class="ai-input" value="{{mcpResourceUri}}" bindinput="handleMcpResourceUri" />
+              <button class="secondary-btn full-btn ai-inline-btn" loading="{{mcpResourceLoading}}" disabled="{{mcpResourceLoading}}" bindtap="runMcpResourceDemo">读取 MCP 资源</button>
+            </view>
+
+            <view wx:if="{{mcpResourceError}}" class="ai-error-panel">
+              <view class="ai-error-title">{{mcpResourceError.title}}</view>
+              <view class="ai-error-message">{{mcpResourceError.message}}</view>
+            </view>
+
+            <view wx:if="{{mcpResourceResult}}" class="ai-result-block inner">
+              <view class="ai-result-title">{{mcpResourceResult.name}}</view>
+              <view class="ai-card-text">{{mcpResourceResult.uri}}</view>
+              <view wx:if="{{mcpResourceResult.description}}" class="ai-card-tip">{{mcpResourceResult.description}}</view>
+              <view class="ai-card-row">
+                <view class="ai-card-title">资源类型</view>
+                <view class="ai-card-text">{{mcpResourceResult.resource_type}}</view>
+              </view>
+              <view class="ai-card-row">
+                <view class="ai-card-title">读取结果预览</view>
+                <view class="ai-card-text">{{mcpResourceResult.item.nickname || mcpResourceResult.item.profile_summary || mcpResourceResult.item.title || '已成功读取资源数据'}}</view>
+              </view>
+            </view>
+
+            <view class="ai-section-title">提示词列表</view>
+            <view wx:for="{{mcpManifest.prompts}}" wx:key="name" class="ai-card-row">
+              <view class="ai-card-title">{{item.name}}</view>
+              <view class="ai-card-text">{{item.description}}</view>
+            </view>
+
+            <view class="ai-section-title">资源列表</view>
+            <view wx:for="{{mcpManifest.resources}}" wx:key="uri" class="ai-card-row">
+              <view class="ai-card-title">{{item.uri}}</view>
+              <view class="ai-card-text">{{item.name}}</view>
+            </view>
+
+            <view wx:if="{{mcpDemoError}}" class="ai-result-block ai-collapsible-card">
+              <view class="ai-collapsible-head" bindtap="toggleMcpDebugError">
+                <view>
+                  <view class="ai-result-title">原始错误详情</view>
+                  <view class="ai-card-tip">请求参数、字段错误和后端返回会收纳在这里。</view>
+                </view>
+                <view class="ai-collapse-indicator">{{mcpDebugErrorCollapsed ? '展开' : '收起'}}</view>
+              </view>
+
+              <block wx:if="{{!mcpDebugErrorCollapsed}}">
+                <view class="ai-error-panel">
+                  <view class="ai-error-title">{{mcpDemoError.title}}</view>
+                  <view class="ai-error-message">{{mcpDemoError.message}}</view>
+                  <view wx:if="{{mcpDemoError.code}}" class="ai-error-meta">状态 / 代码：{{mcpDemoError.code}}</view>
+                  <view class="ai-error-block">
+                    <view class="ai-error-label">请求参数</view>
+                    <view class="ai-error-code">{{mcpDemoError.requestText}}</view>
+                  </view>
+                  <view wx:if="{{mcpDemoError.fieldErrorsText}}" class="ai-error-block">
+                    <view class="ai-error-label">字段错误</view>
+                    <view class="ai-error-code">{{mcpDemoError.fieldErrorsText}}</view>
+                  </view>
+                  <view wx:if="{{mcpDemoError.responseText}}" class="ai-error-block">
+                    <view class="ai-error-label">后端返回</view>
+                    <view class="ai-error-code">{{mcpDemoError.responseText}}</view>
+                  </view>
+                </view>
+              </block>
+            </view>
+          </block>
         </view>
       </view>
     </view>
@@ -871,7 +1072,7 @@
 
       <view wx:if="{{appWorkspaceTab === 'conversation'}}" class="ai-result-block">
         <view class="ai-result-title">连续会话 / 再次追问</view>
-        <view class="ai-card-text">这里把 RAG 问答、学习解释和追问历史串起来，方便演示 AI 会话能力不是“一问一答后就结束”。</view>
+        <view class="ai-card-text">这里把 RAG 问答、学习解释和追问历史串起来，方便查看连续会话。</view>
         <view class="ai-chip-row wrap">
           <view class="ai-choice {{appConversationFeatureType === 'rag' ? 'active' : ''}}" data-value="rag" bindtap="handleConversationFeatureType">RAG 问答</view>
           <view class="ai-choice {{appConversationFeatureType === 'grammar' ? 'active' : ''}}" data-value="grammar" bindtap="handleConversationFeatureType">语法</view>
@@ -882,8 +1083,13 @@
         <button class="secondary-btn full-btn ai-inline-btn" loading="{{appConversationLoading}}" disabled="{{appConversationLoading}}" bindtap="askConversation">发起会话</button>
 
         <view wx:if="{{appConversationAnswer}}" class="ai-result-block inner">
+          <view wx:if="{{appConversationRuntime && appConversationRuntime.runtime_summary && appConversationRuntime.runtime_summary.summary}}" class="ai-status-banner {{appConversationRuntime.runtime_summary.degraded ? 'warning' : 'success'}}">
+            <view class="ai-status-title">{{appConversationRuntime.runtime_summary.status_text || '已完成'}}</view>
+            <view class="ai-status-text">{{appConversationRuntime.runtime_summary.summary}}</view>
+          </view>
           <view class="ai-result-title">{{appConversationAnswer.headline}}</view>
           <view class="ai-result-text">{{appConversationAnswer.summary}}</view>
+          <view wx:if="{{appConversationRuntime && appConversationRuntime.resolved_route}}" class="ai-card-tip">本轮路由：{{appConversationRuntime.resolved_route}}</view>
           <view wx:if="{{appConversationAnswer.answer_summary}}" class="ai-card-row">
             <view class="ai-card-title">回答摘要</view>
             <view class="ai-card-text">{{appConversationAnswer.answer_summary}}</view>
@@ -910,6 +1116,51 @@
           </view>
         </view>
 
+        <view wx:if="{{activeRunDetail && appConversationRuntime && activeRunDetail.run_id === appConversationRuntime.run_id}}" class="ai-result-block inner ai-runtime-row">
+          <view class="ai-collapsible-head" bindtap="toggleAiRuntimeCollapsed">
+            <view>
+              <view class="ai-result-title">会话运行态</view>
+              <view class="ai-card-tip">{{activeRunDetail.runtime_summary.status_text || activeRunDetail.status_text || '进行中'}}</view>
+            </view>
+            <view class="ai-collapse-indicator">{{aiRuntimeCollapsed ? '展开' : '收起'}}</view>
+          </view>
+          <view class="ai-grid-two">
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">当前智能体</view>
+              <view class="ai-metric-value small">{{activeRunDetail.current_agent || activeRunDetail.runtime_summary.active_agent || '--'}}</view>
+            </view>
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">步骤数</view>
+              <view class="ai-metric-value">{{activeRunDetail.runtime_summary.step_count || activeRunSteps.length || 0}}</view>
+            </view>
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">审批状态</view>
+              <view class="ai-metric-value small">{{activeRunDetail.approval_state || 'not_required'}}</view>
+            </view>
+            <view class="ai-metric-card">
+              <view class="ai-metric-label">运行状态</view>
+              <view class="ai-metric-value small">{{activeRunDetail.runtime_summary.status_text || activeRunDetail.status || '--'}}</view>
+            </view>
+          </view>
+          <block wx:if="{{!aiRuntimeCollapsed}}">
+            <view wx:if="{{activeRunDetail.runtime_summary.summary}}" class="ai-card-row">
+              <view class="ai-card-title">运行摘要</view>
+              <view class="ai-card-text">{{activeRunDetail.runtime_summary.summary}}</view>
+            </view>
+            <view wx:if="{{activeRunSteps.length}}" class="ai-card-row">
+              <view class="ai-card-title">步骤时间线</view>
+              <view wx:for="{{activeRunSteps}}" wx:key="id" class="ai-log-line">{{item.agent_name}} · {{item.title}} · {{item.status}}</view>
+            </view>
+            <view class="button-row">
+              <button class="ghost-btn ai-mini-btn" data-action="refresh" bindtap="handleAiRuntimeAction">刷新</button>
+              <button wx:if="{{activeRunDetail.retryable}}" class="ghost-btn ai-mini-btn" data-action="retry" bindtap="handleAiRuntimeAction">重试</button>
+              <button wx:if="{{activeRunDetail.runtime_summary.resumable}}" class="ghost-btn ai-mini-btn" data-action="resume" bindtap="handleAiRuntimeAction">恢复</button>
+              <button wx:if="{{activeRunDetail.approval_state === 'pending'}}" class="ghost-btn ai-mini-btn" data-action="approve" bindtap="handleAiRuntimeAction">批准</button>
+              <button wx:if="{{activeRunDetail.approval_state === 'pending'}}" class="ghost-btn ai-mini-btn" data-action="reject" bindtap="handleAiRuntimeAction">拒绝</button>
+            </view>
+          </block>
+        </view>
+
         <view wx:if="{{appConversationId}}" class="ai-card-row">
           <view class="ai-card-title">继续追问</view>
           <input class="ai-input" value="{{appConversationFollowup}}" bindinput="handleConversationFollowup" placeholder="例如：那能再给我一个更容易记住的例句吗？" />
@@ -932,6 +1183,9 @@
             <view wx:if="{{appConversationDetail}}">
               <view class="ai-card-tip">{{appConversationDetail.feature_label}} · {{appConversationDetail.message_count}} 条消息</view>
               <view class="ai-card-tip">{{appConversationDetail.title}}</view>
+              <view wx:if="{{appConversationDetail.latest_runtime_run && appConversationDetail.latest_runtime_run.run_id}}" class="ai-card-tip">
+                最近运行：{{appConversationDetail.latest_runtime_run.runtime_summary.status_text || appConversationDetail.latest_runtime_run.status}}
+              </view>
               <view wx:for="{{appConversationDetail.messages}}" wx:key="id" class="app-message-card app-message-{{item.role}}">
                 <view class="app-message-role">{{item.role}}</view>
                 <view class="app-message-content">{{item.content}}</view>

@@ -62,11 +62,17 @@ def build_langchain_capabilities() -> Dict[str, Any]:
 def get_chat_model():
     if not langchain_explicit_available():
         raise RuntimeError("LangChain explicit runtime is not available")
+    thinking_mode = (os.getenv("AI_THINKING_MODE", "disabled") or "disabled").strip().lower()
+    extra_body = None
+    if thinking_mode in {"disabled", "off", "false", "0"}:
+        extra_body = {"thinking": {"type": "disabled"}}
     return ChatOpenAI(
         api_key=os.getenv("AI_API_KEY", "").strip(),
         model=os.getenv("AI_MODEL", "").strip(),
         base_url=os.getenv("AI_BASE_URL", "https://api.openai.com/v1").strip().rstrip("/"),
         temperature=0.2,
+        timeout=float(os.getenv("AI_LANGCHAIN_TIMEOUT_SECONDS", "18") or 18),
+        extra_body=extra_body,
     )
 
 

@@ -32,9 +32,18 @@ def _pick_distractors(word, count=3):
     used_ids = {word.id}
     distractors = []
     candidate_groups = [
-        Word.objects.filter(book=word.book, part_of_speech=word.part_of_speech).exclude(id=word.id),
-        Word.objects.filter(book=word.book).exclude(id=word.id),
-        Word.objects.exclude(id=word.id),
+        Word.objects.filter(
+            book=word.book,
+            part_of_speech=word.part_of_speech,
+            meaning_cn__isnull=False,
+        ).exclude(id=word.id).exclude(meaning_cn=""),
+        Word.objects.filter(
+            book=word.book,
+            meaning_cn__isnull=False,
+        ).exclude(id=word.id).exclude(meaning_cn=""),
+        Word.objects.filter(
+            meaning_cn__isnull=False,
+        ).exclude(id=word.id).exclude(meaning_cn=""),
     ]
     for queryset in candidate_groups:
         candidates = list(queryset.order_by("id"))
@@ -50,14 +59,19 @@ def _pick_distractors(word, count=3):
 
 
 def _build_word_options(word):
-    values = [item.word for item in _pick_distractors(word, count=3)] + [word.word]
+    values = [item.word for item in _pick_distractors(word, count=3) if str(item.word or "").strip()] + [word.word]
     values = list(dict.fromkeys(values))
     random.shuffle(values)
     return [{"key": chr(65 + idx), "value": value} for idx, value in enumerate(values[:4])]
 
 
 def _build_meaning_options(word):
-    values = [item.meaning_cn for item in _pick_distractors(word, count=3)] + [word.meaning_cn]
+    values = [
+        str(item.meaning_cn or "").strip()
+        for item in _pick_distractors(word, count=3)
+        if str(item.meaning_cn or "").strip()
+    ] + [str(word.meaning_cn or "").strip()]
+    values = [item for item in values if item]
     values = list(dict.fromkeys(values))
     random.shuffle(values)
     return [{"key": chr(65 + idx), "value": value} for idx, value in enumerate(values[:4])]
@@ -95,8 +109,8 @@ def _build_review_question(progress, adaptive_reason=""):
             "answer_mode": "choice",
             "stem": word.word,
             "helper_text": word.part_of_speech or "",
-            "reference_text": word.example_sentence or "",
-            "reference_translation": word.example_translation or "",
+            "reference_text": "",
+            "reference_translation": "",
             "options": _build_meaning_options(word),
             "adaptive_reason": adaptive_reason,
         }, word)
@@ -118,9 +132,9 @@ def _build_review_question(progress, adaptive_reason=""):
             "question_type": question_type,
             "answer_mode": "input",
             "stem": word.meaning_cn,
-            "helper_text": f"请拼写对应单词，可参考例句：{word.example_sentence or '暂无例句'}",
-            "reference_text": word.example_sentence or "",
-            "reference_translation": word.example_translation or "",
+            "helper_text": "请根据中文义项拼写对应单词。",
+            "reference_text": "",
+            "reference_translation": "",
             "options": [],
             "adaptive_reason": adaptive_reason,
         }
@@ -142,8 +156,8 @@ def _build_review_question(progress, adaptive_reason=""):
         "answer_mode": "choice",
         "stem": word.meaning_cn,
         "helper_text": word.part_of_speech or "",
-        "reference_text": word.example_sentence or "",
-        "reference_translation": word.example_translation or "",
+        "reference_text": "",
+        "reference_translation": "",
         "options": _build_word_options(word),
         "adaptive_reason": adaptive_reason,
     }
@@ -181,57 +195,102 @@ def _lookup_selected_word_text(user_answer):
     return f"{word.word} 的常见意思是“{word.meaning_cn}”。"
 
 
+def _normalize_review_answer_payload(answer):
+    normalized = dict(answer or {})
+    if not normalized.get("user_answer") and normalized.get("result"):
+        normalized["user_answer"] = normalized.get("result", "")
+    return normalized
+
+
+def _validate_review_answer_payload(answer, question_hint):
+    expected_question_type = str((question_hint or {}).get("question_type") or "").strip()
+    question_type = str((answer or {}).get("question_type") or "").strip()
+    if not question_type:
+        raise ValueError("question_type required")
+    if expected_question_type and question_type != expected_question_type:
+        raise ValueError("question_type mismatch")
+
+    answer_mode = str((question_hint or {}).get("answer_mode") or "").strip()
+    user_answer = str((answer or {}).get("user_answer") or "").strip()
+    option_values = {
+        str(item.get("value") or "").strip()
+        for item in (question_hint or {}).get("options", [])
+        if str(item.get("value") or "").strip()
+    }
+    if answer_mode == "choice":
+        if not user_answer:
+            raise ValueError("choice answer required")
+        if option_values and user_answer not in option_values:
+            raise ValueError("choice answer not in options")
+    elif answer_mode == "input" and not user_answer:
+        raise ValueError("input answer required")
+
+
 def _build_answer_feedback(word, question_type, user_answer, expected_answer, is_correct, similarity, quality):
     label = QUESTION_TYPE_LABELS.get(question_type, "复习题")
     score_percent = int(round(float(similarity or 0) * 100))
+    feedback = {
+        "source": "rule",
+        "label": label,
+        "similarity": score_percent,
+        "quality": quality,
+        "word": word.word,
+        "meaning_cn": word.meaning_cn,
+        "part_of_speech": word.part_of_speech or "",
+        "example_sentence": word.example_sentence or "",
+        "example_translation": word.example_translation or "",
+        "speech_text": word.example_sentence or word.word,
+        "speech_lang": "en-US",
+        "usage_tip": "",
+    }
+
     if is_correct:
-        return {
+        feedback.update({
             "source": "rule",
-            "label": label,
             "status": "correct",
             "title": "答对了，继续巩固这组记忆",
             "explanation": f"这题考的是“{word.word}”和“{expected_answer}”之间的对应关系，你已经匹配正确。",
             "recovery_tip": f"再把它放回例句里读一遍：{word.example_sentence or word.word}",
-            "similarity": score_percent,
-            "quality": quality,
-        }
+            "usage_tip": "现在把正确释义、词性和例句一起过一遍，能把这次正确记忆压得更稳。",
+        })
+        return feedback
 
     if question_type == "spelling":
         explanation = f"正确拼写是“{expected_answer}”，你的答案是“{user_answer or '未填写'}”，文本相似度约 {score_percent}%。"
         recovery_tip = "先按音节或字母块拆开记，再默写一遍，避免只记住中文释义。"
+        usage_tip = "拼写题更适合把单词、词性和例句连着读，再自己默写一次。"
     elif question_type == "word_to_meaning":
         explanation = f"“{word.word}”在当前词书里主要对应“{expected_answer}”，你的选择还没有命中核心中文义项。"
         recovery_tip = f"把词性一起记：{word.part_of_speech or '词性待补充'} + {word.meaning_cn}。"
+        usage_tip = "先把核心中文义项记准，再回到例句里确认这个词在真实语境中的意思。"
     elif question_type == "meaning_to_word":
         selected_note = _lookup_selected_word_text(user_answer)
         explanation = f"题目给出的中文义项对应“{expected_answer}”，你选择的是“{user_answer or '未选择'}”。"
         if selected_note:
             explanation = f"{explanation}{selected_note}"
         recovery_tip = "先从中文义项反推出英文，再回到例句确认语境，减少相近词混淆。"
+        usage_tip = "易混词题先区分中文义项，再看例句里这个词真正放在什么场景。"
     elif question_type == "example_to_word":
         explanation = f"例句空格里需要的是“{expected_answer}”。它在这句话里承担当前词义“{word.meaning_cn}”。"
         recovery_tip = "读例句时先抓空格前后的搭配，再判断最自然的单词。"
+        usage_tip = "例句题要重点看搭配和语境，顺手把整句朗读一遍会更容易记住。"
     elif question_type == "listening_to_word":
         explanation = f"这段发音对应“{expected_answer}”，你选择的是“{user_answer or '未选择'}”。"
         recovery_tip = "听音辨词时先抓重音和开头音，再和词形配对；必要时去学习设置里调慢全局语速。"
+        usage_tip = "听力题答完后再对照例句朗读一次，可以把音、形、义重新绑定起来。"
     else:
         explanation = f"正确答案是“{expected_answer}”，你的答案是“{user_answer or '未填写'}”。"
         recovery_tip = "先记核心对应关系，再用例句做一次确认。"
+        usage_tip = "先看清核心释义，再把它放回例句语境里确认。"
 
-    return {
-        "source": "rule",
-        "label": label,
+    feedback.update({
         "status": "wrong",
         "title": "这题答错了，先看错因再进入下一题",
         "explanation": explanation,
         "recovery_tip": recovery_tip,
-        "similarity": score_percent,
-        "quality": quality,
-        "word": word.word,
-        "meaning_cn": word.meaning_cn,
-        "example_sentence": word.example_sentence or "",
-        "example_translation": word.example_translation or "",
-    }
+        "usage_tip": usage_tip,
+    })
+    return feedback
 
 
 def _serialize_wrong_word(item):
@@ -269,22 +328,24 @@ def generate_review_tasks(user, limit=10):
         return {"session_id": None, "list": [], "adaptive": adaptive_profile}
 
     ranked_progresses = annotate_review_progresses(progresses, adaptive_profile)[:limit]
+    question_list = [
+        _build_review_question(
+            item["progress"],
+            adaptive_reason=item["reason"],
+        )
+        for item in ranked_progresses
+    ]
     session = ReviewSession.objects.create(
         user=user,
         plan=plan,
         session_type="daily",
         total_count=len(ranked_progresses),
         started_at=timezone.now(),
+        extra_payload={"questions": question_list},
     )
     return {
         "session_id": session.id,
-        "list": [
-            _build_review_question(
-                item["progress"],
-                adaptive_reason=item["reason"],
-            )
-            for item in ranked_progresses
-        ],
+        "list": question_list,
         "adaptive": adaptive_profile,
     }
 
@@ -294,11 +355,23 @@ def submit_review(user, session_id, answers):
     correct_count = 0
     submitted_results = []
     now = timezone.now()
+    question_lookup = {
+        int(item.get("word_id")): item
+        for item in (session.extra_payload or {}).get("questions", [])
+        if item.get("word_id") is not None
+    }
 
     for answer in answers:
-        word = Word.objects.select_related("book").get(id=answer["word_id"])
-        question_type = answer.get("question_type", "meaning_to_word")
-        user_answer = answer.get("user_answer", "")
+        normalized_answer = _normalize_review_answer_payload(answer)
+        if not normalized_answer.get("word_id"):
+            raise ValueError("word_id required")
+        word = Word.objects.select_related("book").get(id=normalized_answer["word_id"])
+        question_hint = question_lookup.get(word.id, {})
+        if not question_hint:
+            raise ValueError("question not found in session")
+        _validate_review_answer_payload(normalized_answer, question_hint)
+        question_type = normalized_answer.get("question_type", "")
+        user_answer = normalized_answer.get("user_answer", "")
         expected_answer, is_correct, similarity, quality = _evaluate_answer(word, question_type, user_answer)
         answer_feedback = _build_answer_feedback(
             word,

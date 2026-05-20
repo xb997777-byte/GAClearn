@@ -1,6 +1,6 @@
-<view class="page-shell {{themePageClass}}" style="{{pageThemeStyle}}">
+<view class="page-shell review-page {{themePageClass}}" style="{{pageThemeStyle}}">
   <nav-bar title="复习" showBack="{{true}}" />
-  <scroll-view class="page-scroll" scroll-y>
+  <scroll-view class="page-scroll" scroll-y scroll-into-view="{{scrollIntoViewTarget}}" scroll-with-animation>
     <view wx:if="{{adaptive}}" class="section panel-card adaptive-card">
       <view class="adaptive-header">
         <view>
@@ -12,34 +12,95 @@
       <view class="adaptive-tip">{{ adaptive.focus_tip }}</view>
     </view>
 
-    <view wx:if="{{hasQuestion}}" class="section panel-card">
+    <view wx:if="{{hasQuestion}}" id="review-question-anchor" class="section panel-card review-question-card">
       <view class="tag-row">
         <view class="chip-light chip">第 {{ currentIndex + 1 }} 题 / 共 {{ list.length }} 题</view>
         <view wx:if="{{currentQuestion.adaptive_reason}}" class="question-reason">{{ currentQuestion.adaptive_reason }}</view>
       </view>
-      <view class="card-title" style="margin-top:18rpx;">{{ currentQuestion.stem }}</view>
-      <view class="card-subtitle">{{ currentQuestion.helper_text }}</view>
-      <view class="card-subtitle" wx:if="{{currentQuestion.reference_text}}" style="margin-top:8rpx;">{{ currentQuestion.reference_text }}</view>
-      <view class="card-subtitle" wx:if="{{currentQuestion.reference_translation}}" style="margin-top:8rpx;">{{ currentQuestion.reference_translation }}</view>
-    </view>
-
-    <view wx:if="{{hasQuestion && currentQuestion.speech_text}}" class="section panel-card listen-card">
-      <view class="listen-head">
-        <view>
-          <view class="card-title small">{{ currentQuestion.question_type === 'listening_to_word' ? '听音辨词' : '单词发音' }}</view>
-          <view class="card-subtitle">{{ currentQuestion.question_type === 'listening_to_word' ? '先听发音，再选择对应单词。' : '播放当前单词发音。' }}</view>
+      <view class="review-question-panel">
+        <view wx:if="{{currentQuestion.prompt_label}}" class="review-question-prompt">{{ currentQuestion.prompt_label }}</view>
+        <view class="review-question-main review-question-main--{{currentQuestion.presentation_mode}}">
+          <view class="review-question-stem review-question-stem--{{currentQuestion.presentation_mode}}">{{ currentQuestion.stem }}</view>
+          <view wx:if="{{currentQuestion.helper_role === 'pos' && currentQuestion.helper_text}}" class="review-question-pos-pill">
+            {{ currentQuestion.helper_text }}
+          </view>
         </view>
-        <button class="secondary-btn listen-play-btn" loading="{{audioBusy}}" bindtap="playListeningAudio">播放</button>
+        <view wx:if="{{currentQuestion.helper_role === 'translation' && currentQuestion.helper_text}}" class="review-question-translation">
+          {{ currentQuestion.helper_text }}
+        </view>
+        <view wx:if="{{currentQuestion.helper_role === 'hint' && currentQuestion.helper_text}}" class="review-question-hint">
+          {{ currentQuestion.helper_text }}
+        </view>
+      </view>
+      <view wx:if="{{answerFeedback}}" id="review-feedback-anchor" class="{{answerFeedback.panelClass}} review-inline-feedback">
+        <view class="answer-feedback-head">
+          <view class="answer-feedback-badge">{{answerFeedback.isCorrect ? '正确' : '错因'}}</view>
+          <view class="answer-feedback-title">{{answerFeedback.title}}</view>
+        </view>
+        <view class="answer-feedback-text">{{answerFeedback.explanation}}</view>
+        <view wx:if="{{!answerFeedback.isCorrect}}" class="answer-feedback-answer">
+          正确答案：{{answerFeedback.correctAnswer}}
+        </view>
+        <view wx:if="{{answerFeedback.revealedWord || answerFeedback.example_sentence || answerFeedback.meaning_cn || answerFeedback.part_of_speech || answerFeedback.usage_tip}}" class="answer-feedback-knowledge">
+          <view wx:if="{{answerFeedback.revealedWord && answerFeedback.revealedWord !== currentQuestion.stem}}" class="answer-feedback-word-inline">
+            {{answerFeedback.revealedWord}}
+          </view>
+          <view wx:if="{{answerFeedback.meaning_cn || answerFeedback.part_of_speech}}" class="answer-feedback-meaning-line">
+            <view wx:if="{{answerFeedback.meaning_cn}}" class="answer-feedback-meaning-main">{{answerFeedback.meaning_cn}}</view>
+            <view wx:if="{{answerFeedback.part_of_speech}}" class="answer-feedback-pos-main">{{answerFeedback.part_of_speech}}</view>
+          </view>
+          <view wx:if="{{answerFeedback.usage_tip}}" class="answer-feedback-knowledge-line stacked">
+            <text class="answer-feedback-knowledge-label">用法提醒</text>
+            <text class="answer-feedback-knowledge-value">{{answerFeedback.usage_tip}}</text>
+          </view>
+          <view wx:if="{{answerFeedback.example_sentence}}" class="answer-feedback-example">
+            <view class="answer-feedback-example-head">
+              <view class="answer-feedback-knowledge-label">例句</view>
+              <button class="ghost-btn answer-feedback-audio-btn" loading="{{feedbackAudioBusy}}" bindtap="playFeedbackExampleAudio">重播例句</button>
+            </view>
+            <view class="answer-feedback-example-text">{{answerFeedback.example_sentence}}</view>
+            <view wx:if="{{answerFeedback.example_translation}}" class="answer-feedback-example-translation">{{answerFeedback.example_translation}}</view>
+          </view>
+        </view>
+        <view class="button-row review-inline-feedback-actions" wx:if="{{!answerFeedback.isCorrect}}">
+          <button class="ghost-btn full-btn" bindtap="goAiWrongWords">去 AI 深度复盘</button>
+        </view>
+      </view>
+      <view class="review-status-strip">
+        <view class="review-status-pill {{autoPlayAudioEnabled ? 'enabled' : ''}}">{{ autoPlayAudioEnabled ? '自动发音已开' : '自动发音未开' }}</view>
+        <view class="review-status-text">{{ autoPlayAudioEnabled ? '切到下一题会自动播放发音。' : '可以在设置中开启切题自动发音。' }}</view>
       </view>
     </view>
 
-    <view wx:if="{{hasQuestion}}" class="section panel-card review-ai-card">
+    <view wx:if="{{hasQuestion && currentQuestion.answer_mode === 'choice'}}" class="section review-choice-section">
+      <view
+        wx:for="{{options}}"
+        wx:key="key"
+        class="{{ item.className }}"
+        data-value="{{item.value}}"
+        bindtap="chooseOption"
+      >
+        <view class="choice-item">
+          <view class="choice-key">{{ item.key }}</view>
+          <view class="list-main">
+            <view class="list-title">{{ item.value }}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{hasQuestion && currentQuestion.answer_mode === 'input'}}" class="section panel-card">
+      <view class="card-title">输入答案</view>
+      <input class="answer-input" placeholder="请输入单词拼写或答案" value="{{inputValue}}" bindinput="handleInput" />
+    </view>
+
+    <view wx:if="{{hasQuestion && (reviewAiTutor || reviewAiLoading || reviewAiError)}}" class="section panel-card review-ai-card">
       <view class="review-ai-head">
         <view>
           <view class="card-title">AI 讲词</view>
           <view class="card-subtitle">复习当前这题时，也可以直接打开 AI 讲词，不用跳到别的页面。</view>
         </view>
-        <view class="review-ai-badge {{reviewAiTutor ? 'enabled' : ''}}">{{ reviewAiTutor ? 'AI 已生成' : '默认关闭' }}</view>
+        <view class="review-ai-badge {{reviewAiTutor ? 'enabled' : ''}}">{{ reviewAiTutor ? 'AI 已生成' : '生成中' }}</view>
       </view>
 
       <view class="button-row review-ai-actions">
@@ -88,51 +149,36 @@
       </view>
     </view>
 
-    <view wx:if="{{hasQuestion && currentQuestion.answer_mode === 'choice'}}" class="section">
-      <view
-        wx:for="{{options}}"
-        wx:key="key"
-        class="{{ item.className }}"
-        data-value="{{item.value}}"
-        bindtap="chooseOption"
-      >
-        <view class="choice-item">
-          <view class="choice-key">{{ item.key }}</view>
-          <view class="list-main">
-            <view class="list-title">{{ item.value }}</view>
-          </view>
-        </view>
-      </view>
-    </view>
-
-    <view wx:if="{{hasQuestion && currentQuestion.answer_mode === 'input'}}" class="section panel-card">
-      <view class="card-title">输入答案</view>
-      <input class="answer-input" placeholder="请输入单词拼写或答案" value="{{inputValue}}" bindinput="handleInput" />
-    </view>
-
-    <view wx:if="{{answerFeedback}}" class="section panel-card">
-      <view class="{{answerFeedback.panelClass}}">
-        <view class="answer-feedback-head">
-          <view class="answer-feedback-badge">{{answerFeedback.isCorrect ? '正确' : '错因'}}</view>
-          <view class="answer-feedback-title">{{answerFeedback.title}}</view>
-        </view>
-        <view class="answer-feedback-text">{{answerFeedback.explanation}}</view>
-        <view wx:if="{{answerFeedback.recovery_tip}}" class="answer-feedback-tip">{{answerFeedback.recovery_tip}}</view>
-        <view wx:if="{{!answerFeedback.isCorrect}}" class="answer-feedback-answer">
-          正确答案：{{answerFeedback.correctAnswer}}
-        </view>
-      </view>
-      <view class="button-row" style="margin-top:18rpx;" wx:if="{{!answerFeedback.isCorrect}}">
-        <button class="ghost-btn full-btn" bindtap="goAiWrongWords">去 AI 深度复盘</button>
-      </view>
-    </view>
-
-    <view wx:if="{{hasQuestion}}" class="section panel-card">
-      <button class="primary-btn full-btn" loading="{{submitting}}" bindtap="submitAnswer">{{submitButtonText}}</button>
-    </view>
-
-    <view wx:else class="section panel-card">
+    <view wx:if="{{!hasQuestion}}" class="section panel-card">
       <empty-state text="当前没有待复习题目" hint="先去学习一些新词，系统就会帮你安排复习。" />
     </view>
+
+    <view wx:if="{{hasQuestion}}" class="review-bottom-spacer"></view>
   </scroll-view>
+
+  <view wx:if="{{hasQuestion}}" class="review-bottom-bar">
+    <view class="review-bottom-card">
+      <view class="button-row review-bottom-actions">
+        <button
+          wx:if="{{currentQuestion.speech_text}}"
+          class="ghost-btn review-bottom-mini-btn"
+          loading="{{audioBusy}}"
+          bindtap="playListeningAudio"
+        >
+          重播
+        </button>
+        <button
+          class="ghost-btn review-bottom-mini-btn"
+          loading="{{reviewAiLoading}}"
+          disabled="{{!currentQuestion.word_id}}"
+          bindtap="handleReviewAiTutor"
+        >
+          {{ reviewAiTutor ? 'AI重讲' : 'AI讲词' }}
+        </button>
+        <button class="primary-btn review-bottom-submit-btn {{submitDisabled ? 'is-disabled' : ''}}" loading="{{submitting}}" disabled="{{submitDisabled}}" bindtap="submitAnswer">
+          {{submitButtonText}}
+        </button>
+      </view>
+    </view>
+  </view>
 </view>

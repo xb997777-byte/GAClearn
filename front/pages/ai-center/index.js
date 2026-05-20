@@ -80,6 +80,28 @@ function buildErrorPanel(error, fallbackTitle, requestPayload) {
   };
 }
 
+function normalizeRuntimeSummary(summary) {
+  const source = summary || {};
+  return {
+    run_id: source.run_id || '',
+    status: source.status || '',
+    status_text: source.status_text || '',
+    summary: source.summary || '',
+    latency_ms: Number(source.latency_ms || 0),
+    cache_hit: !!source.cache_hit,
+    degraded: !!source.degraded,
+    degraded_reason: source.degraded_reason || '',
+    retryable: !!source.retryable,
+    retry_after: Number(source.retry_after || 0),
+    endpoint: source.endpoint || '',
+    active_agent: source.active_agent || '',
+    step_count: Number(source.step_count || 0),
+    approval_required: !!source.approval_required,
+    resumable: !!source.resumable,
+    stale: !!source.stale
+  };
+}
+
 function translateStatus(status) {
   const mapping = {
     success: '成功',
@@ -207,6 +229,7 @@ function normalizePlanReplanResult(data) {
     langchain_trace: normalizeTrace(source.langchain_trace),
     feature_runtime: source.feature_runtime || {},
     runtime_stack: source.runtime_stack || {},
+    runtime_summary: normalizeRuntimeSummary(source.runtime_summary),
     evidence: normalizeEvidence(source.evidence),
     ai_observability: source.ai_observability || null
   };
@@ -243,6 +266,7 @@ function normalizeRetrievalOrchestratorResult(data) {
     langchain_trace: normalizeTrace(source.langchain_trace),
     feature_runtime: source.feature_runtime || {},
     runtime_stack: source.runtime_stack || {},
+    runtime_summary: normalizeRuntimeSummary(source.runtime_summary),
     agent_flow: source.agent_flow || {},
     evidence: normalizeEvidence(source.evidence),
     structuredSummary: (((source.knowledge || {}).structured_rag || {}).answer || {}).summary || '',
@@ -336,6 +360,21 @@ function normalizeEvaluationRun(data) {
   };
 }
 
+function buildAiPlanRunSnapshot(runId, sourcePage) {
+  return {
+    run_id: runId || '',
+    source_page: sourcePage || 'ai_center',
+    feature_type: 'plan_replan',
+    updated_at: Date.now()
+  };
+}
+
+function buildPollingControlError(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
+
 function normalizeConversationList(list) {
   return (Array.isArray(list) ? list : []).map((item) => ({
     id: item.id,
@@ -365,6 +404,7 @@ function normalizeConversationDetail(data) {
     title: source.title || '',
     context: source.context || {},
     status: source.status || '',
+    latest_runtime_run: source.latest_runtime_run || null,
     updated_at: source.updated_at || '',
     created_at: source.created_at || '',
     messages: (Array.isArray(source.messages) ? source.messages : []).map((item) => ({
@@ -375,13 +415,24 @@ function normalizeConversationDetail(data) {
       prompt_version: item.prompt_version || '',
       model_name: item.model_name || '',
       latency_ms: Number(item.latency_ms || 0),
+      runtime_run_id: item.runtime_run_id || '',
       created_at: item.created_at || '',
-      metaText: [item.prompt_version || '', item.model_name || '', item.latency_ms ? `${item.latency_ms}ms` : '']
+      metaText: [item.runtime_run_id ? `run ${item.runtime_run_id}` : '', item.prompt_version || '', item.model_name || '', item.latency_ms ? `${item.latency_ms}ms` : '']
         .filter(Boolean)
         .join(' · ')
     })),
     message_count: Array.isArray(source.messages) ? source.messages.length : 0,
     feature_label: getConversationFeatureLabel(source.feature_type)
+  };
+}
+
+function normalizeConversationRuntime(data) {
+  const source = data || {};
+  return {
+    run_id: source.run_id || '',
+    resolved_route: source.resolved_route || '',
+    runtime_summary: normalizeRuntimeSummary(source.runtime_summary),
+    runtime_run: source.runtime_run || null
   };
 }
 
@@ -399,12 +450,14 @@ function normalizeMcpDemoResult(data) {
     || source.tool_name
     || '';
   return {
+    run_id: source.run_id || '',
     tool_name: source.tool_name || '',
     result: {
       headline: previewHeadline,
       summary: previewSummary,
       langchain_trace: normalizeTrace(result.langchain_trace),
       runtime_stack: result.runtime_stack || {},
+      runtime_summary: normalizeRuntimeSummary(result.runtime_summary),
       evidence: normalizeEvidence(result.evidence),
       ai_observability: result.ai_observability || null
     }
@@ -446,14 +499,187 @@ function normalizeObservability(data) {
 
 function normalizeMcpManifest(data) {
   const source = data || {};
+  const tools = (Array.isArray(source.tools) ? source.tools : [])
+    .map((item) => ({
+      ...item,
+      display_name: item.display_name || item.name || '',
+      category: item.category || '系统观测',
+      summary: item.summary || item.description || '',
+      details: item.details || item.summary || item.description || '',
+      example_args: item.example_args || {},
+      result_preview_hint: item.result_preview_hint || '',
+      ui_order: Number(item.ui_order || 999),
+      permissions: Array.isArray(item.permissions) ? item.permissions : [],
+      permissions_text: (Array.isArray(item.permissions) ? item.permissions : []).join(' · ')
+    }))
+    .sort((left, right) => {
+      if (left.ui_order !== right.ui_order) {
+        return left.ui_order - right.ui_order;
+      }
+      return String(left.display_name || left.name || '').localeCompare(String(right.display_name || right.name || ''));
+    });
   return {
     ...source,
+    advanced_available: source.advanced_available !== false,
     transport_modes: Array.isArray(source.transport_modes) ? source.transport_modes : [],
     transport_modes_text: (Array.isArray(source.transport_modes) ? source.transport_modes : []).join(' / '),
-    tools: Array.isArray(source.tools) ? source.tools : [],
+    tools,
     resources: Array.isArray(source.resources) ? source.resources : [],
     prompts: Array.isArray(source.prompts) ? source.prompts : []
   };
+}
+
+function getMcpCategoryOrder(category) {
+  const order = {
+    '学习计划': 1,
+    '词汇/语法': 2,
+    'RAG 问答': 3,
+    '写作/场景': 4,
+    '系统观测': 5
+  };
+  return order[category] || 99;
+}
+
+function buildMcpFieldState(tool) {
+  const schema = (tool && tool.input_schema) || {};
+  const properties = schema.properties || {};
+  const requiredFields = Array.isArray(schema.required) ? schema.required : [];
+  const defaults = {
+    ...buildToolArgsFromSchema(schema, tool && tool.name),
+    ...((tool && tool.example_args) || {})
+  };
+  return Object.keys(properties).map((key) => {
+    const field = properties[key] || {};
+    const enumOptions = Array.isArray(field.enum) ? field.enum : [];
+    const type = field.type || (enumOptions.length ? 'string' : 'string');
+    const value = defaults[key] !== undefined ? defaults[key] : buildDefaultValueBySchema(field);
+    return {
+      name: key,
+      label: key,
+      type,
+      required: requiredFields.indexOf(key) > -1,
+      enumOptions,
+      value: Array.isArray(value) ? value.join('\n') : (type === 'boolean' ? !!value : `${value !== undefined && value !== null ? value : ''}`),
+      placeholder: type === 'array'
+        ? '每行一个值'
+        : type === 'integer'
+          ? '请输入数字'
+          : field.description || '',
+      error: ''
+    };
+  });
+}
+
+function buildMcpSkillGroups(manifest, selectedToolName, expandedMap, formOverrides, collapsedMap, errorMap) {
+  const tools = (manifest && Array.isArray(manifest.tools)) ? manifest.tools : [];
+  const groups = [];
+  const groupedMap = {};
+  tools.forEach((tool) => {
+    const category = tool.category || '系统观测';
+    if (!groupedMap[category]) {
+      groupedMap[category] = [];
+    }
+    const baseFields = buildMcpFieldState(tool);
+    const overrideFields = (formOverrides && formOverrides[tool.name]) || {};
+    const fieldErrors = (errorMap && errorMap[tool.name]) || {};
+    const mergedFields = baseFields.map((field) => ({
+      ...field,
+      value: overrideFields[field.name] !== undefined ? overrideFields[field.name] : field.value,
+      error: fieldErrors[field.name] || ''
+    }));
+    const requiredEmpty = mergedFields.some((field) => field.required && !String(field.value || '').trim());
+    const unavailable = manifest && manifest.enabled === false;
+    groupedMap[category].push({
+      ...tool,
+      expanded: !!(expandedMap && expandedMap[tool.name]),
+      collapsedDescription: collapsedMap ? collapsedMap[tool.name] !== false : true,
+      selected: tool.name === selectedToolName,
+      statusText: unavailable ? '暂不可用' : (requiredEmpty ? '需填写参数' : '可直接使用'),
+      statusTone: unavailable ? 'disabled' : (requiredEmpty ? 'pending' : 'ready'),
+      disabled: unavailable,
+      formFields: mergedFields
+    });
+  });
+
+  Object.keys(groupedMap)
+    .sort((left, right) => getMcpCategoryOrder(left) - getMcpCategoryOrder(right))
+    .forEach((category) => {
+      groups.push({
+        key: category,
+        title: category,
+        tools: groupedMap[category]
+      });
+    });
+  return groups;
+}
+
+function buildMcpFormArgs(fields) {
+  const args = {};
+  const errors = {};
+  (fields || []).forEach((field) => {
+    const raw = field.value;
+    const trimmed = typeof raw === 'string' ? raw.trim() : raw;
+    if (field.required && (trimmed === '' || trimmed === undefined || trimmed === null)) {
+      errors[field.name] = '这是必填项';
+      return;
+    }
+    if (trimmed === '' || trimmed === undefined || trimmed === null) {
+      return;
+    }
+    if (field.type === 'integer' || field.type === 'number') {
+      const nextNumber = Number(trimmed);
+      if (Number.isNaN(nextNumber)) {
+        errors[field.name] = '请输入有效数字';
+        return;
+      }
+      args[field.name] = field.type === 'integer' ? parseInt(nextNumber, 10) : nextNumber;
+      return;
+    }
+    if (field.type === 'boolean') {
+      args[field.name] = !!raw;
+      return;
+    }
+    if (field.type === 'array') {
+      const items = `${raw || ''}`
+        .split(/\n+/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+      if (field.required && !items.length) {
+        errors[field.name] = '请至少填写一项';
+        return;
+      }
+      args[field.name] = items;
+      return;
+    }
+    args[field.name] = trimmed;
+  });
+  return {
+    args,
+    errors
+  };
+}
+
+function summarizeMcpResult(result, tool) {
+  const payload = (result && result.result) || {};
+  return {
+    title: payload.headline || (tool && tool.display_name) || '调用成功',
+    summary: payload.summary || (tool && tool.result_preview_hint) || '已成功返回结果',
+    runtime_summary: payload.runtime_summary || null,
+    evidence: payload.evidence || null,
+    langchain_trace: payload.langchain_trace || [],
+    runtime_stack: payload.runtime_stack || {},
+    raw: result || null
+  };
+}
+
+function normalizeMcpFormValueByType(value, fieldType) {
+  if (fieldType === 'boolean') {
+    return !!value;
+  }
+  if (Array.isArray(value)) {
+    return value.join('\n');
+  }
+  return `${value !== undefined && value !== null ? value : ''}`;
 }
 
 function buildDefaultValueBySchema(schema) {
@@ -505,11 +731,16 @@ function buildToolArgsFromSchema(schema, toolName) {
       args.limit = 6;
     }
     if (!args.retrieval_mode) {
-      args.retrieval_mode = 'auto';
+      args.retrieval_mode = 'hybrid';
     }
   }
   if (toolName === 'get_profile_memory') {
     return {};
+  }
+  if (toolName === 'get_word_detail') {
+    return {
+      word_id: 0
+    };
   }
   return args;
 }
@@ -530,7 +761,10 @@ function buildMcpToolState(manifest, selectedToolName) {
   return {
     selectedTool,
     selectedToolName: nextToolName,
-    selectedArgs: buildToolArgsFromSchema(selectedTool && selectedTool.input_schema, nextToolName),
+    selectedArgs: {
+      ...buildToolArgsFromSchema(selectedTool && selectedTool.input_schema, nextToolName),
+      ...((selectedTool && selectedTool.example_args) || {})
+    },
     schemaHint: schemaFields.length
       ? `参数 ${schemaFields.map((item) => `${item.name}(${item.type}${item.required ? '，必填' : ''})`).join('、')}`
       : '当前工具无必填参数',
@@ -606,6 +840,7 @@ function normalizeRagResult(data) {
   return {
     ...source,
     answer,
+    runtime_summary: normalizeRuntimeSummary(source.runtime_summary),
     answer_points: Array.isArray(answer.grounded_points) ? answer.grounded_points : []
   };
 }
@@ -613,11 +848,22 @@ function normalizeRagResult(data) {
 function normalizeVectorRagResult(data) {
   const source = data || {};
   const answer = source.answer || {};
+  const answerBrief = source.answer_brief || {};
   const retrievalStrategy = source.retrieval_strategy || {};
   const retrievalExplain = source.retrieval_explain || {};
+  const sourcePills = Array.isArray(source.source_pills) ? source.source_pills : [];
   return {
     ...source,
+    run_id: source.run_id || '',
     answer,
+    answer_brief: {
+      summary: answerBrief.summary || answer.summary || '',
+      points: Array.isArray(answerBrief.points) ? answerBrief.points : (Array.isArray(answer.grounded_points) ? answer.grounded_points : []),
+      next_questions: Array.isArray(answerBrief.next_questions) ? answerBrief.next_questions : (Array.isArray(answer.next_questions) ? answer.next_questions : [])
+    },
+    source_pills: sourcePills,
+    advanced_debug: source.advanced_debug || {},
+    runtime_summary: normalizeRuntimeSummary(source.runtime_summary),
     retrieval_strategy: {
       ...retrievalStrategy,
       external_vector_db: !!retrievalStrategy.external_vector_db
@@ -633,6 +879,7 @@ function normalizeRagRecallResult(data) {
   const source = data || {};
   return {
     ...source,
+    runtime_summary: normalizeRuntimeSummary(source.runtime_summary),
     structured_recall: source.structured_recall || {},
     vector_recall: source.vector_recall || {}
   };
@@ -641,6 +888,7 @@ function normalizeRagRecallResult(data) {
 function normalizeRagRuntime(runtime) {
   const source = runtime || {};
   const catalog = Array.isArray(source.knowledge_source_catalog) ? source.knowledge_source_catalog : [];
+  const sourceBreakdown = Array.isArray(source.source_breakdown) ? source.source_breakdown : [];
   return {
     type: source.type || '',
     version: source.version || '',
@@ -648,7 +896,9 @@ function normalizeRagRuntime(runtime) {
     embedding_model: source.embedding_model || '',
     embedding_backend: source.embedding_backend || '',
     embedding_provider: source.embedding_provider || '',
+    embedding_dimension: Number(source.embedding_dimension || 0),
     collection_name: source.collection_name || '',
+    collection_fingerprint: source.collection_fingerprint || '',
     storage_path: source.storage_path || '',
     available: !!source.available,
     indexed: !!source.indexed,
@@ -657,8 +907,22 @@ function normalizeRagRuntime(runtime) {
     retrieval_mode: source.retrieval_mode || '',
     fallback_runtime: source.fallback_runtime || '',
     rebuild_command: source.rebuild_command || '',
+    expected_chunk_count: Number(source.expected_chunk_count || 0),
+    collection_health: source.collection_health || '',
+    runtime_ready: !!source.runtime_ready,
+    runtime_degraded: !!source.runtime_degraded,
+    runtime_degraded_reason: source.runtime_degraded_reason || '',
+    dependency_state: source.dependency_state || '',
+    active_retrieval_backend: source.active_retrieval_backend || source.backend || '',
+    stale_collections: Array.isArray(source.stale_collections) ? source.stale_collections : [],
     notes: Array.isArray(source.notes) ? source.notes : [],
     knowledge_sources: Array.isArray(source.knowledge_sources) ? source.knowledge_sources : [],
+    source_breakdown: sourceBreakdown.map((item) => ({
+      key: item.key || '',
+      label: item.label || item.key || '',
+      record_count: Number(item.record_count || 0),
+      chunk_count: Number(item.chunk_count || 0)
+    })),
     knowledge_source_catalog: catalog.map((item) => ({
       key: item.key || '',
       label: item.label || item.key || '',
@@ -676,8 +940,14 @@ function normalizeRagIndexStatus(status) {
   const progressPercent = Number(source.progress_percent || 0);
   const running = !!source.running;
   const state = source.state || 'idle';
+  const runtimeState = source.runtime_state || '';
+  const rebuildState = source.rebuild_state || state;
+  const collectionHealth = source.collection_health || '';
+  const runtimeDegradedReason = source.runtime_degraded_reason || '';
   return {
     state,
+    rebuild_state: rebuildState,
+    runtime_state: runtimeState,
     stateLabel: getRagStateLabel(state),
     running,
     pid_list: Array.isArray(source.pid_list) ? source.pid_list : [],
@@ -686,6 +956,17 @@ function normalizeRagIndexStatus(status) {
     total_count: totalCount,
     expected_chunk_count: Number(source.expected_chunk_count || 0),
     runtime_chunk_count: Number(source.runtime_chunk_count || 0),
+    source_breakdown: Array.isArray(source.source_breakdown) ? source.source_breakdown : [],
+    collection_name: source.collection_name || '',
+    collection_fingerprint: source.collection_fingerprint || '',
+    embedding_dimension: Number(source.embedding_dimension || 0),
+    collection_health: collectionHealth,
+    runtime_available: !!source.runtime_available,
+    runtime_indexed: !!source.runtime_indexed,
+    runtime_degraded: !!source.runtime_degraded,
+    runtime_degraded_reason: runtimeDegradedReason,
+    active_retrieval_backend: source.active_retrieval_backend || '',
+    stale_collections: Array.isArray(source.stale_collections) ? source.stale_collections : [],
     progress_percent: progressPercent,
     progressWidth: `width:${Math.max(4, Math.min(100, progressPercent || 0))}%;`,
     last_progress_line: source.last_progress_line || '',
@@ -700,7 +981,11 @@ function normalizeRagIndexStatus(status) {
     status_started_at: source.status_started_at || '',
     actionHint: running
       ? '索引正在后台持续写入，页面会自动轮询更新。'
-      : state === 'completed'
+      : runtimeState === 'runtime_unavailable'
+        ? `最近一次重建日志可能已完成，但标准向量运行时当前不可用。${runtimeDegradedReason || '系统会自动回退到可用检索链路。'}`
+        : runtimeState === 'partial'
+          ? '索引部分可用，但当前块数仍低于预期，建议重建或增量同步。'
+          : state === 'completed'
         ? '索引已经完成，除非你新增了词库/语法数据，否则不需要重复全量构建。'
         : '当前还没有检测到正在运行的构建任务。先启动重建命令后，这里的进度才会持续变化。',
     refreshHint: '刷新索引状态：重新读取后台构建进度、日志和当前已写入数量。',
@@ -712,12 +997,56 @@ function normalizeRagIndexStatus(status) {
   };
 }
 
+function normalizeAgentRun(run) {
+  const source = run || {};
+  return {
+    run_id: source.run_id || '',
+    feature_type: source.feature_type || '',
+    status: source.status || '',
+    status_text: source.status_text || '',
+    current_agent: source.current_agent || '',
+    approval_state: source.approval_state || 'not_required',
+    retryable: !!source.retryable,
+    runtime_summary: normalizeRuntimeSummary(source.runtime_summary),
+    latest_approval: source.latest_approval || null,
+    error_message: source.error_message || ''
+  };
+}
+
+function normalizeAgentStepList(list) {
+  return trimList(list, 12, (item) => ({
+    id: item.id,
+    step_index: Number(item.step_index || 0),
+    step_key: item.step_key || '',
+    title: item.title || item.step_key || '',
+    step_kind: item.step_kind || '',
+    agent_name: item.agent_name || '',
+    status: translateStatus(item.status || '') || item.status || '',
+    latency_ms: Number(item.latency_ms || 0),
+    summary: item.summary || ''
+  }));
+}
+
+function normalizeAgentArtifactList(list) {
+  return trimList(list, 12, (item) => ({
+    id: item.id,
+    artifact_type: item.artifact_type || '',
+    artifact_key: item.artifact_key || '',
+    title: item.title || item.artifact_key || item.artifact_type || '',
+    summary: item.summary || ''
+  }));
+}
+
 function getRagStateLabel(state) {
   const mapping = {
     idle: '未开始',
     running: '构建中',
     completed: '已完成',
-    failed: '失败'
+    failed: '失败',
+    runtime_unavailable: '运行时不可用',
+    partial: '部分可用',
+    not_indexed: '未建立索引',
+    degraded: '降级中'
   };
   return mapping[state] || '未知';
 }
@@ -737,6 +1066,15 @@ function normalizeVectorDocuments(list) {
     retrieval_sources: Array.isArray(item.retrieval_sources) ? item.retrieval_sources : [],
     retrieval_sources_text: (Array.isArray(item.retrieval_sources) ? item.retrieval_sources : []).join(' + '),
     rank_debug: item.rank_debug || {}
+  }));
+}
+
+function normalizeSourcePills(list) {
+  return (Array.isArray(list) ? list : []).slice(0, 6).map((item) => ({
+    label: item.label || '',
+    source_type: item.source_type || '',
+    audience: item.audience || '',
+    caption: [item.source_type || '', item.audience || ''].filter(Boolean).join(' · ')
   }));
 }
 
@@ -788,7 +1126,8 @@ function buildModuleMaturityPanels(capabilities, ragRuntime, mcpManifest) {
   const toolsCount = (manifest.tools || []).length;
   const ragAvailable = !!runtime.available;
   const ragIndexed = !!runtime.indexed;
-  const ragBackend = runtime.backend || '本地回退链路';
+  const ragBackend = runtime.active_retrieval_backend || runtime.backend || '本地回退链路';
+  const ragRuntimeReason = runtime.runtime_degraded_reason || '';
 
   return [
     {
@@ -802,12 +1141,14 @@ function buildModuleMaturityPanels(capabilities, ragRuntime, mcpManifest) {
     {
       key: 'rag',
       title: 'RAG',
-      status: ragAvailable ? '可用' : '演示版',
+      status: ragAvailable ? '可用' : '降级中',
       tone: ragAvailable ? 'ready' : 'demo',
       detail: ragAvailable
         ? `结构化 RAG + ${ragBackend} 向量检索已接通${ragIndexed ? '，索引链路可用。' : '，但还需要重建索引。'}`
-        : 'RAG 页面和召回解释已做完，当前环境会优先回退到本地轻量检索。',
-      note: ragIndexed ? '支持索引状态、增量同步和个性化 RAG。' : '适合先演示原理，再补全索引构建。'
+        : `RAG 页面和召回解释已完成，当前实际后端为 ${ragBackend || '降级链路'}。`,
+      note: ragAvailable
+        ? (ragIndexed ? '支持索引状态、增量同步和个性化 RAG。' : '需要补全索引构建后才能获得完整效果。')
+        : (ragRuntimeReason || '标准向量运行时当前不可用，系统会自动降级保可用。')
     },
     {
       key: 'mcp',
@@ -817,7 +1158,7 @@ function buildModuleMaturityPanels(capabilities, ragRuntime, mcpManifest) {
       detail: capabilities && capabilities.mcp_stdio_available
         ? `已抽象 ${toolsCount} 个工具，并同时支持小程序 HTTP 调用与独立 STDIO Server。`
         : `已抽象 ${toolsCount} 个工具，HTTP 接口可直接给小程序使用。`,
-      note: capabilities && capabilities.mcp_stdio_available ? '现在可以作为独立 MCP Server 演示。' : '当前以 HTTP 为主，STDIO 视环境可用。'
+      note: capabilities && capabilities.mcp_stdio_available ? '现在可作为独立 MCP Server 使用。' : '当前以 HTTP 为主，STDIO 视环境可用。'
     },
     {
       key: 'apps',
@@ -832,20 +1173,23 @@ function buildModuleMaturityPanels(capabilities, ragRuntime, mcpManifest) {
       title: '观测',
       status: '可用',
       tone: 'ready',
-      detail: '已能看 evidence、日志、LangChain trace 和失败信息。',
-      note: '更偏工程展示能力，但现在已经能明显看出链路。'
+      detail: `已能看 evidence、日志、LangChain trace、失败信息，以及 worker/runtime 健康状态${capabilities && capabilities.auto_recover_enabled ? '，并开启了 stale run 自动恢复。' : '。'}`,
+      note: capabilities && capabilities.auto_recover_enabled
+        ? `当前 stale run ${capabilities.stale_run_count || 0} 个，自动恢复周期 ${capabilities.auto_recover_every_seconds || 0}s。`
+        : '更偏工程展示能力，但现在已经能明显看出链路。'
     }
   ];
 }
 
 Page(withThemePage({
   data: {
-    activeTab: 'apps',
+    activeTab: 'rag',
     capabilityIntroCollapsed: true,
     moduleMaturityCollapsed: true,
     appsLoading: false,
     opsLoading: false,
     agentLoading: false,
+    agentStatusText: '',
     profileRefreshing: false,
     mcpLoading: false,
     capabilities: null,
@@ -858,15 +1202,16 @@ Page(withThemePage({
     ragIndexStatus: null,
     ragIndexLoading: false,
     ragSyncLoading: false,
+    ragProcessCollapsed: true,
+    ragAdvancedCollapsed: true,
+    agentProcessCollapsed: true,
+    ragSourcePills: [],
+    ragChatHistory: [],
     reportHistory: [],
     report: null,
     planReplanResult: null,
     currentPlan: null,
     planApplying: false,
-    retrievalOrchestratorLoading: false,
-    retrievalOrchestratorQuery: 'important 和 significant 的区别，应该怎么学？',
-    retrievalOrchestratorResult: null,
-    retrievalOrchestratorError: null,
     mcpDemoTool: 'get_profile_memory',
     mcpDemoToolOptions: [],
     mcpDemoToolSchema: null,
@@ -876,24 +1221,35 @@ Page(withThemePage({
     mcpDemoToolArgsText: '{}',
     mcpDemoResult: null,
     mcpDemoError: null,
+    mcpSkillGroups: [],
+    mcpToolFormValues: {},
+    mcpExpandedTools: {},
+    mcpCollapsedDescriptions: {},
+    mcpActiveSkill: '',
+    mcpFormErrors: {},
+    mcpAdvancedCollapsed: true,
+    mcpDebugErrorCollapsed: true,
+    mcpResultDetailsCollapsed: true,
+    mcpResultCard: null,
+    aiRuntimeCollapsed: true,
+    activeRunDetail: null,
+    activeRunSteps: [],
+    activeRunArtifacts: [],
     mcpResourceUri: 'ai://profile-memory/self',
     mcpResourceExamples: [],
     mcpResourceLoading: false,
     mcpResourceResult: null,
     mcpResourceError: null,
-    ragViewMode: 'learning',
-    ragModeCards: buildRagModeCards('learning'),
     ragQuery: 'important 和 significant 怎么区分？',
     ragResult: null,
     ragSearchLoading: false,
-    vectorRagQuery: 'important 的近义表达和例句',
+    vectorRagQuery: 'important 和 significant 怎么区分？',
     vectorRagResult: null,
     vectorRagLoading: false,
     ragRecallKeywords: 'important, significant, example',
     ragRecallPreferredSourceType: 'word',
     ragRecallResult: null,
     ragRecallLoading: false,
-    vectorRagMode: 'auto',
     vectorDocPreview: [],
     grammarGuide: null,
     agentsBrief: null,
@@ -932,6 +1288,7 @@ Page(withThemePage({
     appConversationId: 0,
     appConversationDetail: null,
     appConversationAnswer: null,
+    appConversationRuntime: null,
     evaluationRunDetail: null
   },
 
@@ -953,17 +1310,27 @@ Page(withThemePage({
     if (pendingIntent) {
       this.applyAiCenterIntent(pendingIntent);
     }
+    const cachedPlanResult = store.getAiPlanResult();
+    if (cachedPlanResult) {
+      this.setData({
+        planReplanResult: normalizePlanReplanResult(cachedPlanResult),
+        agentProcessCollapsed: true
+      });
+    }
     if (this.data.activeTab === 'rag') {
       this.startRagIndexPolling();
     }
+    this.resumePlanReplanRunIfNeeded();
   },
 
   onHide() {
     this.stopRagIndexPolling();
+    this.stopPlanReplanPolling();
   },
 
   onUnload() {
     this.stopRagIndexPolling();
+    this.stopPlanReplanPolling();
   },
 
   async loadOverview() {
@@ -978,12 +1345,14 @@ Page(withThemePage({
         aiApi.getRagIndexStatus().catch(() => null)
       ]);
       const normalizedRagRuntime = normalizeRagRuntime(capabilities && capabilities.rag_runtime);
-      const mcpToolState = buildMcpToolState(mcpManifest, this.data.mcpDemoTool);
+      const normalizedManifest = normalizeMcpManifest(mcpManifest);
+      const mcpToolState = buildMcpToolState(normalizedManifest, this.data.mcpDemoTool);
+      const nextMcpActiveSkill = this.data.mcpActiveSkill || mcpToolState.selectedToolName;
       this.setData({
         capabilities,
         ragRuntime: normalizedRagRuntime,
         ragIndexStatus: normalizeRagIndexStatus(ragIndexStatus),
-        mcpManifest: normalizeMcpManifest(mcpManifest),
+        mcpManifest: normalizedManifest,
         mcpDemoTool: mcpToolState.selectedToolName,
         mcpDemoToolOptions: mcpToolState.options,
         mcpDemoToolSchema: mcpToolState.selectedTool ? (mcpToolState.selectedTool.input_schema || null) : null,
@@ -991,9 +1360,18 @@ Page(withThemePage({
         mcpDemoToolSchemaFields: mcpToolState.schemaFields,
         mcpDemoToolArgs: mcpToolState.selectedArgs,
         mcpDemoToolArgsText: toPrettyJson(mcpToolState.selectedArgs),
-        mcpResourceExamples: buildMcpResourceExamples(mcpManifest),
-        stackShowcase: this.buildStackShowcase(capabilities, mcpManifest),
-        moduleMaturityPanels: buildModuleMaturityPanels(capabilities, normalizedRagRuntime, mcpManifest),
+        mcpResourceExamples: buildMcpResourceExamples(normalizedManifest),
+        mcpActiveSkill: nextMcpActiveSkill,
+        mcpSkillGroups: buildMcpSkillGroups(
+          normalizedManifest,
+          nextMcpActiveSkill,
+          this.data.mcpExpandedTools,
+          this.data.mcpToolFormValues,
+          this.data.mcpCollapsedDescriptions,
+          this.data.mcpFormErrors
+        ),
+        stackShowcase: this.buildStackShowcase(capabilities, normalizedManifest),
+        moduleMaturityPanels: buildModuleMaturityPanels(capabilities, normalizedRagRuntime, normalizedManifest),
         reportHistory: reports.list || [],
         report: reports.list && reports.list.length ? reports.list[0] : null,
         profileMemory,
@@ -1054,7 +1432,7 @@ Page(withThemePage({
     if (intent.query) {
       nextState.appConversationQuestion = intent.query;
       nextState.ragQuery = intent.query;
-      nextState.retrievalOrchestratorQuery = intent.query;
+      nextState.vectorRagQuery = intent.query;
     }
     if (!Object.keys(nextState).length) {
       return;
@@ -1083,6 +1461,42 @@ Page(withThemePage({
   toggleModuleMaturity() {
     this.setData({
       moduleMaturityCollapsed: !this.data.moduleMaturityCollapsed
+    });
+  },
+
+  toggleRagProcess() {
+    this.setData({
+      ragProcessCollapsed: !this.data.ragProcessCollapsed
+    });
+  },
+
+  toggleRagAdvanced() {
+    this.setData({
+      ragAdvancedCollapsed: !this.data.ragAdvancedCollapsed
+    });
+  },
+
+  toggleAgentProcess() {
+    this.setData({
+      agentProcessCollapsed: !this.data.agentProcessCollapsed
+    });
+  },
+
+  toggleMcpAdvanced() {
+    this.setData({
+      mcpAdvancedCollapsed: !this.data.mcpAdvancedCollapsed
+    });
+  },
+
+  toggleMcpResultDetails() {
+    this.setData({
+      mcpResultDetailsCollapsed: !this.data.mcpResultDetailsCollapsed
+    });
+  },
+
+  toggleMcpDebugError() {
+    this.setData({
+      mcpDebugErrorCollapsed: !this.data.mcpDebugErrorCollapsed
     });
   },
 
@@ -1208,15 +1622,7 @@ Page(withThemePage({
   },
 
   handleVectorRagQuery(event) {
-    this.setData({ vectorRagQuery: event.detail.value || '' });
-  },
-
-  handleVectorRagMode(event) {
-    const mode = event.currentTarget.dataset.mode;
-    if (!mode || mode === this.data.vectorRagMode) {
-      return;
-    }
-    this.setData({ vectorRagMode: mode });
+    this.setData({ vectorRagQuery: event.detail.value || '', ragQuery: event.detail.value || '' });
   },
 
   handleRagRecallKeywords(event) {
@@ -1227,30 +1633,47 @@ Page(withThemePage({
     this.setData({ ragRecallPreferredSourceType: event.currentTarget.dataset.sourceType || '' });
   },
 
-  switchRagViewMode(event) {
-    const mode = event.currentTarget.dataset.mode;
-    if (!mode || mode === this.data.ragViewMode) {
-      return;
-    }
-    this.setData({
-      ragViewMode: mode,
-      ragModeCards: buildRagModeCards(mode)
-    });
-  },
-
   loadPlanReplanner() {
     if (this.agentRequesting || this.data.agentLoading) {
       return;
     }
+    this.stopPlanReplanPolling();
     this.agentRequesting = true;
-    this.setData({ agentLoading: true });
-    aiApi.replanStudyPlan({ trend_days: 7 })
-      .then((data) => {
+    this.setData({
+      agentLoading: true,
+      agentStatusText: 'AI 正在结合你的学习数据整理建议...'
+    });
+    aiApi.replanStudyPlan({ trend_days: 7, force_refresh: true, prefer_fast: false })
+      .then((run) => {
+        const runId = run && run.run_id;
+        if (!runId) {
+          throw new Error('AI 任务启动失败');
+        }
+        store.setAiPlanRun(buildAiPlanRunSnapshot(runId, 'ai_center'));
         this.setData({
-          planReplanResult: normalizePlanReplanResult(data)
+          agentStatusText: run.status_text || 'AI 正在结合你的学习数据整理建议...'
+        });
+        return this.pollPlanReplanRun(runId);
+      })
+      .then((data) => {
+        store.setAiPlanResult(data);
+        this.setData({
+          planReplanResult: normalizePlanReplanResult(data),
+          agentProcessCollapsed: true,
+          agentStatusText: ((data || {}).runtime_summary || {}).status_text || '已完成'
         });
       })
       .catch((error) => {
+        if (error && error.code === 'polling_cancelled') {
+          return;
+        }
+        if (error && error.code === 'still_running') {
+          this.setData({ agentStatusText: 'AI 仍在后台生成，稍后回到本页会自动继续' });
+          wx.showToast({ title: 'AI 仍在后台生成', icon: 'none' });
+          return;
+        }
+        store.setAiPlanRun(null);
+        this.setData({ agentStatusText: '' });
         wx.showToast({ title: ((error && error.message) || 'Agent 请求失败').slice(0, 20), icon: 'none' });
       })
       .finally(() => {
@@ -1259,39 +1682,200 @@ Page(withThemePage({
       });
   },
 
-  handleRetrievalOrchestratorQuery(event) {
-    this.setData({ retrievalOrchestratorQuery: event.detail.value || '' });
+  stopPlanReplanPolling() {
+    this.planReplanPollingAborted = true;
+    if (this.planReplanPollTimer) {
+      clearTimeout(this.planReplanPollTimer);
+      this.planReplanPollTimer = null;
+    }
+    if (this.planReplanPollResolver) {
+      const resolve = this.planReplanPollResolver;
+      this.planReplanPollResolver = null;
+      resolve();
+    }
   },
 
-  runRetrievalOrchestrator() {
-    if (this.data.retrievalOrchestratorLoading) {
-      return;
-    }
-    const query = (this.data.retrievalOrchestratorQuery || '').trim();
-    if (!query) {
-      wx.showToast({ title: '请输入演示问题', icon: 'none' });
-      return;
-    }
-    const requestPayload = { query, limit: 6 };
-    this.setData({
-      retrievalOrchestratorLoading: true,
-      retrievalOrchestratorError: null
+  waitPlanReplanPoll(delayMs) {
+    return new Promise((resolve) => {
+      this.planReplanPollResolver = resolve;
+      this.planReplanPollTimer = setTimeout(() => {
+        this.planReplanPollTimer = null;
+        this.planReplanPollResolver = null;
+        resolve();
+      }, delayMs || 1500);
     });
-    aiApi.runRetrievalOrchestrator(requestPayload)
+  },
+
+  toggleAiRuntimeCollapsed() {
+    this.setData({
+      aiRuntimeCollapsed: !this.data.aiRuntimeCollapsed
+    });
+  },
+
+  async loadAgentRuntime(runId) {
+    if (!runId) {
+      this.setData({
+        activeRunDetail: null,
+        activeRunSteps: [],
+        activeRunArtifacts: []
+      });
+      return null;
+    }
+    const [run, stepsPayload, artifactsPayload] = await Promise.all([
+      aiApi.getAiRun(runId),
+      aiApi.getAiRunSteps(runId).catch(() => ({ steps: [] })),
+      aiApi.getAiRunArtifacts(runId).catch(() => ({ artifacts: [] }))
+    ]);
+    this.setData({
+      activeRunDetail: normalizeAgentRun(run),
+      activeRunSteps: normalizeAgentStepList((stepsPayload && stepsPayload.steps) || []),
+      activeRunArtifacts: normalizeAgentArtifactList((artifactsPayload && artifactsPayload.artifacts) || [])
+    });
+    return run;
+  },
+
+  stopGenericRuntimePolling() {
+    if (this.genericRuntimePollTimer) {
+      clearTimeout(this.genericRuntimePollTimer);
+      this.genericRuntimePollTimer = null;
+    }
+  },
+
+  waitGenericRuntimePoll(delayMs) {
+    return new Promise((resolve) => {
+      this.genericRuntimePollTimer = setTimeout(() => {
+        this.genericRuntimePollTimer = null;
+        resolve();
+      }, delayMs || 1500);
+    });
+  },
+
+  async pollGenericRuntime(runId, handlers) {
+    if (!runId) {
+      return null;
+    }
+    const run = await this.loadAgentRuntime(runId);
+    if (!run) {
+      return null;
+    }
+    if (run.status === 'succeeded') {
+      if (handlers && handlers.onSuccess) {
+        await handlers.onSuccess(run);
+      }
+      return run;
+    }
+    if (run.status === 'failed' || run.status === 'cancelled') {
+      if (handlers && handlers.onFailure) {
+        await handlers.onFailure(run);
+      }
+      return run;
+    }
+    if (run.status === 'waiting_approval') {
+      if (handlers && handlers.onWaitingApproval) {
+        await handlers.onWaitingApproval(run);
+      }
+      return run;
+    }
+    await this.waitGenericRuntimePoll();
+    return this.pollGenericRuntime(runId, handlers);
+  },
+
+  async handleAiRuntimeAction(event) {
+    const action = event.currentTarget.dataset.action;
+    const runId = this.data.activeRunDetail && this.data.activeRunDetail.run_id;
+    if (!action || !runId) {
+      return;
+    }
+    try {
+      if (action === 'retry') {
+        await aiApi.retryAiRun(runId, {});
+      } else if (action === 'resume') {
+        await aiApi.resumeAiRun(runId, {});
+      } else if (action === 'cancel') {
+        await aiApi.cancelAiRun(runId, {});
+      } else if (action === 'approve') {
+        await aiApi.approveAiRun(runId, { approved: true, note: 'miniapp approve' });
+      } else if (action === 'reject') {
+        await aiApi.approveAiRun(runId, { approved: false, note: 'miniapp reject' });
+      } else if (action === 'refresh') {
+        await this.loadAgentRuntime(runId);
+        return;
+      } else {
+        return;
+      }
+      await this.loadAgentRuntime(runId);
+      if (action === 'approve' || action === 'retry' || action === 'resume') {
+        const run = this.data.activeRunDetail;
+        if (run && (run.status === 'queued' || run.status === 'running')) {
+          wx.showToast({ title: '已继续执行', icon: 'success' });
+        }
+      }
+    } catch (error) {
+      wx.showToast({ title: ((error && error.message) || '运行态操作失败').slice(0, 20), icon: 'none' });
+    }
+  },
+
+  async pollPlanReplanRun(runId) {
+    this.planReplanPollingAborted = false;
+    const maxAttempts = 240;
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      if (this.planReplanPollingAborted) {
+        throw buildPollingControlError('polling_cancelled', '轮询已暂停');
+      }
+      const run = await aiApi.getPlanReplanRun(runId);
+      const status = run && run.status;
+      this.setData({
+        agentStatusText: (run && run.status_text) || (status === 'succeeded' ? '已完成' : 'AI 正在结合你的学习数据整理建议...')
+      });
+      if (status === 'succeeded' && run.result) {
+        store.setAiPlanRun(null);
+        return run.result;
+      }
+      if (status === 'failed') {
+        store.setAiPlanRun(null);
+        throw new Error((run && run.error_message) || 'Agent 请求失败');
+      }
+      await this.waitPlanReplanPoll();
+      if (this.planReplanPollingAborted) {
+        throw buildPollingControlError('polling_cancelled', '轮询已暂停');
+      }
+    }
+    throw buildPollingControlError('still_running', 'AI 计划仍在生成中，稍后回到本页会自动继续');
+  },
+
+  resumePlanReplanRunIfNeeded() {
+    const pendingRun = store.getAiPlanRun();
+    if (!pendingRun || !pendingRun.run_id || this.planReplanPollTimer) {
+      return;
+    }
+    this.stopPlanReplanPolling();
+    this.agentRequesting = true;
+    this.setData({
+      agentLoading: true,
+      agentStatusText: '正在恢复上一次 AI 计划生成任务...'
+    });
+    this.pollPlanReplanRun(pendingRun.run_id)
       .then((data) => {
         this.setData({
-          retrievalOrchestratorResult: normalizeRetrievalOrchestratorResult(data),
-          retrievalOrchestratorError: null
+          planReplanResult: normalizePlanReplanResult(data),
+          agentProcessCollapsed: true,
+          agentStatusText: ((data || {}).runtime_summary || {}).status_text || '已完成'
         });
       })
       .catch((error) => {
-        this.setData({
-          retrievalOrchestratorError: buildErrorPanel(error, '检索编排执行失败', requestPayload)
-        });
-        wx.showToast({ title: ((error && error.message) || '编排执行失败').slice(0, 20), icon: 'none' });
+        if (error && error.code === 'polling_cancelled') {
+          return;
+        }
+        if (error && error.code === 'still_running') {
+          this.setData({ agentStatusText: 'AI 仍在后台生成，稍后回到本页会自动继续' });
+          return;
+        }
+        store.setAiPlanRun(null);
+        this.setData({ agentStatusText: '' });
       })
       .finally(() => {
-        this.setData({ retrievalOrchestratorLoading: false });
+        this.agentRequesting = false;
+        this.setData({ agentLoading: false });
       });
   },
 
@@ -1355,7 +1939,23 @@ Page(withThemePage({
       return;
     }
     const mcpToolState = buildMcpToolState(this.data.mcpManifest, toolName);
+    const nextExpandedTools = {
+      ...this.data.mcpExpandedTools,
+      [toolName]: true
+    };
+    const nextFormValues = {
+      ...this.data.mcpToolFormValues,
+      [toolName]: Object.keys(mcpToolState.selectedArgs || {}).reduce((acc, key) => {
+        const value = mcpToolState.selectedArgs[key];
+        const schemaField = (((mcpToolState.selectedTool || {}).input_schema || {}).properties || {})[key] || {};
+        acc[key] = normalizeMcpFormValueByType(value, schemaField.type || 'string');
+        return acc;
+      }, {})
+    };
     this.setData({
+      mcpActiveSkill: toolName,
+      mcpExpandedTools: nextExpandedTools,
+      mcpToolFormValues: nextFormValues,
       mcpDemoTool: mcpToolState.selectedToolName,
       mcpDemoToolOptions: mcpToolState.options,
       mcpDemoToolSchema: mcpToolState.selectedTool ? (mcpToolState.selectedTool.input_schema || null) : null,
@@ -1364,8 +1964,264 @@ Page(withThemePage({
       mcpDemoToolArgs: mcpToolState.selectedArgs,
       mcpDemoToolArgsText: toPrettyJson(mcpToolState.selectedArgs),
       mcpDemoResult: null,
-      mcpDemoError: null
+      mcpDemoError: null,
+      mcpSkillGroups: buildMcpSkillGroups(
+        this.data.mcpManifest,
+        toolName,
+        nextExpandedTools,
+        nextFormValues,
+        this.data.mcpCollapsedDescriptions,
+        this.data.mcpFormErrors
+      )
     });
+  },
+
+  toggleMcpSkillDescription(event) {
+    const toolName = event.currentTarget.dataset.tool;
+    if (!toolName) {
+      return;
+    }
+    const nextCollapsed = {
+      ...this.data.mcpCollapsedDescriptions,
+      [toolName]: !(this.data.mcpCollapsedDescriptions[toolName] !== false)
+    };
+    this.setData({
+      mcpCollapsedDescriptions: nextCollapsed,
+      mcpSkillGroups: buildMcpSkillGroups(
+        this.data.mcpManifest,
+        this.data.mcpActiveSkill,
+        this.data.mcpExpandedTools,
+        this.data.mcpToolFormValues,
+        nextCollapsed,
+        this.data.mcpFormErrors
+      )
+    });
+  },
+
+  toggleMcpSkillCard(event) {
+    const toolName = event.currentTarget.dataset.tool;
+    if (!toolName) {
+      return;
+    }
+    const nextExpanded = {
+      ...this.data.mcpExpandedTools,
+      [toolName]: !this.data.mcpExpandedTools[toolName]
+    };
+    this.setData({
+      mcpActiveSkill: toolName,
+      mcpExpandedTools: nextExpanded,
+      mcpDemoTool: toolName,
+      mcpSkillGroups: buildMcpSkillGroups(
+        this.data.mcpManifest,
+        toolName,
+        nextExpanded,
+        this.data.mcpToolFormValues,
+        this.data.mcpCollapsedDescriptions,
+        this.data.mcpFormErrors
+      )
+    });
+  },
+
+  handleMcpFieldInput(event) {
+    const toolName = event.currentTarget.dataset.tool;
+    const fieldName = event.currentTarget.dataset.field;
+    if (!toolName || !fieldName) {
+      return;
+    }
+    const value = event.detail.value;
+    const nextFormValues = {
+      ...this.data.mcpToolFormValues,
+      [toolName]: {
+        ...((this.data.mcpToolFormValues || {})[toolName] || {}),
+        [fieldName]: value
+      }
+    };
+    const nextFormErrors = {
+      ...this.data.mcpFormErrors,
+      [toolName]: {
+        ...((this.data.mcpFormErrors || {})[toolName] || {}),
+        [fieldName]: ''
+      }
+    };
+    this.setData({
+      mcpToolFormValues: nextFormValues,
+      mcpFormErrors: nextFormErrors,
+      mcpSkillGroups: buildMcpSkillGroups(
+        this.data.mcpManifest,
+        this.data.mcpActiveSkill,
+        this.data.mcpExpandedTools,
+        nextFormValues,
+        this.data.mcpCollapsedDescriptions,
+        nextFormErrors
+      )
+    });
+  },
+
+  handleMcpFieldSwitch(event) {
+    const toolName = event.currentTarget.dataset.tool;
+    const fieldName = event.currentTarget.dataset.field;
+    if (!toolName || !fieldName) {
+      return;
+    }
+    const value = !!event.detail.value;
+    const nextFormValues = {
+      ...this.data.mcpToolFormValues,
+      [toolName]: {
+        ...((this.data.mcpToolFormValues || {})[toolName] || {}),
+        [fieldName]: value
+      }
+    };
+    const nextFormErrors = {
+      ...this.data.mcpFormErrors,
+      [toolName]: {
+        ...((this.data.mcpFormErrors || {})[toolName] || {}),
+        [fieldName]: ''
+      }
+    };
+    this.setData({
+      mcpToolFormValues: nextFormValues,
+      mcpFormErrors: nextFormErrors,
+      mcpSkillGroups: buildMcpSkillGroups(
+        this.data.mcpManifest,
+        this.data.mcpActiveSkill,
+        this.data.mcpExpandedTools,
+        nextFormValues,
+        this.data.mcpCollapsedDescriptions,
+        nextFormErrors
+      )
+    });
+  },
+
+  handleMcpEnumSelect(event) {
+    const toolName = event.currentTarget.dataset.tool;
+    const fieldName = event.currentTarget.dataset.field;
+    const value = event.currentTarget.dataset.value;
+    if (!toolName || !fieldName) {
+      return;
+    }
+    const nextFormValues = {
+      ...this.data.mcpToolFormValues,
+      [toolName]: {
+        ...((this.data.mcpToolFormValues || {})[toolName] || {}),
+        [fieldName]: value
+      }
+    };
+    const nextFormErrors = {
+      ...this.data.mcpFormErrors,
+      [toolName]: {
+        ...((this.data.mcpFormErrors || {})[toolName] || {}),
+        [fieldName]: ''
+      }
+    };
+    this.setData({
+      mcpToolFormValues: nextFormValues,
+      mcpFormErrors: nextFormErrors,
+      mcpSkillGroups: buildMcpSkillGroups(
+        this.data.mcpManifest,
+        this.data.mcpActiveSkill,
+        this.data.mcpExpandedTools,
+        nextFormValues,
+        this.data.mcpCollapsedDescriptions,
+        nextFormErrors
+      )
+    });
+  },
+
+  async runMcpSkill(event) {
+    const toolName = event.currentTarget.dataset.tool;
+    if (!toolName || this.data.mcpLoading) {
+      return;
+    }
+    const skillGroups = this.data.mcpSkillGroups || [];
+    let selectedTool = null;
+    skillGroups.forEach((group) => {
+      (group.tools || []).forEach((tool) => {
+        if (tool.name === toolName) {
+          selectedTool = tool;
+        }
+      });
+    });
+    if (!selectedTool) {
+      wx.showToast({ title: '技能信息加载失败', icon: 'none' });
+      return;
+    }
+    const { args, errors } = buildMcpFormArgs(selectedTool.formFields);
+    if (Object.keys(errors).length) {
+      const nextErrors = {
+        ...this.data.mcpFormErrors,
+        [toolName]: errors
+      };
+      this.setData({
+        mcpFormErrors: nextErrors,
+        mcpExpandedTools: {
+          ...this.data.mcpExpandedTools,
+          [toolName]: true
+        },
+        mcpSkillGroups: buildMcpSkillGroups(
+          this.data.mcpManifest,
+          toolName,
+          {
+            ...this.data.mcpExpandedTools,
+            [toolName]: true
+          },
+          this.data.mcpToolFormValues,
+          this.data.mcpCollapsedDescriptions,
+          nextErrors
+        )
+      });
+      wx.showToast({ title: '请先补全参数', icon: 'none' });
+      return;
+    }
+
+    const requestPayload = {
+      tool_name: toolName,
+      args
+    };
+    this.setData({
+      mcpLoading: true,
+      mcpActiveSkill: toolName,
+      mcpDemoTool: toolName,
+      mcpDemoToolArgs: args,
+      mcpDemoToolArgsText: toPrettyJson(args),
+      mcpDemoError: null,
+      mcpFormErrors: {
+        ...this.data.mcpFormErrors,
+        [toolName]: {}
+      },
+      mcpSkillGroups: buildMcpSkillGroups(
+        this.data.mcpManifest,
+        toolName,
+        this.data.mcpExpandedTools,
+        this.data.mcpToolFormValues,
+        this.data.mcpCollapsedDescriptions,
+        {
+          ...this.data.mcpFormErrors,
+          [toolName]: {}
+        }
+      )
+    });
+    try {
+      const result = await aiApi.callMcpTool(requestPayload);
+      const normalized = normalizeMcpDemoResult(result);
+      if (normalized.run_id) {
+        await this.loadAgentRuntime(normalized.run_id);
+      }
+      this.setData({
+        mcpDemoResult: normalized,
+        mcpResultCard: summarizeMcpResult(normalized, selectedTool),
+        mcpDemoError: null,
+        mcpResultDetailsCollapsed: true
+      });
+      wx.showToast({ title: '技能调用成功', icon: 'success' });
+    } catch (error) {
+      this.setData({
+        mcpDemoError: buildErrorPanel(error, `${selectedTool.display_name || 'MCP 工具'}调用失败`, requestPayload),
+        mcpResultCard: null
+      });
+      wx.showToast({ title: ((error && error.message) || '技能调用失败').slice(0, 20), icon: 'none' });
+    } finally {
+      this.setData({ mcpLoading: false });
+    }
   },
 
   handleMcpResourceExampleSelect(event) {
@@ -1430,6 +2286,7 @@ Page(withThemePage({
         summary: this.data.planReplanResult.headline || 'apply ai patch',
         evidence: this.data.planReplanResult.evidence || {}
       });
+      store.setAiPlanResult(null);
       this.setData({
         currentPlan: updatedPlan || this.data.currentPlan
       });
@@ -1454,23 +2311,67 @@ Page(withThemePage({
 
   searchVectorRag() {
     if (!this.data.vectorRagQuery.trim()) {
-      wx.showToast({ title: '请输入向量问题', icon: 'none' });
+      wx.showToast({ title: '请输入要问的问题', icon: 'none' });
       return;
     }
     this.runWithLoading('vectorRagLoading', async () => {
       const vectorRagResult = await aiApi.vectorRagSearch({
         query: this.data.vectorRagQuery,
-        limit: 8,
-        retrieval_mode: this.data.vectorRagMode
+        limit: 6,
+        retrieval_mode: 'hybrid'
       });
+      if (vectorRagResult && vectorRagResult.run_id) {
+        await this.pollGenericRuntime(vectorRagResult.run_id, {
+          onSuccess: async (run) => {
+            const payload = (run && run.result) || vectorRagResult;
+            const nextRagRuntime = normalizeRagRuntime(
+              (this.data.capabilities && this.data.capabilities.rag_runtime) || (payload && payload.retrieval_strategy)
+            );
+            this.setData({
+              vectorRagResult: normalizeVectorRagResult(payload),
+              vectorDocPreview: normalizeVectorDocuments(payload.documents),
+              ragSourcePills: normalizeSourcePills(payload.source_pills),
+              ragRuntime: nextRagRuntime,
+              moduleMaturityPanels: buildModuleMaturityPanels(this.data.capabilities, nextRagRuntime, this.data.mcpManifest),
+              ragProcessCollapsed: true,
+              ragChatHistory: [
+                ...this.data.ragChatHistory,
+                {
+                  role: 'user',
+                  content: this.data.vectorRagQuery.trim()
+                },
+                {
+                  role: 'assistant',
+                  content: (normalizeVectorRagResult(payload).answer_brief || {}).summary || ''
+                }
+              ]
+            });
+          }
+        });
+        this.refreshRagIndexStatus({ silent: true });
+        return;
+      }
       const nextRagRuntime = normalizeRagRuntime(
         (this.data.capabilities && this.data.capabilities.rag_runtime) || (vectorRagResult && vectorRagResult.retrieval_strategy)
       );
       this.setData({
         vectorRagResult: normalizeVectorRagResult(vectorRagResult),
         vectorDocPreview: normalizeVectorDocuments(vectorRagResult.documents),
+        ragSourcePills: normalizeSourcePills(vectorRagResult.source_pills),
         ragRuntime: nextRagRuntime,
-        moduleMaturityPanels: buildModuleMaturityPanels(this.data.capabilities, nextRagRuntime, this.data.mcpManifest)
+        moduleMaturityPanels: buildModuleMaturityPanels(this.data.capabilities, nextRagRuntime, this.data.mcpManifest),
+        ragProcessCollapsed: true,
+        ragChatHistory: [
+          ...this.data.ragChatHistory,
+          {
+            role: 'user',
+            content: this.data.vectorRagQuery.trim()
+          },
+          {
+            role: 'assistant',
+            content: (normalizeVectorRagResult(vectorRagResult).answer_brief || {}).summary || ''
+          }
+        ]
       });
       this.refreshRagIndexStatus({ silent: true });
     }, '向量检索失败');
@@ -1741,6 +2642,9 @@ Page(withThemePage({
       appConversationId: conversationId,
       appConversationDetail: normalizeConversationDetail(detail)
     });
+    if (detail && detail.latest_runtime_run && detail.latest_runtime_run.run_id) {
+      await this.loadAgentRuntime(detail.latest_runtime_run.run_id);
+    }
   },
 
   selectConversation(event) {
@@ -1756,7 +2660,7 @@ Page(withThemePage({
   askConversation() {
     const question = (this.data.appConversationQuestion || '').trim();
     if (!question) {
-      wx.showToast({ title: '请输入问题', icon: 'none' });
+      wx.showToast({ title: '请输入要问的问题', icon: 'none' });
       return;
     }
     this.runWithLoading('appConversationLoading', async () => {
@@ -1766,11 +2670,27 @@ Page(withThemePage({
       });
       const answer = normalizeLightFeatureResult(result.answer || {});
       const conversation = result.conversation || {};
+      const runtime = normalizeConversationRuntime(result);
       this.setData({
         appConversationAnswer: answer,
+        appConversationRuntime: runtime,
         appConversationQuestion: '',
         appConversationId: conversation.id || 0
       });
+      if (runtime.run_id) {
+        await this.pollGenericRuntime(runtime.run_id, {
+          onSuccess: async () => {
+            const nextConversationId = conversation.id || this.data.appConversationId;
+            if (nextConversationId) {
+              await this.loadConversationDetailById(nextConversationId);
+            }
+            const conversations = await aiApi.listConversations({ limit: 10 });
+            this.setData({
+              appConversationList: normalizeConversationList((conversations || {}).list)
+            });
+          }
+        });
+      }
       const conversations = await aiApi.listConversations({ limit: 10 });
       this.setData({
         appConversationList: normalizeConversationList((conversations || {}).list)
@@ -1798,10 +2718,19 @@ Page(withThemePage({
         feature_type: this.data.appConversationFeatureType,
         question
       });
+      const runtime = normalizeConversationRuntime(result);
       this.setData({
         appConversationAnswer: normalizeLightFeatureResult(result.answer || {}),
+        appConversationRuntime: runtime,
         appConversationFollowup: ''
       });
+      if (runtime.run_id) {
+        await this.pollGenericRuntime(runtime.run_id, {
+          onSuccess: async () => {
+            await this.loadConversationDetailById(conversationId);
+          }
+        });
+      }
       await this.loadConversationDetailById(conversationId);
     }, '追问失败');
   },

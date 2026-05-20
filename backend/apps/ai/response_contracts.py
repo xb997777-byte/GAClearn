@@ -16,6 +16,54 @@ def _dict(value: Any) -> Dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _build_runtime_summary(payload: Dict[str, Any], feature_runtime: Dict[str, Any]) -> Dict[str, Any]:
+    observability = _dict(payload.get("ai_observability"))
+    retrieval_strategy = _dict(payload.get("retrieval_strategy"))
+    runtime = _dict(payload.get("runtime"))
+    ai_strategy = _dict(payload.get("ai_strategy"))
+    run_id = _string(observability.get("run_id"))
+    latency_ms = int(observability.get("latency_ms") or 0)
+    cache_hit = bool(observability.get("cache_hit"))
+    status = _string(observability.get("status"), "success")
+    ai_enabled = bool(ai_strategy.get("ai_enabled", runtime.get("ai_model_env_ready", False)))
+    degraded = bool(feature_runtime.get("fallback")) or bool(retrieval_strategy.get("degraded")) or not ai_enabled
+    degraded_reason = ""
+    if retrieval_strategy.get("backend") == "in_process_counter_cosine":
+        degraded_reason = "当前未使用标准向量库，已回退到本地轻量检索。"
+    elif feature_runtime.get("fallback"):
+        degraded_reason = "当前功能已走回退链路，返回的是可用结果而不是完整 AI 链路。"
+    elif not ai_enabled:
+        degraded_reason = "当前未连接可用模型，结果由本地规则或回退逻辑生成。"
+    if status == "failed":
+        status_text = "本次执行失败"
+    elif status == "rate_limited":
+        status_text = "请求过于频繁"
+    elif degraded:
+        status_text = "已完成，当前结果为降级模式"
+    elif cache_hit:
+        status_text = "已完成，本次命中缓存"
+    else:
+        status_text = "已完成"
+    summary_parts = [status_text]
+    if latency_ms > 0:
+        summary_parts.append(f"{latency_ms}ms")
+    if degraded_reason:
+        summary_parts.append(degraded_reason)
+    return {
+        "run_id": run_id,
+        "status": status,
+        "status_text": status_text,
+        "summary": " · ".join(summary_parts),
+        "latency_ms": latency_ms,
+        "cache_hit": cache_hit,
+        "degraded": degraded,
+        "degraded_reason": degraded_reason,
+        "retryable": status in {"failed", "rate_limited"} or degraded,
+        "retry_after": 60 if status == "rate_limited" else 0,
+        "endpoint": _string(observability.get("endpoint")),
+    }
+
+
 def _build_context_sources(feature_type: str, payload: Dict[str, Any]) -> List[Dict[str, Any]]:
     if feature_type == "study_coach":
         snapshot = _dict(payload.get("snapshot"))
@@ -286,7 +334,7 @@ def _headline_and_summary(feature_type: str, payload: Dict[str, Any]) -> Dict[st
         answer = _dict(payload.get("answer"))
         return {
             "headline": _string(payload.get("headline"), "AI 向量 RAG"),
-            "summary": _string(answer.get("summary"), "已生成向量检索结果"),
+            "summary": _string(_dict(payload.get("answer_brief")).get("summary") or answer.get("summary"), "已生成向量检索结果"),
         }
     return {
         "headline": _string(payload.get("headline")),
@@ -305,4 +353,7 @@ def normalize_feature_contract(feature_type: str, payload: Dict[str, Any]) -> Di
     payload["feature_runtime"] = feature_runtime
     payload["runtime_stack"] = _build_runtime_stack(feature_type, payload, feature_runtime)
     payload["context_sources"] = feature_runtime.get("context_sources", [])
+    payload["runtime_summary"] = _build_runtime_summary(payload, feature_runtime)
+    if payload.get("run_id") and not payload["runtime_summary"].get("run_id"):
+        payload["runtime_summary"]["run_id"] = _string(payload.get("run_id"))
     return payload

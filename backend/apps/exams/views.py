@@ -49,7 +49,11 @@ class TestSubmitView(APIView):
         serializer = TestSubmitSerializer(data=request.data)
         if not serializer.is_valid():
             return error_response("invalid params", code=40001, data=serializer.errors)
-        return success_response(submit_test(request.user, serializer.validated_data["test_id"], serializer.validated_data["answers"]))
+        try:
+            data = submit_test(request.user, serializer.validated_data["test_id"], serializer.validated_data["answers"])
+        except ValueError as exc:
+            return error_response(str(exc), code=40004)
+        return success_response(data)
 
 
 class PlacementSubmitView(APIView):
@@ -59,7 +63,11 @@ class PlacementSubmitView(APIView):
         serializer = TestSubmitSerializer(data=request.data)
         if not serializer.is_valid():
             return error_response("invalid params", code=40001, data=serializer.errors)
-        return success_response(submit_placement_test(request.user, serializer.validated_data["test_id"], serializer.validated_data["answers"]))
+        try:
+            data = submit_placement_test(request.user, serializer.validated_data["test_id"], serializer.validated_data["answers"])
+        except ValueError as exc:
+            return error_response(str(exc), code=40004)
+        return success_response(data)
 
 
 class TestResultView(APIView):

@@ -18,6 +18,7 @@ class ReviewSession(TimeStampedModel):
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="pending", verbose_name="状态")
     started_at = models.DateTimeField(null=True, blank=True, verbose_name="开始时间")
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name="完成时间")
+    extra_payload = models.JSONField(default=dict, blank=True, verbose_name="会话快照")
 
     class Meta:
         db_table = "review_sessions"

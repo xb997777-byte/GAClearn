@@ -255,10 +255,114 @@
   background: rgba(255, 255, 255, 0.9);
 }
 
+.ai-runtime-row .button-row {
+  margin-top: 18rpx;
+  flex-wrap: wrap;
+}
+
+.ai-rag-chat-card {
+  background:
+    radial-gradient(circle at top right, var(--theme-page-glow-a), transparent 24%),
+    linear-gradient(180deg, var(--theme-page-end) 0%, rgba(255, 255, 255, 0.98) 100%);
+}
+
+.ai-rag-chat-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.ai-rag-empty {
+  padding: 24rpx;
+  border-radius: 22rpx;
+  background: rgba(44, 93, 255, 0.06);
+  border: 2rpx dashed rgba(44, 93, 255, 0.12);
+}
+
+.ai-rag-empty-title {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: var(--theme-text-primary);
+}
+
+.ai-rag-empty-text {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: var(--theme-text-secondary);
+}
+
+.ai-chat-bubble {
+  max-width: 92%;
+  padding: 20rpx;
+  border-radius: 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.ai-chat-bubble.user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, rgba(44, 93, 255, 0.14) 0%, rgba(92, 157, 255, 0.18) 100%);
+}
+
+.ai-chat-bubble.assistant {
+  align-self: flex-start;
+  background: #ffffff;
+  border: 2rpx solid rgba(44, 93, 255, 0.08);
+}
+
+.ai-chat-role {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: var(--theme-secondary-text);
+}
+
+.ai-chat-content {
+  font-size: 26rpx;
+  line-height: 1.8;
+  color: var(--theme-text-primary);
+}
+
+.ai-collapsible-card {
+  background: rgba(255, 255, 255, 0.94);
+}
+
 .ai-result-block.inner {
   padding: 20rpx;
   border-radius: 20rpx;
   background: rgba(44, 93, 255, 0.04);
+}
+
+.ai-status-banner {
+  margin-bottom: 18rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 18rpx;
+  border: 2rpx solid rgba(15, 118, 110, 0.14);
+  background: rgba(15, 118, 110, 0.06);
+}
+
+.ai-status-banner.warning {
+  border-color: rgba(217, 119, 6, 0.16);
+  background: rgba(217, 119, 6, 0.08);
+}
+
+.ai-status-banner.success {
+  border-color: rgba(15, 118, 110, 0.14);
+  background: rgba(15, 118, 110, 0.06);
+}
+
+.ai-status-title {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: var(--theme-text-primary);
+}
+
+.ai-status-text {
+  margin-top: 8rpx;
+  font-size: 23rpx;
+  line-height: 1.7;
+  color: var(--theme-text-secondary);
 }
 
 .ai-error-panel {
@@ -460,6 +564,117 @@
   font-size: 24rpx;
   line-height: 1.7;
   word-break: break-all;
+}
+
+.mcp-skill-card {
+  margin-top: 18rpx;
+  padding: 22rpx;
+  border-radius: 22rpx;
+  background: #fff;
+  border: 2rpx solid rgba(44, 93, 255, 0.08);
+}
+
+.mcp-skill-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.mcp-skill-main {
+  flex: 1;
+}
+
+.mcp-skill-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--theme-text-primary);
+}
+
+.mcp-skill-summary {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: var(--theme-text-secondary);
+}
+
+.mcp-skill-status {
+  flex-shrink: 0;
+  min-height: 46rpx;
+  padding: 0 16rpx;
+  border-radius: 999rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.mcp-skill-status.tone-ready {
+  background: rgba(15, 118, 110, 0.12);
+  color: #0f766e;
+}
+
+.mcp-skill-status.tone-pending {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+}
+
+.mcp-skill-status.tone-disabled {
+  background: rgba(107, 114, 128, 0.12);
+  color: #6b7280;
+}
+
+.mcp-skill-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  margin-top: 18rpx;
+}
+
+.mcp-skill-btn {
+  margin-top: 0;
+  min-width: 180rpx;
+}
+
+.ghost-btn.ghost {
+  min-height: 64rpx;
+  padding: 0 20rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid var(--theme-card-border);
+  background: transparent;
+  color: var(--theme-text-secondary);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.mcp-skill-detail {
+  margin-top: 18rpx;
+  padding: 18rpx;
+  border-radius: 18rpx;
+  background: rgba(44, 93, 255, 0.04);
+}
+
+.mcp-skill-form {
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 2rpx solid rgba(44, 93, 255, 0.08);
+}
+
+.mcp-field-row {
+  margin-top: 18rpx;
+}
+
+.mcp-field-label {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: var(--theme-text-primary);
+}
+
+.mcp-field-error {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: #b91c1c;
 }
 
 .ai-workspace-tabs {

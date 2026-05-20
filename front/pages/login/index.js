@@ -129,7 +129,7 @@ Page(withThemePage({
         gender: profile.gender !== undefined ? String(profile.gender) : ''
       });
 
-      store.setToken(loginData.token);
+      store.setTokenMeta(loginData.token, loginData.expired_at || '');
       store.setUserInfo(loginData.user);
       if (loginData.user && loginData.user.settings) {
         store.setSettings(loginData.user.settings);

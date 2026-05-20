@@ -1,0 +1,14 @@
+{% load static %}
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title|default:"GAClearn Web" }}</title>
+    <script type="module" crossorigin src="{% static 'web/assets/index.js' %}"></script>
+    <link rel="stylesheet" crossorigin href="{% static 'web/assets/index.css' %}">
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>

@@ -13,7 +13,7 @@
           <view class="metric-value">{{ taskProgressText }}</view>
         </view>
         <view class="metric-item">
-          <view class="metric-label">待复习</view>
+          <view class="metric-label">今日复习剩余</view>
           <view class="metric-value">{{ reviewRemainingText }}</view>
         </view>
       </view>
@@ -70,7 +70,7 @@
           <view class="plan-hero-value">{{ taskProgressText }}</view>
         </view>
         <view class="plan-hero-metric">
-          <view class="plan-hero-label">待复习</view>
+          <view class="plan-hero-label">今日复习剩余</view>
           <view class="plan-hero-value">{{ reviewRemainingText }}</view>
         </view>
       </view>
@@ -110,7 +110,7 @@
           <view class="adaptive-value">{{ adaptive.recommended_review_word_target }}</view>
         </view>
         <view class="adaptive-metric">
-          <view class="adaptive-label">待复习</view>
+          <view class="adaptive-label">已到复习时间</view>
           <view class="adaptive-value">{{ adaptive.due_review_count }}</view>
         </view>
         <view class="adaptive-metric">
@@ -121,6 +121,7 @@
       <view class="tag-row" style="margin-top:18rpx;" wx:if="{{adaptive.weak_points && adaptive.weak_points.length}}">
         <view class="adaptive-chip" wx:for="{{adaptive.weak_points}}" wx:key="label">{{ item.label }}</view>
       </view>
+      <view class="card-subtitle" style="margin-top:16rpx;">“今日复习剩余”表示你今天计划里还没完成的复习任务；“已到复习时间”表示现在已经到点、可以立刻复习的词数。</view>
     </view>
 
     <view class="section panel-card coach-card">

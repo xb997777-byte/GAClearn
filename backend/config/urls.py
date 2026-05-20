@@ -3,7 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from .views import home_view
+from .views import home_view, web_app_view
 
 admin.site.site_header = "英语单词学习后台"
 admin.site.site_title = "英语单词学习后台"
@@ -11,6 +11,8 @@ admin.site.index_title = "英语单词学习管理系统"
 
 urlpatterns = [
     path("", home_view, name="home"),
+    path("web/", web_app_view, name="web-home"),
+    path("web/<path:_path>", web_app_view, name="web-spa"),
     path("admin/", admin.site.urls),
     path("api/v1/", include("config.api_urls")),
 ]

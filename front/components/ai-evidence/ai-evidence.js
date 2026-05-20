@@ -11,18 +11,24 @@ Component({
   },
 
   data: {
-    displayEvidence: null
+    displayEvidence: null,
+    collapsed: true
   },
 
   observers: {
     evidence(value) {
       this.setData({
-        displayEvidence: this.normalizeEvidence(value)
+        displayEvidence: this.normalizeEvidence(value),
+        collapsed: true
       });
     }
   },
 
   methods: {
+    toggleCollapsed() {
+      this.setData({ collapsed: !this.data.collapsed });
+    },
+
     normalizeEvidence(evidence) {
       if (!evidence) {
         return null;

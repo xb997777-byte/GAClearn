@@ -103,6 +103,7 @@ def _generate_tutor_with_ai(state):
     detail = state["detail"]
     retrieval = state["retrieval"]
     user_profile = state["user_profile"]
+    tutor = _build_tutor_fallback(detail, retrieval, user_profile)
     payload = {
         "sentence": state["sentence"],
         "rule_detail": {
@@ -143,7 +144,6 @@ def _generate_tutor_with_ai(state):
         ],
         temperature=0.2,
     )
-    tutor = _build_tutor_fallback(detail, retrieval, user_profile)
     tutor.update(
         {
             "explanation_cn": result.get("explanation_cn") or tutor["explanation_cn"],
@@ -159,6 +159,7 @@ def _generate_tutor_with_ai(state):
 def _generate_question_with_ai(state):
     detail = state["detail"]
     retrieval = state["retrieval"]
+    fallback = _build_question_fallback(detail, retrieval, state["question"])
     payload = {
         "sentence": state["sentence"],
         "question": state["question"],
@@ -190,7 +191,6 @@ def _generate_question_with_ai(state):
         ],
         temperature=0.3,
     )
-    fallback = _build_question_fallback(detail, retrieval, state["question"])
     fallback.update(
         {
             "answer": result.get("answer") or fallback["answer"],
@@ -222,7 +222,10 @@ def _node_generate_result(state):
     runtime = build_runtime_capabilities()
     if state.get("question"):
         if is_provider_ready():
-            question_payload = _generate_question_with_ai(state)
+            try:
+                question_payload = _generate_question_with_ai(state)
+            except Exception:
+                question_payload = _build_question_fallback(state["detail"], state["retrieval"], state["question"])
         else:
             question_payload = _build_question_fallback(state["detail"], state["retrieval"], state["question"])
         return {
@@ -231,7 +234,10 @@ def _node_generate_result(state):
         }
 
     if is_provider_ready():
-        tutor = _generate_tutor_with_ai(state)
+        try:
+            tutor = _generate_tutor_with_ai(state)
+        except Exception:
+            tutor = _build_tutor_fallback(state["detail"], state["retrieval"], state["user_profile"])
     else:
         tutor = _build_tutor_fallback(state["detail"], state["retrieval"], state["user_profile"])
 

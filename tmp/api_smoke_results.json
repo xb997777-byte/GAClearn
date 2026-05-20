@@ -1,0 +1,470 @@
+[
+  {
+    "method": "GET",
+    "path": "/system/ping",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"status\": \"ok\"}"
+  },
+  {
+    "method": "GET",
+    "path": "/system/bootstrap",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"features\": {\"wechat_login_mode\": \"auto\", \"wechat_login_enabled\": false, \"subscribe_reminder_enabled\": false, \"subscribe_template_ids\": [], \"ai_enabled\": true}}"
+  },
+  {
+    "method": "GET",
+    "path": "/users/me",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"id\": 109, \"openid\": \"mock_debug_local_tester\", \"unionid\": \"\", \"nickname\": \"Codex Tester\", \"avatar_url\": \"https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132\", \"gender\": \"0\", \"status\": \"active\", \"last_login_at\": \"2026-05-11T11:45:56.739012Z\", \"settings\": {\"daily_target\": 55, \"reminder_time\": \"20:30:00\", \"auto_play_audio\": true, \"speech_speed\": 1.0, \"review_enabled\": true, \"theme_id\": \"custom_dynamic\", \"custom_the"
+  },
+  {
+    "method": "GET",
+    "path": "/users/settings",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"daily_target\": 55, \"reminder_time\": \"20:30:00\", \"auto_play_audio\": true, \"speech_speed\": 1.0, \"review_enabled\": true, \"theme_id\": \"custom_dynamic\", \"custom_theme\": {\"base_hue\": 218, \"font_hue\": 220, \"base_lightness\": 48, \"font_lightness\": 18, \"gradient_depth\": 12, \"gradient_shift\": 18, \"font_size_scale\": 115, \"gradient_enabled\": true}, \"cefr_level\": \"\", \"placement_score\": 0.0, \"placement_completed_at\": null, \"reminder_subscription_status\": \"unknown\", \"reminder_template_ids\": [], \"last_reminder"
+  },
+  {
+    "method": "GET",
+    "path": "/books",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"list\": [{\"id\": 2, \"name\": \"四级高频词汇\", \"category\": \"CET-4\", \"level\": \"基础\", \"description\": \"适合大学英语四级备考的高频词汇。\", \"word_count\": 4496, \"status\": \"active\", \"cover_color\": \"#4F7CFF\"}, {\"id\": 3, \"name\": \"考研核心词汇\", \"category\": \"考研\", \"level\": \"进阶\", \"description\": \"适合考研英语阅读、写作和长难句突破。\", \"word_count\": 5494, \"status\": \"active\", \"cover_color\": \"#17C7A3\"}, {\"id\": 4, \"name\": \"雅思场景词汇\", \"category\": \"IELTS\", \"level\": \"强化\", \"description\": \"适合雅思阅读和写作场景的词汇训练。\", \"word_count\": 3497, \"status\": \"active\", \"cover_color\": \"#FF"
+  },
+  {
+    "method": "GET",
+    "path": "/plans/current",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"id\": 28, \"book\": {\"id\": 4, \"name\": \"雅思场景词汇\", \"category\": \"IELTS\", \"word_count\": 3497}, \"daily_target\": 55, \"start_date\": \"2026-05-07\", \"status\": \"active\", \"finished_word_count\": 119, \"estimated_days\": 64}"
+  },
+  {
+    "method": "GET",
+    "path": "/plans/current/history?limit=5",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"list\": [{\"id\": 20, \"plan_id\": 28, \"source\": \"ai_agent\", \"summary\": \"AI 已为你重新规划今天的学习计划\", \"patch_payload\": {\"daily_target\": 55}, \"before_snapshot\": {\"id\": 28, \"book\": {\"id\": 4, \"name\": \"雅思场景词汇\", \"category\": \"IELTS\", \"word_count\": 3497}, \"status\": \"active\", \"start_date\": \"2026-05-07\", \"daily_target\": 100, \"estimated_days\": 35, \"finished_word_count\": 87}, \"after_snapshot\": {\"id\": 28, \"book\": {\"id\": 4, \"name\": \"雅思场景词汇\", \"category\": \"IELTS\", \"word_count\": 3497}, \"status\": \"active\", \"start_date\": \"20"
+  },
+  {
+    "method": "GET",
+    "path": "/tasks/today",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"plan\": {\"id\": 28, \"book\": {\"id\": 4, \"name\": \"雅思场景词汇\", \"category\": \"IELTS\", \"word_count\": 3497}, \"daily_target\": 55, \"start_date\": \"2026-05-07\", \"status\": \"active\", \"finished_word_count\": 119, \"estimated_days\": 64}, \"task\": {\"id\": 27, \"task_date\": \"2026-05-11\", \"new_word_target\": 55, \"review_word_target\": 79, \"learned_count\": 19, \"reviewed_count\": 0, \"test_count\": 0, \"is_started\": true, \"is_finished\": false}, \"summary\": {\"new_words_remaining\": 36, \"review_words_remaining\": 79, \"wrong_words\": 12"
+  },
+  {
+    "method": "GET",
+    "path": "/learn/words",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"list\": [{\"id\": 10137, \"book_id\": 4, \"word\": \"combo\", \"phonetic\": \"'kɒmbәu\", \"part_of_speech\": \"n.\", \"meaning_cn\": \"小型爵士乐团\", \"example_sentence\": \"The jazz combo played nightly at the little restaurant.\", \"example_translation\": \"爵士乐组合每晚都会在小餐厅演奏。\", \"audio_url\": \"\", \"difficulty\": 2, \"synonyms\": \"\", \"pronunciation\": {\"audio_url\": \"\", \"tts_text\": \"combo\", \"example_tts_text\": \"The jazz combo played nightly at the little restaurant.\", \"language\": \"en_US\"}, \"examples\": [{\"id\": 18299, \"example_sentence\""
+  },
+  {
+    "method": "GET",
+    "path": "/favorites",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"list\": []}"
+  },
+  {
+    "method": "GET",
+    "path": "/review/tasks",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"session_id\": 23, \"list\": [{\"word_id\": 10053, \"question_type\": \"word_to_meaning\", \"answer_mode\": \"choice\", \"stem\": \"exploration\", \"helper_text\": \"n.\", \"reference_text\": \"The exploration of unknown areas was often the precursor to colonization.\", \"reference_translation\": \"对未知地区的探索往往是殖民的前兆。\", \"options\": [{\"key\": \"A\", \"value\": \"深谋远虑； 天意； 天命\"}, {\"key\": \"B\", \"value\": \"制药( pharmacy的复数形式 )； 药店； 药房； （医院的）药房\"}, {\"key\": \"C\", \"value\": \"小型爵士乐团\"}, {\"key\": \"D\", \"value\": \"探险； 踏勘； 探测\"}], \"adaptive_reason\": \"已经"
+  },
+  {
+    "method": "GET",
+    "path": "/wrong-words",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"list\": [{\"id\": 33, \"word_id\": 10051, \"word\": \"stadium\", \"meaning_cn\": \"露天大型运动场\", \"wrong_count\": 1, \"source\": \"review\", \"last_wrong_at\": \"2026-05-10T09:49:48.984649Z\"}, {\"id\": 32, \"word_id\": 10050, \"word\": \"flows\", \"meaning_cn\": \"现金流量\", \"wrong_count\": 1, \"source\": \"review\", \"last_wrong_at\": \"2026-05-10T09:49:42.063368Z\"}, {\"id\": 31, \"word_id\": 10049, \"word\": \"croatia\", \"meaning_cn\": \"克罗地亚\", \"wrong_count\": 1, \"source\": \"review\", \"last_wrong_at\": \"2026-05-10T09:49:40.786667Z\"}, {\"id\": 30, \"word_i"
+  },
+  {
+    "method": "GET",
+    "path": "/stats/overview",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"learned_word_count\": 119, \"review_count\": 45, \"test_count\": 0, \"average_test_score\": 0, \"favorite_count\": 0, \"wrong_word_count\": 12, \"grammar_sentence_count\": 1008, \"grammar_studied_count\": 0, \"grammar_learning_percent\": 0.0, \"streak_days\": 0}"
+  },
+  {
+    "method": "GET",
+    "path": "/stats/trend?days=7",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"list\": [{\"date\": \"2026-05-05\", \"learned_count\": 0, \"review_count\": 0, \"grammar_count\": 0, \"test_count\": 0, \"review_accuracy\": 0}, {\"date\": \"2026-05-06\", \"learned_count\": 0, \"review_count\": 0, \"grammar_count\": 0, \"test_count\": 0, \"review_accuracy\": 0}, {\"date\": \"2026-05-07\", \"learned_count\": 40, \"review_count\": 12, \"grammar_count\": 0, \"test_count\": 0, \"review_accuracy\": 50.0}, {\"date\": \"2026-05-08\", \"learned_count\": 41, \"review_count\": 1, \"grammar_count\": 0, \"test_count\": 0, \"review_accuracy\": "
+  },
+  {
+    "method": "GET",
+    "path": "/checkin/history",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"list\": [{\"checkin_date\": \"2026-05-08\", \"finished_new_count\": 0, \"finished_review_count\": 0, \"total_minutes\": 0, \"status\": \"pending\"}, {\"checkin_date\": \"2026-05-07\", \"finished_new_count\": 0, \"finished_review_count\": 0, \"total_minutes\": 0, \"status\": \"pending\"}]}"
+  },
+  {
+    "method": "GET",
+    "path": "/grammar/topics",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"list\": [{\"id\": 1, \"code\": \"simple_present\", \"title\": \"一般现在时与主谓宾\", \"category\": \"时态基础\", \"difficulty\": 1, \"difficulty_label\": \"基础\", \"description\": \"通过高频学习场景句子识别主语、谓语、宾语和常见状语，建立基本句子主干意识。\", \"learning_tip\": \"先看谁在做事，再看做了什么，最后看动作作用到谁或什么上。\", \"sentence_count\": 72, \"progress\": {\"studied_sentence_count\": 0, \"mastered_sentence_count\": 0, \"practice_count\": 0, \"completion_rate\": 0.0}}, {\"id\": 2, \"code\": \"simple_past\", \"title\": \"一般过去时\", \"category\": \"时态基础\", \"difficulty\": 1, \"difficulty_label\": \"基础\", \"descripti"
+  },
+  {
+    "method": "GET",
+    "path": "/grammar/sentences",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"list\": [{\"id\": 1, \"sentence\": \"The new teacher explains the grammar rule in class.\", \"translation_cn\": \"新来的老师在课堂上讲解这个语法规则。\", \"summary\": \"一般现在时常用于描述习惯性动作、固定流程或普遍事实。\", \"main_structure\": \"The new teacher explains the grammar rule.\", \"difficulty\": 1, \"difficulty_label\": \"基础\", \"scene_tag\": \"课堂\", \"grammar_tags\": [\"一般现在时\", \"主谓宾\", \"基础语法\"], \"is_long_sentence\": false, \"point\": {\"id\": 1, \"title\": \"一般现在时与主谓宾\", \"code\": \"simple_present\", \"category\": \"时态基础\"}, \"progress\": {\"last_action\": \"\", \"mastery_level\": "
+  },
+  {
+    "method": "GET",
+    "path": "/grammar/progress",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"total_sentence_count\": 1008, \"studied_sentence_count\": 0, \"practiced_sentence_count\": 0, \"mastered_sentence_count\": 0, \"total_practice_count\": 0, \"learning_percent\": 0.0, \"recent_records\": [], \"topic_progress\": [{\"point_id\": 1, \"point_title\": \"一般现在时与主谓宾\", \"sentence_count\": 72, \"studied_sentence_count\": 0, \"mastered_sentence_count\": 0, \"practice_count\": 0, \"completion_rate\": 0.0}, {\"point_id\": 2, \"point_title\": \"一般过去时\", \"sentence_count\": 72, \"studied_sentence_count\": 0, \"mastered_sentence_count"
+  },
+  {
+    "method": "GET",
+    "path": "/ai/capabilities",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"langgraph_available\": true, \"langchain_openai_available\": true, \"langchain_core_available\": true, \"langchain_available\": true, \"langchain_community_available\": true, \"langchain_mcp_adapters_available\": true, \"mcp_available\": false, \"chroma_available\": true, \"ai_model_env_ready\": true, \"preferred_runtime\": \"langgraph\", \"mcp_version\": \"\", \"model_name\": \"deepseek-v4-flash\", \"langchain_explicit_available\": true, \"langchain_tool_calling_available\": true, \"langchain_trace_available\": true, \"mcp_stdi"
+  },
+  {
+    "method": "GET",
+    "path": "/ai/mcp/manifest",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"enabled\": false, \"advanced_available\": true, \"external_server_support\": false, \"capability_flags\": {\"tool_form_mode\": true, \"resource_read_mode\": true, \"prompt_catalog\": true, \"raw_json_debug\": true, \"external_mcp_registry\": false}, \"transport\": \"http\", \"transport_modes\": [\"http\", \"stdio\"], \"name\": \"english-word-miniapp-ai\", \"version\": \"0.4.0\", \"description\": \"英语单词微信小程序内部 AI 工具层，面向学习计划、词库、语法、RAG 和观测能力。\", \"manifest_endpoint\": \"/api/v1/ai/mcp/manifest\", \"tool_call_endpoint\": \"/api/v1/ai/mcp/tool"
+  },
+  {
+    "method": "GET",
+    "path": "/ai/grammar/guide",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"headline\": \"本周语法导学建议\", \"summary\": \"先用少量高频语法点补足句子理解，再回到单词和例句里巩固。\", \"recommended_points\": [{\"point_id\": 1, \"title\": \"一般现在时与主谓宾\", \"category\": \"时态基础\", \"difficulty_label\": \"基础\", \"reason\": \"结合近期错词模式，建议用“一般现在时与主谓宾”补一次句子结构意识。\", \"learning_tip\": \"先看谁在做事，再看做了什么，最后看动作作用到谁或什么上。\", \"sentence_id\": 1, \"sample_sentence\": \"The new teacher explains the grammar rule in class.\"}, {\"point_id\": 2, \"title\": \"一般过去时\", \"category\": \"时态基础\", \"difficulty_label\": \"基础\", \"reason\": \"结合近期错词模式，建议用“一般过去时”补一次句子结构意识。\", \"learning_tip\""
+  },
+  {
+    "method": "GET",
+    "path": "/ai/rag/index-status",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"state\": \"failed\", \"running\": false, \"processes\": [], \"pid_list\": [], \"inserted_count\": 19904, \"total_count\": 25623, \"expected_chunk_count\": 37263, \"progress_percent\": 77.68, \"last_progress_line\": \"Inserted batch 3777-3840 / 25623\", \"latest_line\": \"Inserted batch 3777-3840 / 25623\", \"last_error_line\": \"\", \"log_tail\": [\"Inserted batch 2817-2880 / 25623\", \"Inserted batch 2881-2944 / 25623\", \"Inserted batch 2945-3008 / 25623\", \"Inserted batch 3009-3072 / 25623\", \"Inserted batch 3073-3136 / 25623\","
+  },
+  {
+    "method": "GET",
+    "path": "/ai/scenario/templates",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"list\": [{\"scenario\": \"daily\", \"label\": \"日常交流\", \"difficulty\": \"基础\", \"mission\": \"和 AI 做 2 到 3 轮轻松日常对话，重点练习自然回应。\", \"coach_focus\": \"先用完整句表达，再慢慢增加细节。\", \"assistant_role\": \"友好的英语聊天伙伴\", \"learner_role\": \"想提高口语表达的学习者\", \"starters\": [\"Hi, I want to practice speaking English with you.\", \"How was your day today?\", \"I usually study English after dinner.\"]}, {\"scenario\": \"restaurant\", \"label\": \"餐厅点餐\", \"difficulty\": \"基础\", \"mission\": \"完成点餐、追加需求和结账三个环节。\", \"coach_focus\": \"多用礼貌表达和数量表达。\", \"assistant_role\": \"餐厅服务员\","
+  },
+  {
+    "method": "GET",
+    "path": "/ai/agents/brief",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"headline\": \"多 Agent 协作架构说明\", \"agents\": [{\"name\": \"supervisor\", \"focus\": \"统一接收 planner / retriever / coach 的结果，并决定最终输出。\", \"action\": \"负责汇总最终学习计划或最终检索答案。\"}, {\"name\": \"planner\", \"focus\": \"先定义这次任务的焦点，是保守复习、平衡推进，还是做规则解释。\", \"action\": \"负责问题分析、任务优先级和初始策略。\"}, {\"name\": \"retriever\", \"focus\": \"调用计划、错词、RAG、快照与长期记忆来补证据。\", \"action\": \"负责 structured / vector / hybrid 等检索与证据比较。\"}, {\"name\": \"coach\", \"focus\": \"把系统策略翻译成学习者能直接看懂、直接执行的建议。\", \"action\": \"负责可读解释、下一步动作与提醒。\"}], \"recommended_flow\": [\"planner -> retriever ->"
+  },
+  {
+    "method": "GET",
+    "path": "/ai/quality",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"message_count\": 0, \"week_request_count\": 160, \"cache_hit_count\": 86, \"active_cache_items\": 2, \"feedback_summary\": {}, \"status_summary\": {\"success\": 155, \"failed\": 5}, \"quality_notes\": [\"当前已记录 AI 会话和用户反馈，可用于后续人工抽检。\", \"当前已接入 AI 运行日志、响应缓存、基础限流和缓存命中统计。\"], \"ai_strategy\": {\"ai_enabled\": true, \"prompt_version\": \"assistant_v1\", \"model_name\": \"deepseek-v4-flash\"}}"
+  },
+  {
+    "method": "GET",
+    "path": "/ai/observability",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"window\": {\"daily_since\": \"2026-05-10T11:46:03.186996Z\", \"weekly_since\": \"2026-05-04T11:46:03.186996Z\"}, \"totals\": {\"today_requests\": 18, \"week_requests\": 160, \"active_cache_items\": 2}, \"status_summary\": {\"success\": 155, \"failed\": 5}, \"prompt_versions\": [{\"prompt_version\": \"assistant_v1\", \"total\": 63}, {\"prompt_version\": \"plan_replan_v2_multi_agent\", \"total\": 44}, {\"prompt_version\": \"study_coach_v1\", \"total\": 34}, {\"prompt_version\": \"vocab_tutor_v1\", \"total\": 7}, {\"prompt_version\": \"wrong_word_"
+  },
+  {
+    "method": "GET",
+    "path": "/ai/profile-memory",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"id\": 9, \"profile_summary\": \"累计学习 87 个词，当前连续学习 0 天，推荐模式为 今天先救复习，主要薄弱点为 n.、v.、adj.，当前 CEFR=unknown，最近 AI 反馈 helpful=0。\", \"weak_points\": [{\"tip\": \"最近 n. 相关词更容易出错，建议放慢一点巩固。\", \"label\": \"n.\", \"weight\": 506}, {\"tip\": \"最近 v. 相关词更容易出错，建议放慢一点巩固。\", \"label\": \"v.\", \"weight\": 126}, {\"tip\": \"最近 adj. 相关词更容易出错，建议放慢一点巩固。\", \"label\": \"adj.\", \"weight\": 102}], \"preferred_modes\": [\"review_priority\", \"plan_replan\", \"grammar_guide\", \"multi_agent_brief\"], \"recent_focus_words\": [\"acoustic\", \"indicator\", \"parish\", \"thres"
+  },
+  {
+    "method": "GET",
+    "path": "/ai/evaluations?limit=6",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"cases\": [{\"id\": 1, \"name\": \"RAG 同义词召回评测\", \"case_type\": \"rag_recall\", \"enabled\": true, \"description\": \"检查 important/significant 等相关知识是否被召回。\", \"input_payload\": {\"limit\": 6, \"query\": \"important 和 significant 的区别\", \"expected_keywords\": [\"important\", \"significant\", \"example\"], \"preferred_source_type\": \"word\"}, \"expected_signals\": {\"min_coverage_rate\": 50}, \"case_group\": \"rag_recall\"}, {\"id\": 2, \"name\": \"学习计划重排评测\", \"case_type\": \"plan_replan\", \"enabled\": true, \"description\": \"检查 Agent 是否产出计划 patch、顺序"
+  },
+  {
+    "method": "GET",
+    "path": "/ai/reports?limit=5&include_compare=1",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"list\": [], \"history_compare_enabled\": true}"
+  },
+  {
+    "method": "POST",
+    "path": "/system/speech",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "ok",
+    "data_preview": "{\"audio_url\": \"http://127.0.0.1:8000/media/tts/e45fc3642eac1c0356c8065073b018e03058333e.m4a\", \"content\": \"important\", \"lang\": \"en-US\", \"speed\": 1.0, \"provider\": \"macos_say\", \"cached\": false}"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/refresh",
+    "status": 200,
+    "ok": true,
+    "code": 0,
+    "message": "token refreshed",
+    "data_preview": "{\"token\": \"ERAeN5U9cVqOiMjfUf_iQLm2i4NlCGp9GUXA05-MVsc\", \"expired_at\": \"2026-06-10T11:46:04.974206Z\"}"
+  },
+  {
+    "method": "POST",
+    "path": "/users/feedback",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/grammar/analyze",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/grammar/ask",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/grammar/tutor",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/words/explain",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/study-coach",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/plans/replan",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/agents/retrieval-orchestrator",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/wrong-words/review",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/writing/correct",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/writing/prompt",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/translation/evaluate",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/rag/search",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/rag/vector-search",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/rag/recall-evaluate",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/mcp/tools/call",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/mcp/resources/read",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/profile-memory",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/ai/conversations/ask",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/checkin",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  },
+  {
+    "method": "POST",
+    "path": "/tests/placement/generate",
+    "status": 403,
+    "ok": false,
+    "code": null,
+    "message": null,
+    "data_preview": "null"
+  }
+]

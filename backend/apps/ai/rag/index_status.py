@@ -172,7 +172,9 @@ def list_rag_rebuild_processes() -> List[Dict[str, Any]]:
 def build_rag_index_status() -> Dict[str, Any]:
     runtime = get_chroma_runtime()
     catalog = runtime.get("knowledge_source_catalog") or get_knowledge_source_catalog()
-    expected_chunk_count = sum(int(item.get("record_count") or 0) for item in catalog)
+    expected_chunk_count = int(runtime.get("expected_chunk_count") or 0)
+    if not expected_chunk_count:
+        expected_chunk_count = sum(int(item.get("chunk_count") or item.get("record_count") or 0) for item in catalog)
     processes = list_rag_rebuild_processes()
     status_file = _read_status_file()
     out_tail = _read_tail_lines(RAG_REBUILD_OUT_LOG, limit=16)
@@ -184,7 +186,7 @@ def build_rag_index_status() -> Dict[str, Any]:
     total_count = int(status_file.get("total_count") or 0)
     last_progress_line = status_file.get("last_progress_line", "") or ""
     latest_line = status_file.get("latest_line", "") or ""
-    state = status_file.get("state", "") or ""
+    rebuild_state = status_file.get("state", "") or ""
 
     if out_progress.get("inserted_count", 0) >= inserted_count:
         inserted_count = int(out_progress.get("inserted_count") or inserted_count)
@@ -192,7 +194,7 @@ def build_rag_index_status() -> Dict[str, Any]:
         last_progress_line = out_progress.get("last_progress_line", "") or last_progress_line
         latest_line = out_progress.get("latest_line", "") or latest_line
         if out_progress.get("completed"):
-            state = "completed"
+            rebuild_state = "completed"
 
     if expected_chunk_count and not total_count:
         total_count = expected_chunk_count
@@ -203,29 +205,56 @@ def build_rag_index_status() -> Dict[str, Any]:
 
     running = bool(processes)
     if running:
-        state = "running"
+        rebuild_state = "running"
     elif runtime.get("indexed") and total_count and inserted_count >= total_count:
-        state = "completed"
+        rebuild_state = "completed"
         inserted_count = total_count
     elif runtime.get("indexed") and expected_chunk_count and int(runtime.get("chunk_count") or 0) >= expected_chunk_count:
-        state = "completed"
+        rebuild_state = "completed"
         inserted_count = int(runtime.get("chunk_count") or 0)
         total_count = expected_chunk_count
     elif status_file.get("state") == "failed":
-        state = "failed"
-    elif not state:
-        state = "idle"
+        rebuild_state = "failed"
+    elif not rebuild_state:
+        rebuild_state = "idle"
+
+    runtime_available = bool(runtime.get("available"))
+    runtime_indexed = bool(runtime.get("indexed"))
+    runtime_degraded_reason = str(runtime.get("runtime_degraded_reason") or "").strip()
+    active_retrieval_backend = str(
+        runtime.get("backend") if runtime_available and runtime_indexed else (runtime.get("fallback_runtime") or runtime.get("backend") or "")
+    ).strip()
+    runtime_state = "ready"
+    if running:
+        runtime_state = "building"
+    elif not runtime_available:
+        runtime_state = "runtime_unavailable"
+    elif not runtime_indexed:
+        runtime_state = "not_indexed"
+    elif str(runtime.get("collection_health") or "") == "partial":
+        runtime_state = "partial"
+    runtime_degraded = bool(runtime.get("runtime_degraded")) or runtime_state in {"runtime_unavailable", "not_indexed", "partial", "degraded"}
+    if runtime_degraded and runtime_state == "ready":
+        runtime_state = "degraded"
+
+    state = rebuild_state
+    if rebuild_state == "completed" and runtime_state != "ready":
+        state = runtime_state
+    elif rebuild_state in {"idle", "failed", "running"}:
+        state = rebuild_state
 
     progress_percent = 0.0
     if total_count > 0:
         progress_percent = round(min(100.0, max(0.0, inserted_count * 100.0 / total_count)), 2)
-    if state == "completed" and total_count > 0:
+    if rebuild_state == "completed" and total_count > 0:
         progress_percent = 100.0
 
-    expose_error_tail = state == "failed"
+    expose_error_tail = rebuild_state == "failed"
 
     return {
         "state": state,
+        "rebuild_state": rebuild_state,
+        "runtime_state": runtime_state,
         "running": running,
         "processes": processes,
         "pid_list": [item["pid"] for item in processes],
@@ -239,8 +268,17 @@ def build_rag_index_status() -> Dict[str, Any]:
         "log_tail": out_tail,
         "error_log_tail": err_tail if expose_error_tail else [],
         "runtime_chunk_count": int(runtime.get("chunk_count") or 0),
-        "runtime_indexed": bool(runtime.get("indexed")),
-        "runtime_available": bool(runtime.get("available")),
+        "runtime_indexed": runtime_indexed,
+        "runtime_available": runtime_available,
+        "runtime_degraded": runtime_degraded,
+        "runtime_degraded_reason": runtime_degraded_reason,
+        "active_retrieval_backend": active_retrieval_backend,
+        "source_breakdown": runtime.get("source_breakdown") or [],
+        "collection_name": runtime.get("collection_name", "") or "",
+        "collection_fingerprint": runtime.get("collection_fingerprint", "") or "",
+        "embedding_dimension": int(runtime.get("embedding_dimension") or 0),
+        "collection_health": runtime.get("collection_health", "unknown") or "unknown",
+        "stale_collections": runtime.get("stale_collections") or [],
         "status_file_path": str(RAG_REBUILD_STATUS_FILE),
         "out_log_path": str(RAG_REBUILD_OUT_LOG),
         "err_log_path": str(RAG_REBUILD_ERR_LOG),

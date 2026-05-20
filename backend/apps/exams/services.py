@@ -252,14 +252,34 @@ def generate_placement_test(user, question_count=18):
 
 
 def _evaluate_question_answer(question, answer):
-    selected_option = (answer.get("selected_option") or "").upper().strip()
-    submitted_text = (answer.get("submitted_text") or "").strip()
+    normalized_answer = dict(answer or {})
+    if not normalized_answer.get("selected_option") and normalized_answer.get("answer"):
+        selected_value = str(normalized_answer.get("answer") or "").strip()
+        option_map = {
+            str(getattr(question, field) or "").strip(): key
+            for field, key in (
+                ("option_a", "A"),
+                ("option_b", "B"),
+                ("option_c", "C"),
+                ("option_d", "D"),
+            )
+            if str(getattr(question, field) or "").strip()
+        }
+        normalized_answer["selected_option"] = option_map.get(selected_value, selected_value[:1].upper())
+    selected_option = (normalized_answer.get("selected_option") or "").upper().strip()
+    submitted_text = (normalized_answer.get("submitted_text") or "").strip()
     if question.answer_mode == "input":
+        if not submitted_text:
+            raise ValueError("submitted_text required")
         similarity = text_similarity_score(question.answer_text, submitted_text)
         is_correct = is_text_answer_correct(question.answer_text, submitted_text)
         quality = infer_quality(question.question_type, is_correct, similarity)
         return is_correct, quality, "", submitted_text
 
+    if not selected_option:
+        raise ValueError("selected_option required")
+    if selected_option not in {"A", "B", "C", "D"}:
+        raise ValueError("selected_option invalid")
     is_correct = selected_option == question.correct_option
     quality = infer_quality(question.question_type, is_correct, 100 if is_correct else 0)
     return is_correct, quality, selected_option, submitted_text

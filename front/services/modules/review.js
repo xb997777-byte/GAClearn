@@ -4,7 +4,7 @@ function getReviewTasks(params = {}) {
   return request({
     url: '/review/tasks',
     method: 'GET',
-    data: params
+    params
   });
 }
 

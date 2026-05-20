@@ -1,9 +1,11 @@
 from django.shortcuts import get_object_or_404
 
+from .agent_runtime import build_agent_runtime_summary, execute_inline_agent_run, normalize_payload
 from .evidence import attach_feature_evidence
 from .graphs.grammar_tutor import build_grammar_tutor_answer, build_grammar_tutor_detail
 from .learning_assistant import correct_writing, evaluate_translation, run_rag_search
-from .models import AIConversation, AIMessage, AIUserFeedback
+from .models import AIAsyncRun, AIConversation, AIMessage, AIUserFeedback
+from .observability import fit_model_char_value
 from .response_contracts import normalize_feature_contract
 
 
@@ -16,17 +18,32 @@ def serialize_message(message):
         "prompt_version": message.prompt_version,
         "model_name": message.model_name,
         "latency_ms": message.latency_ms,
+        "runtime_run_id": getattr(message.runtime_run, "public_id", ""),
         "created_at": message.created_at,
     }
 
 
+def serialize_runtime_run_brief(run: AIAsyncRun | None):
+    if not run:
+        return None
+    payload = normalize_payload(run.result_payload or {})
+    return {
+        "run_id": run.public_id,
+        "status": run.status,
+        "current_agent": run.current_agent,
+        "runtime_summary": build_agent_runtime_summary(run, payload),
+    }
+
+
 def serialize_conversation(conversation, include_messages=False):
+    latest_run = conversation.agent_runs.order_by("-id").first()
     data = {
         "id": conversation.id,
         "feature_type": conversation.feature_type,
         "title": conversation.title,
         "context": conversation.context,
         "status": conversation.status,
+        "latest_runtime_run": serialize_runtime_run_brief(latest_run),
         "created_at": conversation.created_at,
         "updated_at": conversation.updated_at,
     }
@@ -139,6 +156,46 @@ def _run_feature_answer(user, feature_type, question, conversation):
     return feature_key, result, next_context
 
 
+def _build_runtime_payload(feature_key, question, conversation, context):
+    payload = {
+        "question": question,
+        "feature_type": feature_key,
+        "conversation_id": conversation.id if conversation else None,
+        "conversation_context": context or {},
+    }
+    # Keep the raw user question intact for the unified conversation runtime.
+    # Route-specific derivation is now resolved inside the conversation agent.
+    payload["route_hint"] = feature_key
+    payload["limit"] = 6
+    if feature_key == "grammar":
+        payload["current_sentence"] = str((context or {}).get("current_sentence", "")).strip()
+    elif feature_key == "writing":
+        payload["level"] = str((context or {}).get("level") or "cet4")
+    elif feature_key == "translation":
+        source_text, user_translation = _extract_translation_inputs(question, context or {})
+        payload["source_text_hint"] = source_text
+        payload["user_translation_hint"] = user_translation
+        payload["direction"] = "auto"
+    elif feature_key == "scenario":
+        payload["scenario"] = str((context or {}).get("scenario") or "daily")
+    return payload
+
+
+def _resolve_next_context(feature_key, question, result, context):
+    next_context = dict(context or {})
+    if feature_key == "grammar":
+        next_context["current_sentence"] = result.get("sentence") or question
+    elif feature_key == "writing":
+        next_context["last_text"] = question
+    elif feature_key == "translation":
+        source_text, user_translation = _extract_translation_inputs(question, context or {})
+        next_context["last_source_text"] = source_text
+        next_context["last_user_translation"] = user_translation
+    elif feature_key == "scenario":
+        next_context["scenario"] = (result.get("result") or {}).get("scenario") or next_context.get("scenario") or "daily"
+    return next_context
+
+
 def _build_assistant_content(feature_type, result):
     if feature_type == "grammar":
         tutor = result.get("tutor") or {}
@@ -154,10 +211,10 @@ def _build_assistant_content(feature_type, result):
 
 
 def ask_conversation(user, question, conversation_id=None, feature_type="rag"):
+    feature_key = (feature_type or "rag").strip() or "rag"
     if conversation_id:
         conversation = get_object_or_404(AIConversation, id=conversation_id, user=user)
     else:
-        feature_key = (feature_type or "rag").strip() or "rag"
         conversation = AIConversation.objects.create(
             user=user,
             feature_type=feature_key,
@@ -165,25 +222,73 @@ def ask_conversation(user, question, conversation_id=None, feature_type="rag"):
             context={"source": "conversation", "feature_type": feature_key},
         )
     user_message = AIMessage.objects.create(conversation=conversation, role="user", content=question)
-    feature_key, result, next_context = _run_feature_answer(user, feature_type, question, conversation)
+    context = conversation.context or {}
+    run_payload = _build_runtime_payload(feature_key, question, conversation, context)
+    runtime_run = None
+    try:
+        runtime_run, result = execute_inline_agent_run(
+            user=user,
+            feature_type="conversation",
+            endpoint="/api/v1/ai/conversations/ask",
+            request_payload=run_payload,
+            conversation=conversation,
+        )
+        result = normalize_feature_contract("conversation", normalize_payload(result))
+        feature_key = str(result.get("resolved_route") or feature_key)
+        next_context = dict((result.get("conversation") or {}).get("context") or {})
+        if not next_context:
+            next_context = _resolve_next_context(feature_key, question, (result.get("answer") or {}), context)
+    except Exception:
+        feature_key, result, next_context = _run_feature_answer(user, feature_type, question, conversation)
     if next_context != (conversation.context or {}):
         conversation.context = next_context
         conversation.save(update_fields=["context", "updated_at"])
-    content = _build_assistant_content(feature_key, result)
-    assistant_message = AIMessage.objects.create(
-        conversation=conversation,
-        role="assistant",
-        content=content,
-        payload=result,
-        prompt_version=result.get("ai_strategy", {}).get("prompt_version", ""),
-        model_name=result.get("ai_strategy", {}).get("model_name", ""),
-        latency_ms=int((result.get("ai_observability") or {}).get("latency_ms") or 0),
-    )
+    answer_payload = result.get("answer") if isinstance(result, dict) and result.get("answer") else result
+    if isinstance(answer_payload, dict) and isinstance(result, dict):
+        for key in ("sentence", "question", "resolved_route"):
+            if result.get(key) is not None and key not in answer_payload:
+                answer_payload[key] = result.get(key)
+    assistant_message = None
+    if runtime_run:
+        assistant_message = (
+            AIMessage.objects.filter(conversation=conversation, role="assistant", runtime_run=runtime_run)
+            .order_by("-id")
+            .first()
+        )
+    if not assistant_message:
+        content = _build_assistant_content(feature_key, answer_payload)
+        assistant_message = AIMessage.objects.create(
+            conversation=conversation,
+            role="assistant",
+            content=content,
+            payload=result,
+            runtime_run=runtime_run,
+            prompt_version=fit_model_char_value(
+                (answer_payload or {}).get("ai_strategy", {}).get("prompt_version", "") or result.get("ai_strategy", {}).get("prompt_version", ""),
+                AIMessage._meta.get_field("prompt_version").max_length,
+            ),
+            model_name=fit_model_char_value(
+                (answer_payload or {}).get("ai_strategy", {}).get("model_name", "") or result.get("ai_strategy", {}).get("model_name", ""),
+                AIMessage._meta.get_field("model_name").max_length,
+            ),
+            latency_ms=int(((answer_payload or {}).get("ai_observability") or result.get("ai_observability") or {}).get("latency_ms") or 0),
+        )
+    elif assistant_message.payload != result:
+        assistant_message.payload = result
+        assistant_message.save(update_fields=["payload", "updated_at"])
+    user_message.runtime_run = runtime_run
+    user_message.save(update_fields=["runtime_run", "updated_at"])
+    runtime_run_brief = serialize_runtime_run_brief(runtime_run)
+    runtime_summary = (runtime_run_brief or {}).get("runtime_summary", {}) if runtime_run else {}
     return {
         "conversation": serialize_conversation(conversation),
         "user_message": serialize_message(user_message),
         "assistant_message": serialize_message(assistant_message),
-        "answer": result,
+        "answer": answer_payload,
+        "resolved_route": feature_key,
+        "run_id": runtime_run.public_id if runtime_run else "",
+        "runtime_summary": runtime_summary,
+        "runtime_run": runtime_run_brief,
     }
 
 

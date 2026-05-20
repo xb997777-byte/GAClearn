@@ -2,21 +2,42 @@
   margin-top: 20rpx;
   padding: 22rpx;
   border-radius: 24rpx;
-  border: 2rpx solid #dbe4f0;
+  border: 2rpx solid var(--theme-card-border, #d5e5ff);
   background: rgba(255, 255, 255, 0.94);
+}
+
+.evidence-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
 }
 
 .evidence-title {
   font-size: 26rpx;
   font-weight: 800;
-  color: #101828;
+  color: var(--theme-text-primary, #0f2748);
+}
+
+.evidence-toggle {
+  flex-shrink: 0;
+  min-height: 44rpx;
+  padding: 0 16rpx;
+  border-radius: 999rpx;
+  background: rgba(44, 93, 255, 0.08);
+  color: var(--theme-secondary-text, #0e60d8);
+  font-size: 22rpx;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .evidence-summary {
   margin-top: 10rpx;
   font-size: 24rpx;
   line-height: 1.7;
-  color: #667085;
+  color: var(--theme-text-secondary, #55718f);
 }
 
 .evidence-section {
@@ -26,7 +47,7 @@
 .evidence-section-title {
   font-size: 24rpx;
   font-weight: 800;
-  color: #2c5dff;
+  color: var(--theme-secondary-text, #0e60d8);
 }
 
 .evidence-step {
@@ -40,7 +61,7 @@
   height: 40rpx;
   border-radius: 999rpx;
   background: rgba(44, 93, 255, 0.08);
-  color: #2c5dff;
+  color: var(--theme-secondary-text, #0e60d8);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -59,7 +80,7 @@
 .evidence-metric-value {
   font-size: 24rpx;
   font-weight: 700;
-  color: #101828;
+  color: var(--theme-text-primary, #0f2748);
 }
 
 .evidence-step-detail,
@@ -70,7 +91,7 @@
   margin-top: 8rpx;
   font-size: 22rpx;
   line-height: 1.7;
-  color: #667085;
+  color: var(--theme-text-secondary, #55718f);
   word-break: break-word;
 }
 
@@ -78,7 +99,7 @@
   margin-top: 12rpx;
   padding: 18rpx;
   border-radius: 20rpx;
-  background: #f8fbff;
+  background: rgba(247, 251, 255, 0.96);
 }
 
 .evidence-card-head,
@@ -97,7 +118,7 @@
   padding: 0 14rpx;
   border-radius: 999rpx;
   background: rgba(44, 93, 255, 0.08);
-  color: #2c5dff;
+  color: var(--theme-secondary-text, #0e60d8);
   font-size: 22rpx;
   font-weight: 700;
 }

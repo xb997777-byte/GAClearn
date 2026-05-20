@@ -64,6 +64,7 @@ def _build_observability(payload: Dict[str, Any], runtime_summary: Dict[str, Any
         "engine": runtime_summary.get("engine", ""),
         "model_name": runtime_summary.get("model_name", ""),
         "prompt_version": runtime_summary.get("prompt_version", ""),
+        "run_id": observability.get("run_id", ""),
     }
     for field in ("cache_hit", "cache_key", "latency_ms", "endpoint", "status", "cached_at"):
         if field in observability:
@@ -470,6 +471,7 @@ def _feature_definition(feature_type: str, payload: Dict[str, Any]) -> Dict[str,
             "retrieval_hits": _hits_from_learning_context(payload.get("retrieval") or {}),
         }
     if feature_type == "vector_rag":
+        query_intent = (payload.get("advanced_debug") or {}).get("query_intent") or {}
         return {
             "summary": "优先使用 Chroma 知识库检索命中的知识 chunk，并支持 hybrid 召回、命中高亮和结果解释；若不可用则回退到本地轻量向量检索。",
             "workflow": {
@@ -484,6 +486,7 @@ def _feature_definition(feature_type: str, payload: Dict[str, Any]) -> Dict[str,
                 _tool("vector_rag_search", "执行 Chroma / 本地轻量向量召回"),
             ],
             "retrieval_hits": _hits_from_vector_documents(payload.get("documents") or []),
+            "query_intent": query_intent,
         }
     if feature_type == "rag_recall_eval":
         return {

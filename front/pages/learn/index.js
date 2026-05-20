@@ -13,6 +13,7 @@ Page(withThemePage({
     targetCount: 0,
     adaptive: null,
     loading: true,
+    submitting: false,
     audioBusy: false,
     playbackReady: speech.isSpeechPlaybackReady(),
     aiTutorEnabled: false,
@@ -90,6 +91,11 @@ Page(withThemePage({
     this.setData({
       decisionStage: 'reviewing',
       meaningVisible: true
+    }, () => {
+      const currentWord = this.getCurrentWord();
+      if (currentWord && currentWord.example_sentence) {
+        this.handlePlayExample();
+      }
     });
   },
 
@@ -273,7 +279,8 @@ Page(withThemePage({
 
   handleBackToDecision() {
     this.setData({
-      decisionStage: 'initial'
+      decisionStage: 'initial',
+      meaningVisible: false
     });
   },
 
@@ -324,9 +331,10 @@ Page(withThemePage({
 
   async record(actionType, result) {
     const currentWord = this.getCurrentWord();
-    if (!currentWord) {
+    if (!currentWord || this.data.submitting) {
       return;
     }
+    this.setData({ submitting: true });
     try {
       await learnApi.createLearningRecord({
         word_id: currentWord.id,
@@ -343,6 +351,7 @@ Page(withThemePage({
       }
       this.setData({
         currentIndex: nextIndex,
+        submitting: false,
         localTutor: null,
         aiTutor: null,
         aiTutorEvidence: null,
@@ -357,11 +366,16 @@ Page(withThemePage({
         this.autoPlayCurrentWord();
       });
     } catch (error) {
+      this.setData({ submitting: false });
       wx.showToast({ title: '提交失败', icon: 'none' });
     }
   },
 
   handleKnown() {
+    if (this.data.decisionStage === 'initial') {
+      this.enterReviewStage();
+      return;
+    }
     this.record('known', 'correct');
   },
 

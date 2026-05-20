@@ -1,4 +1,5 @@
 import os
+from importlib import metadata as importlib_metadata
 
 
 try:
@@ -47,9 +48,13 @@ except ImportError:
     LANGCHAIN_MCP_ADAPTERS_AVAILABLE = False
 
 try:
-    from mcp import __version__ as MCP_VERSION
+    import mcp  # noqa: F401
 
     MCP_AVAILABLE = True
+    try:
+        MCP_VERSION = importlib_metadata.version("mcp")
+    except importlib_metadata.PackageNotFoundError:
+        MCP_VERSION = ""
 except ImportError:
     MCP_VERSION = ""
     MCP_AVAILABLE = False
